@@ -1,4 +1,4 @@
-.PHONY: run prod chromium get-token stop logs
+.PHONY: run prod chromium get-token stop logs reset
 
 run:
 	@echo "Lancement en mode dev..."
@@ -11,8 +11,8 @@ prod:
 	@$(MAKE) chromium
 
 chromium:
-	@echo "Ouverture du frontend dans Chromium en mode kiosk..."
-	chromium-browser --kiosk http://localhost:5173 &
+	@echo "Ouverture du frontend dans Chromium en mode kiosk (cache désactivé)..."
+	chromium-browser --kiosk --disable-application-cache --disk-cache-dir=/dev/null http://localhost:5173 &
 
 get-token:
 	doppler run -p abview -c dev -- npx tsx server/scripts/get_token.ts
@@ -24,3 +24,13 @@ stop:
 logs:
 	@echo "Suivi des logs..."
 	docker compose logs -f
+
+reset:
+	@echo "Réinitialisation de l'environnement..."
+	@docker compose down -v --rmi local
+	@echo "Suppression des dossiers node_modules..."
+	@rm -rf ./server/node_modules
+	@rm -rf ./client/node_modules
+	@echo "Suppression du cache npm..."
+	@npm cache clean --force
+	@echo "Environnement réinitialisé. Tu peux relancer avec 'make run' ou 'make prod'."

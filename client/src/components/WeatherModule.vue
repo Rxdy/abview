@@ -238,7 +238,7 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     gap: 10px;
-    margin-bottom: 10px;
+    height: 32%;
     padding: 8px;
     background: var(--module-card-bg);
     border-radius: 6px;
@@ -334,6 +334,7 @@ onUnmounted(() => {
     justify-content: space-between;
     gap: 4px;
     margin: auto 0%;
+    height: 45%;
 }
 
 .forecast-day {
