@@ -7,7 +7,17 @@ services:
         ports:
             - "3333:3333"
         environment:
+            - TZ=UTC
             - NODE_ENV=development
+            - PORT=3333
+            - HOST=0.0.0.0
+            - LOG_LEVEL=info
+            - APP_KEY=SEYsJ0SsaIxmvq50Y4RFS1ZnTkGaByaq
+            - DB_HOST=127.0.0.1
+            - DB_PORT=3306
+            - DB_USER=root
+            - DB_PASSWORD=root
+            - DB_DATABASE=app
             - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
             - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
             - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
