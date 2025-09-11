@@ -196,9 +196,7 @@ const fetchWeather = async () => {
 
 onMounted(() => {
     fetchWeather();
-
-    // 🔄 rafraîchit toutes les minutes
-    refreshTimer = setInterval(fetchWeather, 1 * 60 * 1000);
+    refreshTimer = setInterval(fetchWeather, 1 * 30 * 1000);
 });
 
 onUnmounted(() => {

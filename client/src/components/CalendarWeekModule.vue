@@ -73,7 +73,7 @@ onMounted(() => {
                     console.error("Erreur lors du fetchData périodique :", err);
                     fetchError.value = true;
                 });
-            }, 60 * 1000);
+            }, 30 * 1000);
             const checkInterval = setInterval(() => {
                 console.log("Vérification des événements à venir");
                 checkUpcomingEvents();
