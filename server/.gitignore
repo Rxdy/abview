@@ -24,7 +24,5 @@ yarn-error.log
 # Platform specific
 .DS_Store
 
-
-*.json
 token.json
 credentials.json

@@ -1,0 +1,183 @@
+[
+  {
+    "name": "Rudy",
+    "type": "fixed",
+    "schedule": {
+      "monday": ["08:30-17:00"],
+      "tuesday": ["08:30-17:00"],
+      "wednesday": ["08:30-17:00"],
+      "thursday": ["08:30-17:00"],
+      "friday": ["08:30-17:00"],
+      "saturday": [],
+      "sunday": []
+    }
+  },
+  {
+    "name": "Papa",
+    "type": "shift",
+    "rotation": [
+      {
+        "week": 1,
+        "shift": "Nuit",
+        "hours": ["21:00-05:00"],
+        "exceptions": { "friday": [], "saturday": [], "sunday": [] }
+      },
+      {
+        "week": 2,
+        "shift": "Soir",
+        "hours": ["13:00-21:00"],
+        "exceptions": { "saturday": [], "sunday": [] }
+      },
+      {
+        "week": 3,
+        "shift": "Matin",
+        "hours": ["05:00-13:00"],
+        "exceptions": { "saturday": [], "sunday": [] }
+      }
+    ],
+    "offset": 1
+  },
+  {
+    "name": "Maman",
+    "type": "shift",
+    "cycleLength": 9,
+    "rotation": [
+      {
+        "week": 1,
+        "shift": "Matin",
+        "hours": ["05:00-13:00"],
+        "exceptions": { "saturday": [], "sunday": [] }
+      },
+      {
+        "week": 2,
+        "shift": "Soir",
+        "hours": ["13:00-21:00"],
+        "exceptions": { "saturday": [], "sunday": [] }
+      },
+      {
+        "week": 3,
+        "shift": "Matin",
+        "hours": ["05:00-13:00"],
+        "exceptions": { "saturday": [], "sunday": [] }
+      },
+      {
+        "week": 4,
+        "shift": "Soir",
+        "hours": ["13:00-21:00"],
+        "exceptions": { "saturday": [], "sunday": [] }
+      },
+      {
+        "week": 5,
+        "shift": "Matin",
+        "hours": ["05:00-13:00"],
+        "exceptions": { "saturday": [], "sunday": [] }
+      },
+      {
+        "week": 6,
+        "shift": "Soir",
+        "hours": ["13:00-21:00"],
+        "exceptions": {
+          "saturday": [],
+          "sunday": [],
+          "week2_2025": ["21:00-05:00"]
+        }
+      },
+      {
+        "week": 7,
+        "shift": "Nuit",
+        "hours": ["21:00-05:00"],
+        "exceptions": { "saturday": [], "sunday": [] }
+      },
+      {
+        "week": 8,
+        "shift": "Nuit",
+        "hours": ["21:00-05:00"],
+        "exceptions": { "saturday": [], "sunday": [] }
+      },
+      {
+        "week": 9,
+        "shift": "Nuit",
+        "hours": ["21:00-05:00"],
+        "exceptions": { "saturday": [], "sunday": [] }
+      }
+    ],
+    "lastDayOverride": {
+      "Matin": ["03:00-11:00"],
+      "Soir": ["11:00-19:00"],
+      "Nuit": ["19:00-02:00"]
+    },
+    "offset": 5
+  },
+  {
+    "name": "Lyam & Noah",
+    "type": "garde_alternee",
+    "weeks": {
+      "odd": "Chez Papa",
+      "even": "Chez Maman"
+    },
+    "overrides": [
+      {
+        "month_start": 7,
+        "day_start": 1,
+        "month_end": 7,
+        "day_end": 31,
+        "location": "Chez Maman"
+      },
+      {
+        "month_start": 8,
+        "day_start": 1,
+        "month_end": 8,
+        "day_end": 31,
+        "location": "Chez Papa"
+      }
+    ]
+  },
+  {
+    "name": "Rugby Lyam",
+    "type": "fixed",
+    "schedule": {
+      "monday": [],
+      "tuesday": [],
+      "wednesday": ["14:15-15:45"],
+      "thursday": [],
+      "friday": [],
+      "saturday": ["10:30-12:00"],
+      "sunday": []
+    },
+    "location": "Stade Baudras",
+    "linkedTo": "Lyam & Noah"
+  },
+  {
+    "name": "Rugby Noah",
+    "type": "fixed",
+    "schedule": {
+      "monday": [],
+      "tuesday": [],
+      "wednesday": [],
+      "thursday": [],
+      "friday": [],
+      "saturday": ["10:30-11:30"],
+      "sunday": []
+    },
+    "location": "Stade Baudras",
+    "linkedTo": "Lyam & Noah"
+  },
+  {
+    "name": "Poubelle",
+    "type": "fixed",
+    "schedule": {
+      "monday": [],
+      "tuesday": [],
+      "wednesday": [],
+      "thursday": ["19:00-19:30"],
+      "friday": [],
+      "saturday": [],
+      "sunday": []
+    },
+    "rotationType": "alternate",
+    "alternating": [
+      { "weekMod2": 0, "type": "Jaune" },
+      { "weekMod2": 1, "type": "Noire" }
+    ]
+  }
+]
