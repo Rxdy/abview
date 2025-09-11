@@ -23,6 +23,7 @@ services:
             - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
             - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN}
             - GOOGLE_ACCESS_TOKEN=${GOOGLE_ACCESS_TOKEN}
+            - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
         command: sh -c "npm install && npm run dev"
         stop_grace_period: 1s
 
