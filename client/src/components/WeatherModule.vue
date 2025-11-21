@@ -251,7 +251,7 @@ onUnmounted(() => {
     gap: 6px;
     flex: 1;
     align-items: flex-start;
-    margin: auto 3%;
+    margin: 0% 3%;
 }
 
 .current-right {

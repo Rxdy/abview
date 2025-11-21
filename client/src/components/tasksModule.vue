@@ -1,3 +1,4 @@
+```vue
 <template>
     <div class="tasks-board" ref="tasksBoard">
         <!-- Header : mise à jour -->
@@ -6,6 +7,7 @@
                 Mise à jour : {{ formatLastUpdate(lastUpdate) }}
             </div>
         </div>
+        <!-- Conteneur des colonnes -->
         <div class="tasks-columns">
             <div
                 v-for="(tasks, listTitle, index) in sortedGroupedTasks"
@@ -65,7 +67,6 @@ export default {
             columnScrollable: [],
             cycleWaiters: {},
             verticalCycleTimes: {},
-            pollingInterval: null,
         };
     },
     computed: {
@@ -95,39 +96,6 @@ export default {
         },
     },
     methods: {
-        async fetchTasks() {
-            try {
-                const response = await fetch("http://127.0.0.1:3333/tasks");
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                this.tasks = data.tasks || [];
-                this.lastUpdate = data.lastUpdate
-                    ? new Date(data.lastUpdate)
-                    : null;
-                console.log("lastUpdate:", this.lastUpdate);
-            } catch (err) {
-                console.error(
-                    "Erreur lors de la récupération des tâches :",
-                    err
-                );
-            }
-        },
-
-        startPolling() {
-            this.fetchTasks();
-            this.pollingInterval = setInterval(() => {
-                this.fetchTasks();
-            }, 30 * 1000);
-        },
-
-        stopPolling() {
-            if (this.pollingInterval) {
-                clearInterval(this.pollingInterval);
-                this.pollingInterval = null;
-            }
-        },
         formatLastUpdate(date) {
             if (!date) return "";
             const hours = String(date.getHours()).padStart(2, "0");
@@ -209,22 +177,26 @@ export default {
         },
         async scrollLoop(container, colIndex) {
             const title = this.columnTitles[colIndex] ?? `#${colIndex}`;
-            const step = 1;
-            const delay = 16;
+            const step = 1; // pixels par frame
+            const delay = 16; // ms entre chaque frame (~60fps)
             let firstLoop = true;
 
             while (true) {
                 const cycleStart = performance.now();
 
+                // Scroll vers le bas
                 await this.scrollOneDirection(container, "down", colIndex);
 
+                // Pause en bas 5s
                 await this.wait(
                     5000,
                     `V: pause bas col ${colIndex} "${title}"`
                 );
 
+                // Scroll vers le haut
                 await this.scrollOneDirection(container, "up", colIndex);
 
+                // Pause en haut 5s
                 await this.wait(
                     5000,
                     `V: pause haut col ${colIndex} "${title}"`
@@ -233,15 +205,17 @@ export default {
                 const cycleEnd = performance.now();
                 const cycleTime = cycleEnd - cycleStart;
 
+                // Stocker le temps de cycle pour synchronisation horizontal
                 this.verticalCycleTimes[colIndex] = cycleTime;
 
+                // Notifier les awaiters horizontaux
                 this.notifyVerticalCycle(colIndex);
 
                 if (firstLoop) firstLoop = false;
             }
         },
         scrollOneDirection(container, direction, colIndex) {
-            const step = 1;
+            const step = 1; // pixels par frame
             const delay = 16;
             return new Promise((resolve) => {
                 const interval = setInterval(() => {
@@ -272,13 +246,15 @@ export default {
             const step = 2;
             const delay = 16;
 
-            if (this.taskColumns.length <= 6) return;
+            if (this.taskColumns.length <= 6) return; // pas besoin de scroll horizontal si peu de colonnes
 
             const firstColIndex = 0;
 
+            // Attendre que le DOM ait fini de rendre tous les post-it avec leur largeur et rotation
             await this.$nextTick();
             await this.wait(50, "H: wait post-it render");
 
+            // Attendre que la boucle verticale de la première colonne soit connue
             while (
                 this.columnScrollable[firstColIndex] &&
                 this.verticalCycleTimes[firstColIndex] === undefined
@@ -286,6 +262,7 @@ export default {
                 await this.wait(50, "H: polling cycle vertical col 0");
             }
 
+            // Si la première colonne n'est pas scrollable, on attend 10 secondes
             if (!this.columnScrollable[firstColIndex]) {
                 await this.wait(
                     10000,
@@ -301,7 +278,7 @@ export default {
             let direction = "right";
 
             while (true) {
-                if (board.scrollWidth <= board.clientWidth) return;
+                if (board.scrollWidth <= board.clientWidth) return; // plus de scroll possible
 
                 if (direction === "right") {
                     const target = board.scrollWidth - board.clientWidth;
@@ -309,6 +286,7 @@ export default {
 
                     const lastIndex = this.taskColumns.length - 1;
                     if (this.columnScrollable[lastIndex]) {
+                        // attendre la fin de la boucle verticale si scrollable
                         const cycleTime =
                             this.verticalCycleTimes[lastIndex] ?? 5000;
                         await this.wait(
@@ -370,14 +348,21 @@ export default {
         },
     },
     mounted() {
-        this.startPolling();
-        this.$nextTick(() => {
-            this.startIndependentScroll();
-            if (this.taskColumns.length > 6) this.horizontalScrollLoop();
-        });
-    },
-    beforeDestroy() {
-        this.stopPolling();
+        fetch("http://127.0.0.1:3333/tasks")
+            .then((res) => res.json())
+            .then((data) => {
+                this.tasks = data.tasks || [];
+                this.lastUpdate = data.lastUpdate
+                    ? new Date(data.lastUpdate)
+                    : null;
+                console.log("lastUpdate:", this.lastUpdate);
+                this.$nextTick(() => {
+                    this.startIndependentScroll();
+                    if (this.taskColumns.length > 6)
+                        this.horizontalScrollLoop();
+                });
+            })
+            .catch((err) => console.error(err));
     },
 };
 </script>
@@ -518,3 +503,4 @@ export default {
     color: #000 !important; /* Date en noir */
 }
 </style>
+```
