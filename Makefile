@@ -1,4 +1,14 @@
-.PHONY: run prod chromium get-token stop logs reset
+.PHONY: help run prod chromium get-token stop logs reset
+
+help:
+	@echo "Commandes disponibles :"
+	@echo "  run       - Lancement en mode développement"
+	@echo "  prod      - Lancement en mode production"
+	@echo "  chromium  - Ouverture du frontend dans Chromium en mode kiosk"
+	@echo "  get-token - Récupération du token"
+	@echo "  stop      - Arrêt des conteneurs"
+	@echo "  logs      - Suivi des logs"
+	@echo "  reset     - Réinitialisation de l'environnement"
 
 run:
 	@echo "Lancement en mode dev..."

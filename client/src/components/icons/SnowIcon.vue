@@ -1,60 +1,31 @@
 <template>
-    <svg
-        width="24px"
-        height="24px"
-        stroke-width="1.5"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-    >
-        <!-- Nuage -->
-        <g :stroke="cloudColor" :fill="cloudColor">
-            <path
-                d="M12 4C6 4 6 8 6 10C4.33333 10 1 11 1 15C1 19 4.33333 20 6 20H18C19.6667 20 23 19 23 15C23 11 19.6667 10 18 10C18 8 18 4 12 4Z"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            ></path>
-        </g>
-        <!-- Flocons -->
-        <g :stroke="snowColor">
-            <path
-                d="M6 16L8 18M8 16L6 18"
-                stroke-width="1"
-                stroke-linecap="round"
-            />
-            <!-- Gauche, sous le nuage -->
-            <path
-                d="M10 19L12 21M12 19L10 21"
-                stroke-width="1"
-                stroke-linecap="round"
-            />
-            <!-- Centre-gauche, plus bas -->
-            <path
-                d="M14 16L16 18M16 16L14 18"
-                stroke-width="1"
-                stroke-linecap="round"
-            />
-            <!-- Centre-droit -->
-            <path
-                d="M18 19L20 21M20 19L18 21"
-                stroke-width="1"
-                stroke-linecap="round"
-            />
-            <!-- Droit, sous le nuage, plus bas -->
-        </g>
-    </svg>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    :class="iconClass"
+  >
+    <!-- Nuage -->
+    <path
+      d="M6.02679 17.4293C3.08078 16.2492 1 13.3676 1 10C1 5.58172 4.58172 2 9 2C12.3949 2 15.2959 4.11466 16.4576 7.09864C16.7951 7.0339 17.1436 7 17.5 7C20.5376 7 23 9.46243 23 12.5C23 15.369 20.8032 17.725 18 17.9776C17.9879 14.6742 15.3062 12 12 12C8.87879 12 6.31421 14.3833 6.02679 17.4293Z"
+      fill="#666666"
+    />
+    <!-- Flocon -->
+    <path
+      d="M13 16.268L14.9641 15.134L15.9641 16.866L14 18L15.9641 19.134L14.9641 20.866L13 19.732V22H11V19.732L9.0359 20.866L8.0359 19.134L10 18L8.0359 16.866L9.0359 15.134L11 16.268V14H13V16.268Z"
+      fill="white"
+    />
+  </svg>
 </template>
 
-<script setup>
-defineProps({
-    cloudColor: {
-        type: String,
-        default: "#666666", // Gris foncé pour le nuage
+<script>
+export default {
+  name: "SnowIcon",
+  props: {
+    iconClass: {
+      type: String,
+      default: "",
     },
-    snowColor: {
-        type: String,
-        default: "#e0f7fa", // Bleu clair pour les flocons
-    },
-});
+  },
+};
 </script>

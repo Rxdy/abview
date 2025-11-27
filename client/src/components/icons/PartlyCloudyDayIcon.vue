@@ -1,90 +1,31 @@
 <template>
-    <svg
-        width="16px"
-        height="16px"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-    >
-        <!-- Soleil (en arrière-plan) -->
-        <g :stroke="sunColor" :fill="sunColor" transform="translate(9 -3)">
-            <path
-                d="M12 12C13.1046 12 14 11.1046 14 10C14 8.89543 13.1046 8 12 8C10.8954 8 10 8.89543 10 10C10 11.1046 10.8954 12 12 12Z"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-            <path
-                d="M18 10L20 10"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-            <path
-                d="M12 4V3"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-            <path
-                d="M12 19V18"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-            <path
-                d="M16 16L15 15"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-            <path
-                d="M16 4L15 5"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-            <path
-                d="M8 16L9 15"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-            <path
-                d="M8 4L9 5"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-            <path
-                d="M6 10L8 10"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-            <path
-                d="M14 10L16 10"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-        </g>
-
-        <!-- Nuage (au premier plan) -->
-        <g :stroke="cloudColor" :fill="cloudColor">
-            <path
-                d="M12 4C6 4 6 8 6 10C4.33333 10 1 11 1 15C1 19 4.33333 20 6 20H18C19.6667 20 23 19 23 15C23 11 19.6667 10 18 10C18 8 18 4 12 4Z"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-        </g>
-    </svg>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    :class="iconClass"
+  >
+    <!-- Nuage -->
+    <path
+      d="M9.98392 5.05991C11.1323 3.22236 13.1734 2 15.5 2C19.0899 2 22 4.91015 22 8.5C22 9.58031 21.7365 10.5991 21.2701 11.4955C22.3351 12.4985 23 13.9216 23 15.5C23 18.5376 20.5376 21 17.5 21H9C4.58172 21 1 17.4183 1 13C1 8.58172 4.58172 5 9 5C9.33312 5 9.66149 5.02036 9.98392 5.05991Z"
+      fill="white"
+    />
+    <!-- Soleil -->
+    <path
+      d="M12.0554 5.60419C14.0675 6.43637 15.6662 8.06578 16.4576 10.0986C16.7951 10.0339 17.1436 10 17.5 10C18.2351 10 18.9366 10.1442 19.5776 10.4059C19.8486 9.82719 20 9.18128 20 8.5C20 6.01472 17.9853 4 15.5 4C14.1177 4 12.8809 4.6233 12.0554 5.60419Z"
+      fill="#ffca28"
+    />
+  </svg>
 </template>
 
-<script setup>
-defineProps({
-    cloudColor: { type: String, default: "#666666" },
-    sunColor: { type: String, default: "#ffca28" },
-});
+<script>
+export default {
+  name: "PartlyCloudyDayIcon",
+  props: {
+    iconClass: {
+      type: String,
+      default: "",
+    },
+  },
+};
 </script>

@@ -1,42 +1,31 @@
 <template>
-    <svg
-        width="24px"
-        height="24px"
-        stroke-width="1.5"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-    >
-        <!-- Nuage -->
-        <g :stroke="cloudColor" :fill="cloudColor">
-            <path
-                d="M12 4C6 4 6 8 6 10C4.33333 10 1 11 1 15C1 19 4.33333 20 6 20H18C19.6667 20 23 19 23 15C23 11 19.6667 10 18 10C18 8 18 4 12 4Z"
-                :stroke="cloudColor"
-                stroke-width="1.5"
-                stroke-linejoin="round"
-            ></path>
-        </g>
-        <!-- Éclair -->
-        <g :stroke="thunderColor" :fill="cloudColor">
-            <path
-                d="M12 13L9 18H14L11 23"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-        </g>
-    </svg>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    :class="iconClass"
+  >
+    <!-- Nuage -->
+    <path
+      d="M16.9885 18L18.2044 16.4194C18.4061 16.1572 18.5154 15.8356 18.5154 15.5048C18.5154 14.6764 17.8439 14.0048 17.0154 14.0048H15V10.0291C15 9.56319 14.7835 9.12374 14.4141 8.83982C13.7573 8.33495 12.8156 8.45813 12.3107 9.11494L5.9453 17.3961C3.04248 16.1959 1 13.3365 1 10C1 5.58172 4.58172 2 9 2C12.3949 2 15.2959 4.11466 16.4576 7.09864C16.7951 7.0339 17.1436 7 17.5 7C20.5376 7 23 9.46243 23 12.5C23 15.5376 20.5376 18 17.5 18H16.9885Z"
+      fill="#666666"
+    />
+    <!-- Éclair -->
+    <path
+      d="M13 16.0048H16L11 22.5048V18.0048H8L13 11.5V16.0048Z"
+      fill="#ffca28"
+    />
+  </svg>
 </template>
 
-<script setup>
-defineProps({
-    cloudColor: {
-        type: String,
-        default: "#666666", // Gris foncé pour le nuage
+<script>
+export default {
+  name: "ThunderIcon",
+  props: {
+    iconClass: {
+      type: String,
+      default: "",
     },
-    thunderColor: {
-        type: String,
-        default: "#ffca28", // Jaune pour l'éclair
-    },
-});
+  },
+};
 </script>

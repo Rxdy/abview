@@ -17,7 +17,9 @@
 export default {
     name: "HeaderBar",
     data() {
-        return { now: new Date() };
+        return { 
+            now: new Date()
+        };
     },
     computed: {
         formattedDateTime() {
@@ -53,7 +55,7 @@ export default {
     align-items: center;
     background-color: #1e293b;
     color: white;
-    padding: 0% 0.5%;
+    padding: 1vh 0.5%;
     font-family: Arial, sans-serif;
 }
 

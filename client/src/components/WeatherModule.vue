@@ -25,13 +25,13 @@
                 </div>
                 <div class="sun-times">
                     <div class="sun-item">
-                        <span class="sun-icon">🌅</span>
+                        <SunriseIcon class="sun-icon-svg" />
                         <span class="sun-time">{{
                             formatTime(current.sunrise)
                         }}</span>
                     </div>
                     <div class="sun-item">
-                        <span class="sun-icon">🌇</span>
+                        <SunsetIcon class="sun-icon-svg" />
                         <span class="sun-time">{{
                             formatTime(current.sunset)
                         }}</span>
@@ -109,6 +109,9 @@ import DropIcon from "@/components/icons/DropIcon.vue";
 import WindIcon from "@/components/icons/WindIcon.vue";
 import PartlyCloudyDayIcon from "@/components/icons/PartlyCloudyDayIcon.vue";
 import ClearDayIcon from "@/components/icons/ClearDayIcon.vue";
+import SunriseIcon from "@/components/icons/SunriseIcon.vue";
+import SunsetIcon from "@/components/icons/SunsetIcon.vue";
+import HailIcon from "@/components/icons/HailIcon.vue";
 import SnowIcon from "@/components/icons/SnowIcon.vue";
 import ThunderIcon from "@/components/icons/ThunderIcon.vue";
 
@@ -128,9 +131,11 @@ const Wind = WindIcon;
 const getIconComponent = (icon) =>
     ({
         rain: RainIcon,
+        "heavy-rain": HeavyRain,
         "partly-cloudy-day": PartlyCloudyDayIcon,
         cloudy: CloudyIcon,
         snow: SnowIcon,
+        hail: HailIcon,
         thunder: ThunderIcon,
         thunderstorm: ThunderIcon,
         "clear-day": ClearDayIcon,
@@ -155,10 +160,7 @@ const formatTime = (timeStr) => {
     const m = parseInt(mStr, 10);
     if (isNaN(h) || isNaN(m)) return "-";
 
-    // Ajouter 2h pour le fuseau UTC+2
-    const totalH = (h + 2) % 24;
-
-    return `${totalH.toString().padStart(2, "0")}h${m
+    return `${h.toString().padStart(2, "0")}h${m
         .toString()
         .padStart(2, "0")}`;
 };
@@ -185,7 +187,18 @@ const fetchWeather = async () => {
 
         current.value = w.current ?? {};
         forecast.value = Array.isArray(w.forecast) ? w.forecast : [];
-        lastUpdate.value = w.lastUpdate?.split("T")[1]?.split(".")[0] ?? "";
+        
+        // Parse lastUpdate as Date and format in local time
+        if (w.lastUpdate) {
+            const updateDate = new Date(w.lastUpdate);
+            const hours = updateDate.getHours().toString().padStart(2, "0");
+            const minutes = updateDate.getMinutes().toString().padStart(2, "0");
+            const seconds = updateDate.getSeconds().toString().padStart(2, "0");
+            lastUpdate.value = `${hours}:${minutes}:${seconds}`;
+        } else {
+            lastUpdate.value = "";
+        }
+        
         isLoaded.value = true;
         error.value = "";
     } catch (err) {
@@ -238,11 +251,13 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     gap: 10px;
-    height: 32%;
-    padding: 8px;
+    height: 35%;
+    padding: 1% 8px;
     background: var(--module-card-bg);
     border-radius: 6px;
     margin: auto 0%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .current-left {
@@ -252,6 +267,7 @@ onUnmounted(() => {
     flex: 1;
     align-items: flex-start;
     margin: 0% 3%;
+    justify-content: space-between;
 }
 
 .current-right {
@@ -274,7 +290,7 @@ onUnmounted(() => {
 
 .day-name-current {
     font-weight: bold;
-    font-size: 18px;
+    font-size: 1rem;
     color: var(--color-text); /* Accent */
 }
 
@@ -285,12 +301,12 @@ onUnmounted(() => {
 }
 
 .weather-icon {
-    width: 28px;
-    height: 28px;
+    width: 1rem;
+    height: 1rem;
 }
 
 .temp-value {
-    font-size: 22px;
+    font-size: 0.75rem;
     font-weight: bold;
     color: var(--color-text);
 }
@@ -298,7 +314,7 @@ onUnmounted(() => {
 .sun-times {
     display: flex;
     gap: 15px;
-    margin-top: 4px;
+    margin-top: 0px;
 }
 
 .sun-item {
@@ -308,11 +324,17 @@ onUnmounted(() => {
 }
 
 .sun-icon {
-    font-size: 18px; /* Taille augmentée pour les icônes de lever/coucher */
+    font-size: 1rem; /* Taille augmentée pour les icônes de lever/coucher */
+}
+
+.sun-icon-svg {
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-text);
 }
 
 .sun-time {
-    font-size: 14px;
+    font-size: 0.75rem;
     font-weight: bold;
     color: var(--color-text); /* Lever/coucher soleil */
 }
@@ -334,14 +356,14 @@ onUnmounted(() => {
     justify-content: space-between;
     gap: 4px;
     margin: auto 0%;
-    height: 45%;
+    height: 40%;
 }
 
 .forecast-day {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 3%;
+    padding: 1%;
     background: var(--module-card-bg);
     border-radius: 5px;
     min-width: 45px;

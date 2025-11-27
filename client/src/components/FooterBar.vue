@@ -41,7 +41,7 @@ export default {
     align-items: center;
     background-color: #1e293b;
     color: white;
-    padding: 0.15% 0.6%;
+    padding: 1vh 0.6%;
     font-family: Arial, sans-serif;
     font-size: 0.85rem;
 }

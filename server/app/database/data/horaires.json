@@ -13,7 +13,7 @@
     }
   },
   {
-    "name": "Papa",
+    "name": "Luis",
     "type": "shift",
     "rotation": [
       {
@@ -38,7 +38,7 @@
     "offset": 1
   },
   {
-    "name": "Maman",
+    "name": "Caroline",
     "type": "shift",
     "cycleLength": 9,
     "rotation": [
@@ -179,5 +179,18 @@
       { "weekMod2": 0, "type": "Jaune" },
       { "weekMod2": 1, "type": "Noire" }
     ]
+  },
+  {
+    "name": "Echange enfants",
+    "type": "fixed",
+    "schedule": {
+      "monday": ["17:00-17:30"],
+      "tuesday": [],
+      "wednesday": [],
+      "thursday": [],
+      "friday": [],
+      "saturday": [],
+      "sunday": []
+    }
   }
 ]

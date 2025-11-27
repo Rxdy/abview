@@ -1,19 +1,6 @@
 <template>
     <HeaderBar />
     <main class="main-content">
-        <div class="theme-toggle">
-            <label for="theme-switch">Mode :</label>
-            <select
-                id="theme-switch"
-                v-model="themeMode"
-                @change="applyDayNightMode"
-            >
-                <option value="auto">Automatique</option>
-                <option value="light">Clair</option>
-                <option value="dark">Sombre</option>
-            </select>
-        </div>
-
         <!-- Ligne du haut : calendrier -->
         <div class="top-row">
             <CalendarModule class="calendar-module" />
@@ -50,7 +37,6 @@ export default {
                 sunrise: "06:00",
                 sunset: "18:00",
             },
-            themeMode: localStorage.getItem("themeMode") || "auto",
             themeTimeout: null,
         };
     },
@@ -76,18 +62,6 @@ export default {
             this.applyDayNightMode();
         },
         applyDayNightMode() {
-            localStorage.setItem("themeMode", this.themeMode);
-
-            if (this.themeMode === "light") {
-                document.body.classList.remove("dark-mode");
-                if (this.themeTimeout) clearTimeout(this.themeTimeout);
-                return;
-            } else if (this.themeMode === "dark") {
-                document.body.classList.add("dark-mode");
-                if (this.themeTimeout) clearTimeout(this.themeTimeout);
-                return;
-            }
-
             const now = new Date();
             const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -183,39 +157,27 @@ body,
     background-color: var(--color-bg);
     color: var(--color-text);
     transition: background-color 0.3s ease, color 0.3s ease;
+    box-sizing: border-box;
 }
 
 header {
-    height: calc(var(--vh) * 3);
+    height: calc(var(--vh) * 4);
+    box-sizing: border-box;
 }
 
 footer {
-    height: calc(var(--vh) * 3);
+    height: calc(var(--vh) * 4);
+    box-sizing: border-box;
 }
 
 .main-content {
-    height: calc(var(--vh) * 90);
+    height: calc(var(--vh) * 92);
     overflow-y: auto;
     padding: 0.85% 1%;
     display: flex;
     flex-direction: column;
     gap: 1%;
-}
-
-.theme-toggle {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-    color: var(--color-text);
-}
-
-.theme-toggle select {
-    padding: 5px;
-    border-radius: 5px;
-    background-color: var(--module-bg);
-    color: var(--color-text);
-    border: 1px solid var(--task-border-color);
+    box-sizing: border-box;
 }
 
 /* Ligne du haut : calendrier */

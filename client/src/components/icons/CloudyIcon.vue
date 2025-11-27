@@ -1,27 +1,22 @@
 <template>
-    <svg
-        width="24px"
-        height="24px"
-        stroke-width="1.5"
-        viewBox="0 0 24 24"
-        :fill="color"
-        xmlns="http://www.w3.org/2000/svg"
-        :color="color"
-    >
-        <path
-            d="M12 4C6 4 6 8 6 10C4.33333 10 1 11 1 15C1 19 4.33333 20 6 20H18C19.6667 20 23 19 23 15C23 11 19.6667 10 18 10C18 8 18 4 12 4Z"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linejoin="round"
-        ></path>
-    </svg>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="white"
+    :class="iconClass"
+  >
+    <path d="M9 20.9855C4.53831 20.7267 1 17.0266 1 12.5C1 7.80558 4.80558 4 9.5 4C12.5433 4 15.2131 5.59939 16.7146 8.00348C20.2051 8.11671 23 10.982 23 14.5C23 17.9216 20.3562 20.7257 17 20.9811V21H9V20.9855Z" />
+  </svg>
 </template>
 
-<script setup>
-defineProps({
-    color: {
-        type: String,
-        default: "#666666",
+<script>
+export default {
+  name: "CloudyIcon",
+  props: {
+    iconClass: {
+      type: String,
+      default: "",
     },
-});
+  },
+};
 </script>

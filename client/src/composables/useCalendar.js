@@ -222,20 +222,37 @@ export function useCalendar() {
                 // Événement pour garde alternée
                 if (
                     person.type === "garde_alternee" &&
-                    person.name === "Lyam & Noah" &&
-                    childrenLocation === "Chez Papa"
+                    person.name === "Lyam & Noah"
                 ) {
-                    planningEvents.push({
-                        id: `garde-${dateStr}`,
-                        title: "Lyam & Noah",
-                        start: `${dateStr}T00:00:00+02:00`,
-                        end: `${dateStr}T23:59:59+02:00`,
-                        startTime: "00:00",
-                        endTime: "23:59",
-                        location: "Chez Papa",
-                        isPlanning: true,
-                        colorType: "garde-alternee",
-                    });
+                    // Afficher seulement quand les enfants sont chez Papa
+                    if (childrenLocation === "Chez Papa") {
+                        if (dayOfWeek === 1) { // Lundi : 00h-17h
+                            planningEvents.push({
+                                id: `garde-${dateStr}`,
+                                title: "Lyam & Noah",
+                                start: `${dateStr}T00:00:00+02:00`,
+                                end: `${dateStr}T17:00:00+02:00`,
+                                startTime: "00:00",
+                                endTime: "17:00",
+                                location: "Chez Papa",
+                                isPlanning: true,
+                                colorType: "garde-alternee",
+                            });
+                        } else { // Autres jours : 00h-23h59
+                            planningEvents.push({
+                                id: `garde-${dateStr}`,
+                                title: "Lyam & Noah",
+                                start: `${dateStr}T00:00:00+02:00`,
+                                end: `${dateStr}T23:59:59+02:00`,
+                                startTime: "00:00",
+                                endTime: "23:59",
+                                location: "Chez Papa",
+                                isPlanning: true,
+                                colorType: "garde-alternee",
+                            });
+                        }
+                    }
+                    // Ne rien afficher quand chez Maman
                 }
 
                 // Fixed
@@ -245,6 +262,16 @@ export function useCalendar() {
                         const [start, end] = hour.split("-");
                         let eventTitle = person.name;
                         let colorType = isRugbyEvent ? "rugby" : "planning";
+
+                        // Skip "Echange enfants" if children are not with you
+                        if (person.name === "Echange enfants" && childrenLocation !== "Chez Papa") {
+                            return;
+                        }
+
+                        // Special color for "Echange enfants"
+                        if (person.name === "Echange enfants") {
+                            colorType = "garde-alternee";
+                        }
 
                         // Gestion spéciale pour Poubelle
                         if (
