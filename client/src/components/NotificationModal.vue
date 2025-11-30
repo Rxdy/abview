@@ -43,13 +43,13 @@ defineEmits(["close"]);
 }
 .modal-content {
     background-color: var(--module-bg, #e0e0e0);
-    padding: 20px;
+    padding: clamp(15px, 3vh, 30px);
     border-radius: 8px;
     text-align: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.3s;
     width: 80%;
-    max-width: 500px;
+    max-width: 600px;
 }
 @keyframes fadeIn {
     from {
@@ -63,15 +63,15 @@ defineEmits(["close"]);
 }
 .modal-content h2 {
     margin-bottom: 10px;
-    font-size: 1.5rem;
+    font-size: clamp(1.2rem, 3vh, 2rem);
 }
 .modal-content p {
     margin-bottom: 10px;
-    font-size: 1rem;
+    font-size: clamp(1rem, 2.5vh, 1.5rem);
 }
 .progress-bar {
     width: 100%;
-    height: 10px;
+    height: clamp(8px, 1.5vh, 15px);
     background-color: #4b5563;
     border-radius: 5px;
     overflow: hidden;

@@ -133,7 +133,7 @@
     ]
   },
   {
-    "name": "Rugby Lyam",
+    "name": "Rugby",
     "type": "fixed",
     "schedule": {
       "monday": [],
@@ -148,49 +148,13 @@
     "linkedTo": "Lyam & Noah"
   },
   {
-    "name": "Rugby Noah",
-    "type": "fixed",
-    "schedule": {
-      "monday": [],
-      "tuesday": [],
-      "wednesday": [],
-      "thursday": [],
-      "friday": [],
-      "saturday": ["10:30-11:30"],
-      "sunday": []
-    },
-    "location": "Stade Baudras",
-    "linkedTo": "Lyam & Noah"
-  },
-  {
     "name": "Poubelle",
-    "type": "fixed",
-    "schedule": {
-      "monday": [],
-      "tuesday": [],
-      "wednesday": [],
-      "thursday": ["19:00-19:30"],
-      "friday": [],
-      "saturday": [],
-      "sunday": []
-    },
+    "type": "allday",
+    "days": ["thursday"],
     "rotationType": "alternate",
     "alternating": [
       { "weekMod2": 0, "type": "Jaune" },
       { "weekMod2": 1, "type": "Noire" }
     ]
-  },
-  {
-    "name": "Echange enfants",
-    "type": "fixed",
-    "schedule": {
-      "monday": ["17:00-17:30"],
-      "tuesday": [],
-      "wednesday": [],
-      "thursday": [],
-      "friday": [],
-      "saturday": [],
-      "sunday": []
-    }
   }
 ]

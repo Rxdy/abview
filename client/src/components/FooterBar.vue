@@ -41,9 +41,11 @@ export default {
     align-items: center;
     background-color: #1e293b;
     color: white;
-    padding: 1vh 0.6%;
+    padding: 0.5vh 1%;
     font-family: Arial, sans-serif;
-    font-size: 0.85rem;
+    font-size: clamp(0.7rem, 1.2vh, 1rem);
+    height: 3vh;
+    min-height: 20px;
 }
 
 .left,

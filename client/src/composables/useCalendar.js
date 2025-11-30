@@ -11,6 +11,7 @@ export function useCalendar() {
     const isProcessingQueue = ref(false);
     const notifiedEventsOneHour = ref(new Set());
     const notifiedEventsThirtyMin = ref(new Set());
+    const allDayNotifications = ref(new Map()); // Track last notification time for all-day events
     const notificationAudio = ref(null);
     const audioEnabled = ref(false);
 
@@ -129,7 +130,7 @@ export function useCalendar() {
             return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
         };
 
-        for (let i = 0; i < 9; i++) {
+        for (let i = 0; i < 8; i++) {
             const date = new Date(localToday);
             date.setDate(localToday.getDate() + i);
             const dateStr = formatDateLocal(date);
@@ -219,38 +220,26 @@ export function useCalendar() {
                 const isWithYou = childrenLocation === "Chez Papa";
                 if ((isLinkedToGarde || isRugbyEvent) && !isWithYou) return;
 
-                // Événement pour garde alternée
+                // Événement pour garde alternée (journalier, sans horaire, sans notification)
                 if (
                     person.type === "garde_alternee" &&
                     person.name === "Lyam & Noah"
                 ) {
                     // Afficher seulement quand les enfants sont chez Papa
                     if (childrenLocation === "Chez Papa") {
-                        if (dayOfWeek === 1) { // Lundi : 00h-17h
-                            planningEvents.push({
-                                id: `garde-${dateStr}`,
-                                title: "Lyam & Noah",
-                                start: `${dateStr}T00:00:00+02:00`,
-                                end: `${dateStr}T17:00:00+02:00`,
-                                startTime: "00:00",
-                                endTime: "17:00",
-                                location: "Chez Papa",
-                                isPlanning: true,
-                                colorType: "garde-alternee",
-                            });
-                        } else { // Autres jours : 00h-23h59
-                            planningEvents.push({
-                                id: `garde-${dateStr}`,
-                                title: "Lyam & Noah",
-                                start: `${dateStr}T00:00:00+02:00`,
-                                end: `${dateStr}T23:59:59+02:00`,
-                                startTime: "00:00",
-                                endTime: "23:59",
-                                location: "Chez Papa",
-                                isPlanning: true,
-                                colorType: "garde-alternee",
-                            });
-                        }
+                        planningEvents.push({
+                            id: `garde-${dateStr}`,
+                            title: "Lyam & Noah",
+                            start: `${dateStr}T00:00:00+02:00`,
+                            end: `${dateStr}T23:59:59+02:00`,
+                            startTime: null,
+                            endTime: null,
+                            location: "Chez Papa",
+                            isPlanning: true,
+                            isAllDay: true,
+                            noNotification: true,
+                            colorType: "garde-alternee",
+                        });
                     }
                     // Ne rien afficher quand chez Maman
                 }
@@ -302,6 +291,41 @@ export function useCalendar() {
                             colorType: colorType,
                         });
                     });
+                }
+
+                // All-day events (no schedule, recurring reminders every 3h)
+                if (person.type === "allday") {
+                    const shouldShow = person.days?.includes(dayName);
+                    if (shouldShow) {
+                        let eventTitle = person.name;
+                        let colorType = person.colorType || "planning";
+
+                        // Handle alternating types (like Poubelle Jaune/Noire)
+                        if (person.rotationType === "alternate" && person.alternating) {
+                            const weekMod2 = weekNumber % 2;
+                            const alternatingEntry = person.alternating.find(
+                                (a) => a.weekMod2 === weekMod2
+                            );
+                            if (alternatingEntry) {
+                                eventTitle = person.name; // Just "Poubelle" (minuscules)
+                                colorType = alternatingEntry.type.toLowerCase();
+                            }
+                        }
+
+                        planningEvents.push({
+                            id: `allday-${person.name}-${dateStr}`,
+                            title: eventTitle,
+                            start: `${dateStr}T00:00:00+02:00`,
+                            end: `${dateStr}T23:59:59+02:00`,
+                            startTime: null,
+                            endTime: null,
+                            location: person.location || "",
+                            isPlanning: true,
+                            isAllDay: true,
+                            colorType: colorType,
+                            description: person.description || "",
+                        });
+                    }
                 }
                 // Shift
                 else if (person.type === "shift") {
@@ -375,9 +399,28 @@ export function useCalendar() {
     const checkUpcomingEvents = () => {
         const now = new Date();
         const fiveMin = 5 * 60 * 1000;
+        const threeHours = 3 * 60 * 60 * 1000;
+        const todayStr = formatDateLocal(now);
 
         next9Days.value.forEach((day) => {
             day.events.forEach((event) => {
+                // Skip events that should not trigger notifications
+                if (event.noNotification) return;
+
+                // Handle all-day events with recurring notifications every 3 hours
+                if (event.isAllDay && day.date === todayStr) {
+                    const eventKey = event.id;
+                    const lastNotified = allDayNotifications.value.get(eventKey);
+                    const shouldNotify = !lastNotified || (now.getTime() - lastNotified >= threeHours);
+                    
+                    if (shouldNotify) {
+                        notificationQueue.value.push({ event, type: "Rappel" });
+                        allDayNotifications.value.set(eventKey, now.getTime());
+                        processNotificationQueue();
+                    }
+                    return;
+                }
+
                 if (!event.start || !event.startTime) return;
                 const eventStart = new Date(event.start);
                 if (isNaN(eventStart.getTime())) return;
@@ -425,6 +468,27 @@ export function useCalendar() {
         notificationAudio.value.play().catch(() => {});
     };
 
+    // Function to test notifications with sound
+    const testNotification = (title = "Test Notification", type = "Test") => {
+        const testEvent = {
+            id: `test-${Date.now()}`,
+            title: title,
+            startTime: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+            endTime: null,
+            description: "Ceci est une notification de test",
+            location: "",
+            isPlanning: true,
+            colorType: "planning",
+        };
+        notificationQueue.value.push({ event: testEvent, type: type });
+        processNotificationQueue();
+    };
+
+    // Expose testNotification globally for console testing
+    if (typeof window !== 'undefined') {
+        window.testNotification = testNotification;
+    }
+
     setTimeout(() => initAudio(), 1000);
 
     return {
@@ -437,10 +501,12 @@ export function useCalendar() {
         isProcessingQueue,
         notifiedEventsOneHour,
         notifiedEventsThirtyMin,
+        allDayNotifications,
         next9Days,
         fetchData,
         checkUpcomingEvents,
         processNotificationQueue,
         playNotificationSound,
+        testNotification,
     };
 }

@@ -56,7 +56,13 @@ const {
     fetchData,
     checkUpcomingEvents,
     processNotificationQueue,
+    testNotification,
 } = useCalendar();
+
+// Expose testNotification globally for console testing
+if (typeof window !== 'undefined') {
+    window.testNotification = testNotification;
+}
 
 const { initAutoScroll, equalizeEventHeights } = useAutoScroll(dayColumns);
 
@@ -122,6 +128,7 @@ const closeNotificationModal = () => {
     height: 95%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 .calendar-header {
     display: flex;

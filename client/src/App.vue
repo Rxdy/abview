@@ -172,7 +172,7 @@ footer {
 
 .main-content {
     height: calc(var(--vh) * 92);
-    overflow-y: auto;
+    overflow: hidden;
     padding: 0.85% 1%;
     display: flex;
     flex-direction: column;
@@ -184,13 +184,13 @@ footer {
 .top-row {
     display: flex;
     width: 100%;
-    height: 60vh; /* bloc haut = 60-65% */
+    height: 60%;
 }
 
 .top-row > .calendar-module {
     flex: 1;
     max-height: 95%;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 /* Ligne du bas : météo + tâches */

@@ -435,7 +435,7 @@ export default {
     padding: 0.5%;
     border-radius: 8px;
     font-family: Arial, sans-serif;
-    height: 95%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -476,7 +476,7 @@ export default {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    height: 90%;
+    height: 100%;
     width: 30%;
     position: relative;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);

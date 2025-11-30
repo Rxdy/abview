@@ -48,6 +48,7 @@ defineProps({
     margin-bottom: 5%;
     color: var(--color-text);
     font-weight: bold;
+    font-size: clamp(0.8rem, 1.6vh, 1.3rem);
 }
 .day-header.today {
     background: #334155;
@@ -58,7 +59,7 @@ defineProps({
 .events {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: clamp(0.3rem, 0.8vh, 0.6rem);
     overflow-y: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -71,6 +72,7 @@ defineProps({
     text-align: center;
     font-style: italic;
     color: var(--color-text);
+    font-size: clamp(0.8rem, 1.5vh, 1.2rem);
 }
 </style>
 ```

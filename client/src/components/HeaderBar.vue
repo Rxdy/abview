@@ -8,7 +8,7 @@
             <span class="context">Alves</span>
         </div>
         <div class="right">
-            <span class="datetime">{{ formattedDateTime }}</span>
+            <span class="datetime">{{ formattedDate }} | {{ formattedTime }}</span>
         </div>
     </header>
 </template>
@@ -22,24 +22,21 @@ export default {
         };
     },
     computed: {
-        formattedDateTime() {
+        formattedDate() {
             const dateStr = this.now.toLocaleDateString("fr-FR", {
                 weekday: "long",
                 year: "numeric",
                 month: "long",
                 day: "numeric",
             });
-            const timeStr = this.now.toLocaleTimeString("fr-FR", {
+            return dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+        },
+        formattedTime() {
+            return this.now.toLocaleTimeString("fr-FR", {
                 hour: "2-digit",
                 minute: "2-digit",
                 second: "2-digit",
             });
-            return (
-                dateStr.charAt(0).toUpperCase() +
-                dateStr.slice(1) +
-                " | " +
-                timeStr
-            );
         },
     },
     mounted() {
@@ -55,31 +52,45 @@ export default {
     align-items: center;
     background-color: #1e293b;
     color: white;
-    padding: 1vh 0.5%;
+    padding: 0 1%;
     font-family: Arial, sans-serif;
+    height: 5%;
 }
 
 .left {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex: 1;
 }
 
 .center {
-    font-size: 1.1rem;
+    font-size: clamp(1.5rem, 1.8vh, 1.3rem);
     font-weight: 500;
+    flex: 1;
+    text-align: center;
 }
 
 .logo {
-    height: 30px;
+    height: 5.5vh;
+    min-height: 20px;
 }
 
 .app-name {
     font-weight: bold;
-    font-size: 1rem;
+    font-size: clamp(1.5rem, 1.8vh, 1.3rem);
+    margin: 0;
 }
 
 .right {
-    font-size: 0.9rem;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.datetime {
+    font-size: clamp(1.5rem, 1.8vh, 1.3rem);
+    font-weight: 500;
 }
 </style>
