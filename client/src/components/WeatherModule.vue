@@ -102,6 +102,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from "vue";
+import { getApiUrl } from "../utils/dateUtils";
 import RainIcon from "@/components/icons/RainIcon.vue";
 import HeavyRain from "@/components/icons/HeavyRain.vue";
 import CloudyIcon from "@/components/icons/CloudyIcon.vue";
@@ -180,7 +181,7 @@ const nextForecast = computed(() => forecast.value.slice(1, 7));
 // Fetch météo
 const fetchWeather = async () => {
     try {
-        const response = await fetch("http://127.0.0.1:3333/weather");
+        const response = await fetch(getApiUrl("/weather"));
         if (!response.ok) throw new Error("Erreur");
         const data = await response.json();
         const w = data.weather ?? {};

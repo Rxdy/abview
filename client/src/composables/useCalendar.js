@@ -1,5 +1,5 @@
 import { ref, computed } from "vue";
-import { getEventDate, getTime } from "../utils/dateUtils";
+import { getEventDate, getTime, getApiUrl } from "../utils/dateUtils";
 
 export function useCalendar() {
     const events = ref([]);
@@ -45,7 +45,7 @@ export function useCalendar() {
 
             try {
                 const calendarRes = await fetch(
-                    "http://127.0.0.1:3333/calendar",
+                    getApiUrl("/calendar"),
                     { headers: { Accept: "application/json" } }
                 );
                 if (calendarRes.ok) {
@@ -59,7 +59,7 @@ export function useCalendar() {
 
             try {
                 const planningRes = await fetch(
-                    "http://127.0.0.1:3333/horaires",
+                    getApiUrl("/horaires"),
                     { headers: { Accept: "application/json" } }
                 );
                 if (planningRes.ok) {

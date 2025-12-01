@@ -55,6 +55,8 @@
 </template>
 
 <script>
+import { getApiUrl } from "../utils/dateUtils";
+
 export default {
     name: "TasksBoard",
     data() {
@@ -126,16 +128,16 @@ export default {
             try {
                 const newStatus =
                     task.status === "completed" ? "needsAction" : "completed";
-                const response = await fetch(
-                    `http://127.0.0.1:3333/tasks/${task.id}`,
-                    {
-                        method: "PATCH",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ status: newStatus }),
-                    }
-                );
+                // Utiliser getApiUrl pour que ça fonctionne en prod et dev
+                const apiUrl = getApiUrl("/tasks/" + task.id);
+                
+                const response = await fetch(apiUrl, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ status: newStatus }),
+                });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -148,6 +150,32 @@ export default {
                     "Erreur lors de la mise à jour du statut de la tâche :",
                     error
                 );
+                // Fallback vers localhost si l'URL dynamique ne marche pas
+                try {
+                    const newStatus =
+                        task.status === "completed" ? "needsAction" : "completed";
+                    const fallbackUrl = "http://127.0.0.1:3333/tasks/" + task.id;
+                    
+                    const response = await fetch(fallbackUrl, {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ status: newStatus }),
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    task.status = newStatus;
+                    task.completed =
+                        newStatus === "completed" ? new Date().toISOString() : null;
+                    this.$forceUpdate();
+                } catch (fallbackError) {
+                    console.error(
+                        "Erreur fallback lors de la mise à jour du statut de la tâche :",
+                        fallbackError
+                    );
+                }
             }
         },
         startIndependentScroll() {
@@ -407,7 +435,8 @@ export default {
         },
     },
     mounted() {
-        fetch("http://127.0.0.1:3333/tasks")
+        // Utiliser une URL relative pour que ça fonctionne en prod et dev
+        fetch(getApiUrl("/tasks"))
             .then((res) => res.json())
             .then((data) => {
                 this.tasks = data.tasks || [];
@@ -423,7 +452,28 @@ export default {
                     }, 100);
                 });
             })
-            .catch((err) => console.error(err));
+            .catch((err) => {
+                console.error("Erreur chargement tâches:", err);
+                // Fallback vers localhost si l'URL dynamique ne marche pas
+                fetch("http://127.0.0.1:3333/tasks")
+                    .then((res) => res.json())
+                    .then((data) => {
+                        this.tasks = data.tasks || [];
+                        this.lastUpdate = data.lastUpdate
+                            ? new Date(data.lastUpdate)
+                            : null;
+                        console.log("lastUpdate (fallback):", this.lastUpdate);
+                        this.$nextTick(() => {
+                            this.startIndependentScroll();
+                            setTimeout(() => {
+                                this.horizontalScrollLoop();
+                            }, 100);
+                        });
+                    })
+                    .catch((fallbackErr) => {
+                        console.error("Erreur fallback chargement tâches:", fallbackErr);
+                    });
+            });
     },
 };
 </script>

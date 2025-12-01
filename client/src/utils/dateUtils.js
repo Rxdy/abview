@@ -41,3 +41,8 @@ export function getTime(dateStr) {
         timeZone: "Europe/Paris",
     });
 }
+
+// Fonction utilitaire pour construire l'URL de l'API
+export function getApiUrl(endpoint) {
+    return window.location.protocol + "//" + window.location.hostname + ":3333" + endpoint;
+}
