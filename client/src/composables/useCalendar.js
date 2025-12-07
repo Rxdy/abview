@@ -18,21 +18,32 @@ export function useCalendar() {
     const initAudio = () => {
         try {
             notificationAudio.value = new Audio("/song/notif.wav");
-            notificationAudio.value.volume = 0.7;
-            notificationAudio.value.addEventListener("loadeddata", () => {
-                notificationAudio.value
-                    .play()
-                    .then(() => {
-                        audioEnabled.value = true;
-                    })
-                    .catch(() => {
-                        audioEnabled.value = false;
-                    });
+            notificationAudio.value.volume = 1.0; // Volume max du navigateur (0.0 à 1.0)
+            notificationAudio.value.preload = "auto";
+            
+            // Charger le fichier audio
+            notificationAudio.value.load();
+            
+            notificationAudio.value.addEventListener("canplaythrough", () => {
+                audioEnabled.value = true;
+                console.log("[Audio] Notification sound ready");
+                
+                // Tenter de jouer immédiatement pour débloquer l'audio (grâce aux flags Chromium)
+                notificationAudio.value.play().then(() => {
+                    notificationAudio.value.pause();
+                    notificationAudio.value.currentTime = 0;
+                    console.log("[Audio] Audio auto-unlocked at startup");
+                }).catch((e) => {
+                    console.warn("[Audio] Auto-unlock failed, waiting for flags or interaction:", e.message);
+                });
             });
-            notificationAudio.value.addEventListener("error", () => {
+            
+            notificationAudio.value.addEventListener("error", (e) => {
+                console.error("[Audio] Error loading notification sound:", e);
                 notificationAudio.value = null;
             });
-        } catch {
+        } catch (err) {
+            console.error("[Audio] Init error:", err);
             notificationAudio.value = null;
         }
     };
@@ -508,8 +519,28 @@ export function useCalendar() {
     };
 
     const playNotificationSound = () => {
-        if (!notificationAudio.value) return;
-        notificationAudio.value.play().catch(() => {});
+        if (!notificationAudio.value) {
+            console.warn("[Audio] No audio element available");
+            return;
+        }
+        // Reset et jouer
+        notificationAudio.value.currentTime = 0;
+        notificationAudio.value.volume = 1.0;
+        
+        const playPromise = notificationAudio.value.play();
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    console.log("[Audio] Notification sound played successfully");
+                })
+                .catch((err) => {
+                    console.error("[Audio] Play failed:", err.message);
+                    // Retry une fois après un court délai
+                    setTimeout(() => {
+                        notificationAudio.value.play().catch(() => {});
+                    }, 100);
+                });
+        }
     };
 
     // Function to test notifications with sound

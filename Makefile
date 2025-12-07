@@ -23,7 +23,18 @@ prod:
 
 chromium:
 	@echo "Ouverture du frontend dans Chromium en mode kiosk..."
-	chromium-browser --kiosk --disable-web-security --disable-application-cache --disk-cache-dir=/dev/null --cursor-visibility=0 http://127.0.0.1:5173 &
+	chromium-browser \
+		--kiosk \
+		--disable-web-security \
+		--disable-application-cache \
+		--disk-cache-dir=/dev/null \
+		--cursor-visibility=0 \
+		--autoplay-policy=no-user-gesture-required \
+		--disable-features=PreloadMediaEngagementData,MediaEngagementBypassAutoplayPolicies \
+		--disable-gesture-requirement-for-media-playback \
+		--disable-infobars \
+		--noerrdialogs \
+		http://127.0.0.1:5173 &
 
 get-token:
 	doppler run -p abview -c dev -- npx tsx server/scripts/get_token.ts
