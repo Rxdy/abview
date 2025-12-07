@@ -22,10 +22,11 @@
                 v-for="(tasks, listTitle, index) in sortedGroupedTasks"
                 :key="listTitle"
                 class="task-column"
+                :class="{ 'dark-postit': isDarkPostIt(listTitle) }"
                 :ref="(el) => (taskColumns[index] = el)"
                 :style="{
                     '--rotation': Math.random() * 6 - 3 + 'deg',
-                    '--postit-bg': randomPostItColor(),
+                    '--postit-bg': getPostItColor(listTitle),
                 }"
             >
                 <div class="column-title">{{ listTitle }}</div>
@@ -117,15 +118,42 @@ export default {
             const minutes = String(date.getMinutes()).padStart(2, "0");
             return `${hours}h${minutes}`;
         },
-        randomPostItColor() {
-            const colors = [
-                "#fff9a6",
-                "#ffd1dc",
-                "#c3f7d6",
-                "#cce0ff",
-                "#ffe6b3",
+        getPostItColor(listTitle) {
+            // Couleurs spécifiques par nom de liste
+            const colorMap = {
+                'Luis': '#004C99',      // Bleu FC Porto
+                'Julie': '#ffd1dc',     // Rose
+                'Courses': '#e74c3c',   // Rouge
+                'Caroline': '#f39c12',  // Orange
+                'Rudy': '#1e293b',      // Bleu header/footer
+                'Général': '#9b59b6',   // Violet (complémentaire)
+            };
+            
+            // Couleurs aléatoires pour les autres listes
+            const randomColors = [
+                "#fff9a6",  // Jaune
+                "#ffd1dc",  // Rose
+                "#c3f7d6",  // Vert
+                "#cce0ff",  // Bleu clair
+                "#ffe6b3",  // Orange clair
             ];
-            return colors[Math.floor(Math.random() * colors.length)];
+            
+            // Chercher correspondance (insensible à la casse)
+            const normalizedTitle = listTitle?.trim();
+            for (const [name, color] of Object.entries(colorMap)) {
+                if (normalizedTitle?.toLowerCase() === name.toLowerCase()) {
+                    return color;
+                }
+            }
+            
+            // Couleur aléatoire pour les listes inconnues
+            return randomColors[Math.floor(Math.random() * randomColors.length)];
+        },
+        isDarkPostIt(listTitle) {
+            // Listes avec fond sombre qui nécessitent du texte blanc
+            const darkLists = ['Luis', 'Rudy'];
+            const normalizedTitle = listTitle?.trim()?.toLowerCase();
+            return darkLists.some(name => normalizedTitle === name.toLowerCase());
         },
         formatDate(dateStr) {
             const d = new Date(dateStr);
@@ -196,24 +224,24 @@ export default {
             this.columnScrollable = [];
             this.cycleWaiters = {};
             
-            // Check if horizontal scroll is needed
-            const board = this.$refs.tasksBoard.querySelector(".tasks-columns");
-            const hasHorizontalOverflow = board.scrollWidth > board.clientWidth;
-            
             for (let i = 0; i < this.taskColumns.length; i++) {
                 const col = this.taskColumns[i];
+                if (!col) continue;
+                
                 const title =
                     col.querySelector(".column-title")?.textContent?.trim() ??
                     `#${i}`;
                 const container = col.querySelector(".tasks-container");
+                if (!container) continue;
+                
                 const isScrollable =
                     container.scrollHeight > container.clientHeight;
                 this.columnTitles[i] = title;
                 this.columnScrollable[i] = isScrollable;
                 this.cycleWaiters[i] = [];
                 
-                // Only start vertical scroll if horizontal overflow exists
-                if (isScrollable && hasHorizontalOverflow) {
+                // Toujours démarrer le scroll vertical si overflow vertical
+                if (isScrollable) {
                     this.scrollLoop(container, i);
                 }
             }
@@ -551,20 +579,37 @@ export default {
     flex-direction: column;
     flex-shrink: 0;
     height: 100%;
-    width: 30%;
+    width: 23%;
     position: relative;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
     border: 1px solid #ccc;
-    color: #000 !important; /* Forcer tout le texte de la colonne en noir */
+    color: #000;
     padding: 1%;
     box-sizing: border-box;
+}
+.task-column.dark-postit {
+    color: #fff;
+    border-color: #555;
+}
+.task-column.dark-postit .column-title {
+    color: #fff !important;
+}
+.task-column.dark-postit .task-card {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff !important;
+}
+.task-column.dark-postit .task-title,
+.task-column.dark-postit .task-due,
+.task-column.dark-postit .task-notes {
+    color: #fff !important;
 }
 .column-title {
     font-weight: bold;
     text-align: center;
     margin-bottom: 0.5rem;
     flex-shrink: 0;
-    color: #000 !important; /* Titre toujours noir */
+    color: #000;
 }
 .tasks-container {
     flex: 1;
