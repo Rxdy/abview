@@ -44,43 +44,39 @@
     "rotation": [
       {
         "week": 1,
-        "shift": "Matin",
-        "hours": ["05:00-13:00"],
+        "shift": "Soir",
+        "hours": ["13:00-21:00"],
         "exceptions": { "saturday": [], "sunday": [] }
       },
       {
         "week": 2,
-        "shift": "Soir",
-        "hours": ["13:00-21:00"],
+        "shift": "Matin",
+        "hours": ["05:00-13:00"],
         "exceptions": { "saturday": [], "sunday": [] }
       },
       {
         "week": 3,
-        "shift": "Matin",
-        "hours": ["05:00-13:00"],
+        "shift": "Soir",
+        "hours": ["13:00-21:00"],
         "exceptions": { "saturday": [], "sunday": [] }
       },
       {
         "week": 4,
-        "shift": "Soir",
-        "hours": ["13:00-21:00"],
-        "exceptions": { "saturday": [], "sunday": [] }
-      },
-      {
-        "week": 5,
         "shift": "Matin",
         "hours": ["05:00-13:00"],
         "exceptions": { "saturday": [], "sunday": [] }
       },
       {
-        "week": 6,
+        "week": 5,
         "shift": "Soir",
         "hours": ["13:00-21:00"],
-        "exceptions": {
-          "saturday": [],
-          "sunday": [],
-          "week2_2025": ["21:00-05:00"]
-        }
+        "exceptions": { "saturday": [], "sunday": [] }
+      },
+      {
+        "week": 6,
+        "shift": "Matin",
+        "hours": ["05:00-13:00"],
+        "exceptions": { "saturday": [], "sunday": [] }
       },
       {
         "week": 7,
@@ -101,12 +97,22 @@
         "exceptions": { "saturday": [], "sunday": [] }
       }
     ],
+    "weekOverrides": {
+      "2025-50": { "shift": "Soir", "hours": ["13:00-21:00"] },
+      "2025-51": { "shift": "Matin", "hours": ["05:00-13:00"] },
+      "2025-52": { "shift": "Soir", "hours": ["13:00-21:00"] },
+      "2026-2": { "shift": "Soir", "hours": ["13:00-21:00"] },
+      "2026-3": { "shift": "Matin", "hours": ["05:00-13:00"] },
+      "2026-4": { "shift": "Nuit", "hours": ["21:00-05:00"] },
+      "2026-5": { "shift": "Nuit", "hours": ["21:00-05:00"] },
+      "2026-6": { "shift": "Nuit", "hours": ["21:00-05:00"] }
+    },
     "lastDayOverride": {
       "Matin": ["03:00-11:00"],
       "Soir": ["11:00-19:00"],
       "Nuit": ["19:00-02:00"]
     },
-    "offset": 5
+    "offset": 6
   },
   {
     "name": "Lyam & Noah",

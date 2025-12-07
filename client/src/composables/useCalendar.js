@@ -329,6 +329,52 @@ export function useCalendar() {
                 }
                 // Shift
                 else if (person.type === "shift") {
+                    const year = new Date(dateStr).getFullYear();
+                    const overrideKey = `${year}-${weekNumber}`;
+                    
+                    // Vérifier d'abord les overrides par semaine
+                    if (person.weekOverrides && person.weekOverrides[overrideKey]) {
+                        const override = person.weekOverrides[overrideKey];
+                        const hours = override.exceptions?.[dayName] || override.hours || [];
+                        
+                        // Si c'est un CP ou pas d'heures, on affiche juste le shift sans horaires
+                        if (override.shift === "CP" || hours.length === 0) {
+                            if (dayName !== "saturday" && dayName !== "sunday") {
+                                planningEvents.push({
+                                    id: `planning-${person.name}-${dateStr}-cp`,
+                                    title: person.name,
+                                    shift: override.shift,
+                                    start: dateStr,
+                                    end: dateStr,
+                                    startTime: null,
+                                    endTime: null,
+                                    location: "",
+                                    isPlanning: true,
+                                    isAllDay: true,
+                                    colorType: "planning",
+                                });
+                            }
+                        } else {
+                            hours.forEach((hour) => {
+                                let [start, end] = hour.split("-");
+                                planningEvents.push({
+                                    id: `planning-${person.name}-${dateStr}-${hour}`,
+                                    title: person.name,
+                                    shift: override.shift,
+                                    start: `${dateStr}T${start}:00+02:00`,
+                                    end: `${dateStr}T${end}:00+02:00`,
+                                    startTime: start,
+                                    endTime: end,
+                                    location: "",
+                                    isPlanning: true,
+                                    colorType: "planning",
+                                });
+                            });
+                        }
+                        return; // Skip le cycle normal si override trouvé
+                    }
+                    
+                    // Sinon utiliser le cycle normal
                     const cycleLength =
                         person.cycleLength || person.rotation?.length || 0;
                     if (cycleLength === 0) return;
@@ -344,8 +390,6 @@ export function useCalendar() {
                     if (!rotation) return;
                     let hours =
                         rotation.exceptions?.[dayName] || rotation.hours;
-                    rotation.exceptions?.[`week${weekNumber}_2025`] &&
-                        (hours = rotation.exceptions[`week${weekNumber}_2025`]);
                     hours?.forEach((hour) => {
                         let [start, end] = hour.split("-");
                         planningEvents.push({
