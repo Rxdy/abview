@@ -37,5 +37,7 @@ services:
             - "5173:5173"
         environment:
             - NODE_ENV=development
+            - VITE_SCREEN_OFF_START=${VITE_SCREEN_OFF_START:-23}
+            - VITE_SCREEN_OFF_END=${VITE_SCREEN_OFF_END:-7}
         command: sh -c "npm install && npm run dev -- --host"
         stop_grace_period: 1s

@@ -1,4 +1,7 @@
 <template>
+    <!-- Écran noir quand l'écran doit être éteint -->
+    <div v-if="screenOff" class="screen-off" @click="wakeUpScreen"></div>
+    
     <HeaderBar />
     <main class="main-content">
         <!-- Ligne du haut : calendrier -->
@@ -38,16 +41,28 @@ export default {
                 sunset: "18:00",
             },
             themeTimeout: null,
+            // Configuration extinction écran (heures en format 24h) - via variables d'environnement
+            screenOffStart: parseInt(import.meta.env.VITE_SCREEN_OFF_START) || 23,
+            screenOffStartMinutes: parseInt(import.meta.env.VITE_SCREEN_OFF_START_MINUTES) || 0,
+            screenOffEnd: parseInt(import.meta.env.VITE_SCREEN_OFF_END) || 7,
+            screenOffEndMinutes: parseInt(import.meta.env.VITE_SCREEN_OFF_END_MINUTES) || 0,
+            screenOff: false,
+            screenCheckInterval: null,
+            manualWakeUp: false, // Si l'utilisateur a cliqué pour rallumer
         };
     },
     mounted() {
         this.setViewportHeight();
         window.addEventListener("resize", this.setViewportHeight);
         this.applyDayNightMode();
+        // Vérifier l'état de l'écran toutes les minutes
+        this.checkScreenOff();
+        this.screenCheckInterval = setInterval(() => this.checkScreenOff(), 60000);
     },
     beforeUnmount() {
         window.removeEventListener("resize", this.setViewportHeight);
         if (this.themeTimeout) clearTimeout(this.themeTimeout);
+        if (this.screenCheckInterval) clearInterval(this.screenCheckInterval);
     },
     methods: {
         setViewportHeight() {
@@ -101,11 +116,56 @@ export default {
                 nextChangeInMinutes * 60 * 1000
             );
         },
+        checkScreenOff() {
+            const now = new Date();
+            const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+            const startTimeInMinutes = this.screenOffStart * 60 + this.screenOffStartMinutes;
+            const endTimeInMinutes = this.screenOffEnd * 60 + this.screenOffEndMinutes;
+            
+            // Si l'utilisateur a manuellement rallumé, ne pas rééteindre pendant 5 minutes
+            if (this.manualWakeUp) {
+                return;
+            }
+            
+            // Vérifier si on est dans la plage d'extinction
+            let shouldBeOff = false;
+            if (startTimeInMinutes > endTimeInMinutes) {
+                // Plage qui traverse minuit (ex: 23h -> 7h)
+                shouldBeOff = currentTimeInMinutes >= startTimeInMinutes || currentTimeInMinutes < endTimeInMinutes;
+            } else {
+                // Plage normale (ex: 14h00 -> 15h10)
+                shouldBeOff = currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes < endTimeInMinutes;
+            }
+            
+            this.screenOff = shouldBeOff;
+        },
+        wakeUpScreen() {
+            // Permet de rallumer temporairement l'écran en cliquant
+            this.screenOff = false;
+            this.manualWakeUp = true;
+            // Réactiver l'extinction automatique après 5 minutes
+            setTimeout(() => {
+                this.manualWakeUp = false;
+                this.checkScreenOff();
+            }, 5 * 60 * 1000);
+        },
     },
 };
 </script>
 
 <style>
+/* Écran noir pour extinction automatique */
+.screen-off {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 9999;
+    cursor: pointer;
+}
+
 :root {
     --vh: 1vh;
 
