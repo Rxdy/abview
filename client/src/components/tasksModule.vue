@@ -321,10 +321,20 @@ export default {
         },
         async horizontalScrollLoop() {
             console.log("🔄 horizontalScrollLoop DÉMARRÉ");
-            const board = this.$refs.tasksBoard.querySelector(".tasks-columns");
+            const board = this.$refs.tasksBoard?.querySelector(".tasks-columns");
+            
+            if (!board) {
+                console.error("❌ Board non trouvé, retry dans 500ms");
+                setTimeout(() => this.horizontalScrollLoop(), 500);
+                return;
+            }
+            
             const step = 2;
             const delay = 16;
             const DEFAULT_WAIT = 10000; // 10 secondes si pas d'overflow vertical
+
+            // Attendre que le layout soit stable (important en prod)
+            await this.wait(500);
 
             // Check if horizontal scroll is actually needed
             console.log("📏 Vérification scroll nécessaire:", {
@@ -463,7 +473,8 @@ export default {
                     this.loading = false;
                     this.$nextTick(() => {
                         this.startIndependentScroll();
-                        setTimeout(() => this.horizontalScrollLoop(), 100);
+                        // Délai plus long pour que le CSS soit stable en prod
+                        setTimeout(() => this.horizontalScrollLoop(), 1000);
                     });
                     return; // Succès, on sort
                 } catch (err) {
