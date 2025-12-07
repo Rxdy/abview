@@ -48,6 +48,7 @@ export default {
             screenOffEndMinutes: parseInt(import.meta.env.VITE_SCREEN_OFF_END_MINUTES) || 0,
             screenOff: false,
             screenCheckInterval: null,
+            themeCheckInterval: null,
             manualWakeUp: false, // Si l'utilisateur a cliqué pour rallumer
         };
     },
@@ -55,6 +56,8 @@ export default {
         this.setViewportHeight();
         window.addEventListener("resize", this.setViewportHeight);
         this.applyDayNightMode();
+        // Vérifier le thème toutes les minutes (sécurité en plus du timeout)
+        this.themeCheckInterval = setInterval(() => this.applyDayNightMode(), 60000);
         // Vérifier l'état de l'écran toutes les minutes
         this.checkScreenOff();
         this.screenCheckInterval = setInterval(() => this.checkScreenOff(), 60000);
@@ -62,6 +65,7 @@ export default {
     beforeUnmount() {
         window.removeEventListener("resize", this.setViewportHeight);
         if (this.themeTimeout) clearTimeout(this.themeTimeout);
+        if (this.themeCheckInterval) clearInterval(this.themeCheckInterval);
         if (this.screenCheckInterval) clearInterval(this.screenCheckInterval);
     },
     methods: {
@@ -272,8 +276,8 @@ footer {
 
 /* Météo en bas à gauche */
 .bottom-row > .weather-module {
-    flex: 0 0 45%;
-    max-width: 50%;
+    flex: 0 0 32%;
+    max-width: 35%;
     overflow: hidden;
 }
 
