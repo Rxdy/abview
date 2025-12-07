@@ -122,8 +122,11 @@ export default {
             const startTimeInMinutes = this.screenOffStart * 60 + this.screenOffStartMinutes;
             const endTimeInMinutes = this.screenOffEnd * 60 + this.screenOffEndMinutes;
             
+            console.log(`[ScreenOff] Current: ${now.getHours()}:${now.getMinutes()} (${currentTimeInMinutes}min), Off: ${this.screenOffStart}:${this.screenOffStartMinutes} (${startTimeInMinutes}min) -> ${this.screenOffEnd}:${this.screenOffEndMinutes} (${endTimeInMinutes}min)`);
+            
             // Si l'utilisateur a manuellement rallumé, ne pas rééteindre pendant 5 minutes
             if (this.manualWakeUp) {
+                console.log('[ScreenOff] Manual wake up active, skipping');
                 return;
             }
             
@@ -137,6 +140,7 @@ export default {
                 shouldBeOff = currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes < endTimeInMinutes;
             }
             
+            console.log(`[ScreenOff] Should be off: ${shouldBeOff}`);
             this.screenOff = shouldBeOff;
         },
         wakeUpScreen() {
