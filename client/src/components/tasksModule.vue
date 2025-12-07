@@ -81,6 +81,7 @@ export default {
             loading: true,
             error: null,
             verticalCycleTimes: {},
+            refreshInterval: null,
         };
     },
     computed: {
@@ -295,6 +296,7 @@ export default {
             const board = this.$refs.tasksBoard.querySelector(".tasks-columns");
             const step = 2;
             const delay = 16;
+            const DEFAULT_WAIT = 10000; // 10 secondes si pas d'overflow vertical
 
             // Check if horizontal scroll is actually needed
             console.log("📏 Vérification scroll nécessaire:", {
@@ -309,87 +311,53 @@ export default {
             }
 
             const firstColIndex = 0;
+            const lastColIndex = this.taskColumns.length - 1;
 
-            // Attendre que le DOM ait fini de rendre tous les post-it avec leur largeur et rotation
+            // Attendre que le DOM ait fini de rendre
             await this.$nextTick();
-            console.log("✅ $nextTick terminé");
-            await this.wait(50, "H: wait post-it render");
-            console.log("✅ Attente 50ms terminée");
+            await this.wait(50);
 
-            // Attendre que la boucle verticale de la première colonne soit connue
-            console.log("⏳ Attente cycle vertical première colonne...");
-            while (
-                this.columnScrollable[firstColIndex] &&
-                this.verticalCycleTimes[firstColIndex] === undefined
-            ) {
-                await this.wait(50, "H: polling cycle vertical col 0");
-                console.log("⏳ Polling cycle vertical col 0...");
-            }
+            // Fonction helper pour obtenir le temps d'attente d'une colonne
+            const getWaitTime = async (colIndex) => {
+                if (!this.columnScrollable[colIndex]) {
+                    return DEFAULT_WAIT;
+                }
+                // Attendre que le cycle vertical soit mesuré
+                while (this.verticalCycleTimes[colIndex] === undefined) {
+                    await this.wait(50);
+                }
+                return this.verticalCycleTimes[colIndex];
+            };
 
-            // Si la première colonne n'est pas scrollable, on attend 10 secondes
-            if (!this.columnScrollable[firstColIndex]) {
-                console.log("⏸️ Première colonne non-scrollable, pause 10s");
-                await this.wait(
-                    10000,
-                    "H: init première colonne non-scrollable"
-                );
-                console.log("✅ Pause 10s terminée");
-            } else {
-                console.log("⏸️ Attente cycle vertical première colonne:", this.verticalCycleTimes[firstColIndex], "ms");
-                await this.wait(
-                    this.verticalCycleTimes[firstColIndex],
-                    "H: init cycle vertical réel col 0"
-                );
-                console.log("✅ Cycle vertical première colonne terminé");
-            }
+            // Attente initiale à gauche (première liste)
+            const initialWait = await getWaitTime(firstColIndex);
+            console.log(`⏸️ Attente initiale: ${initialWait}ms (colonne 0, scrollable: ${this.columnScrollable[firstColIndex]})`);
+            await this.wait(initialWait);
 
             // Boucle infinie pour le défilement horizontal
             let cycleCount = 0;
             while (true) {
                 cycleCount++;
-                console.log(`\n🔁 ===== CYCLE ${cycleCount} DÉBUT =====`);
+                console.log(`\n🔁 ===== CYCLE ${cycleCount} =====`);
+                
                 // Scroll vers la droite
                 const target = board.scrollWidth - board.clientWidth;
-                console.log("➡️ Scroll vers la droite, target:", target, "current:", board.scrollLeft);
+                console.log("➡️ Scroll droite");
                 await this.scrollBoard(board, target, step, delay);
-                console.log("✅ Arrivé à droite");
 
-                const lastIndex = this.taskColumns.length - 1;
-                console.log("📍 Dernière colonne:", lastIndex, "scrollable:", this.columnScrollable[lastIndex]);
-                if (this.columnScrollable[lastIndex]) {
-                    // attendre UNE boucle verticale complète (down+up)
-                    console.log("⏳ Attente cycle vertical dernière colonne...");
-                    await this.waitForNextVerticalCycle(lastIndex);
-                    console.log("✅ Cycle vertical dernière colonne terminé");
-                } else {
-                    // Si pas scrollable, attendre 10 secondes
-                    console.log("⏸️ Dernière colonne non-scrollable, pause 10s");
-                    await this.wait(10000);
-                    console.log("✅ Pause 10s terminée");
-                }
-                
-                console.log("⬅️ Début du retour vers la gauche");
-
+                // Attente à droite (dernière liste)
+                const rightWait = await getWaitTime(lastColIndex);
+                console.log(`⏸️ Attente droite: ${rightWait}ms (colonne ${lastColIndex}, scrollable: ${this.columnScrollable[lastColIndex]})`);
+                await this.wait(rightWait);
                 
                 // Scroll vers la gauche
-                console.log("⬅️ Scroll vers la gauche, target: 0, current:", board.scrollLeft);
+                console.log("⬅️ Scroll gauche");
                 await this.scrollBoard(board, 0, step, delay);
-                console.log("✅ Retourné à gauche");
 
-                // attendre UNE boucle verticale complète (down+up)
-                if (this.columnScrollable[firstColIndex]) {
-                    console.log("⏳ Attente cycle vertical première colonne...");
-                    await this.waitForNextVerticalCycle(firstColIndex);
-                    console.log("✅ Cycle vertical première colonne terminé");
-                } else {
-                    console.log("⏸️ Première colonne non-scrollable, pause 10s");
-                    await this.wait(10000);
-                    console.log("✅ Pause 10s terminée");
-                }
-                
-                console.log(`🔁 ===== CYCLE ${cycleCount} FIN =====\n`);
-                console.log("🔄 Redémarrage du cycle...");
-                // La boucle while(true) reprend automatiquement
+                // Attente à gauche (première liste)
+                const leftWait = await getWaitTime(firstColIndex);
+                console.log(`⏸️ Attente gauche: ${leftWait}ms (colonne 0, scrollable: ${this.columnScrollable[firstColIndex]})`);
+                await this.wait(leftWait);
             }
         },
         scrollBoard(board, target, step, delay) {
@@ -485,11 +453,36 @@ export default {
             this.error = `Erreur après ${maxRetries} tentatives: ${lastError?.message}. API: ${apiUrl}`;
             this.loading = false;
         },
+        async refreshTasks() {
+            // Rafraîchissement silencieux sans recharger tout le composant
+            const apiUrl = getApiUrl("/tasks");
+            try {
+                const res = await fetch(apiUrl);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                this.tasks = data.tasks || [];
+                this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
+                console.log("[Tasks] Refresh: ", this.tasks.length, "tasks");
+            } catch (err) {
+                console.error("[Tasks] Refresh failed:", err.message);
+            }
+        },
     },
     mounted() {
         console.log("[Tasks] Component mounted, starting loadTasks...");
         console.log("[Tasks] getApiUrl test:", getApiUrl("/tasks"));
         this.loadTasks();
+        
+        // Rafraîchissement automatique toutes les 5 minutes
+        this.refreshInterval = setInterval(() => {
+            console.log("[Tasks] Rafraîchissement périodique des tâches...");
+            this.refreshTasks();
+        }, 5 * 60 * 1000);
+    },
+    beforeUnmount() {
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+        }
     },
 };
 </script>
