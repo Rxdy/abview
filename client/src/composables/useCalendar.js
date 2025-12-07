@@ -13,38 +13,95 @@ export function useCalendar() {
     const notifiedEventsThirtyMin = ref(new Set());
     const allDayNotifications = ref(new Map()); // Track last notification time for all-day events
     const notificationAudio = ref(null);
+    const audioContext = ref(null);
+    const audioBuffer = ref(null);
     const audioEnabled = ref(false);
 
-    const initAudio = () => {
+    const initAudio = async () => {
         try {
+            // Méthode 1: Audio HTML5 classique
             notificationAudio.value = new Audio("/song/notif.wav");
-            notificationAudio.value.volume = 1.0; // Volume max du navigateur (0.0 à 1.0)
+            notificationAudio.value.volume = 1.0;
             notificationAudio.value.preload = "auto";
-            
-            // Charger le fichier audio
             notificationAudio.value.load();
+            
+            // Méthode 2: Web Audio API (plus fiable sur certains navigateurs)
+            try {
+                audioContext.value = new (window.AudioContext || window.webkitAudioContext)();
+                const response = await fetch("/song/notif.wav");
+                const arrayBuffer = await response.arrayBuffer();
+                audioBuffer.value = await audioContext.value.decodeAudioData(arrayBuffer);
+                console.log("[Audio] Web Audio API ready");
+            } catch (e) {
+                console.warn("[Audio] Web Audio API failed:", e.message);
+            }
             
             notificationAudio.value.addEventListener("canplaythrough", () => {
                 audioEnabled.value = true;
-                console.log("[Audio] Notification sound ready");
+                console.log("[Audio] HTML5 Audio ready");
                 
-                // Tenter de jouer immédiatement pour débloquer l'audio (grâce aux flags Chromium)
+                // Tenter de débloquer l'audio
                 notificationAudio.value.play().then(() => {
                     notificationAudio.value.pause();
                     notificationAudio.value.currentTime = 0;
                     console.log("[Audio] Audio auto-unlocked at startup");
                 }).catch((e) => {
-                    console.warn("[Audio] Auto-unlock failed, waiting for flags or interaction:", e.message);
+                    console.warn("[Audio] Auto-unlock failed:", e.message);
                 });
             });
             
             notificationAudio.value.addEventListener("error", (e) => {
-                console.error("[Audio] Error loading notification sound:", e);
-                notificationAudio.value = null;
+                console.error("[Audio] Error loading sound:", e);
             });
+            
         } catch (err) {
             console.error("[Audio] Init error:", err);
-            notificationAudio.value = null;
+        }
+    };
+
+    const playNotificationSound = () => {
+        console.log("[Audio] Attempting to play sound...");
+        
+        // Essayer Web Audio API d'abord (plus fiable)
+        if (audioContext.value && audioBuffer.value) {
+            try {
+                // Reprendre le contexte si suspendu
+                if (audioContext.value.state === 'suspended') {
+                    audioContext.value.resume();
+                }
+                
+                const source = audioContext.value.createBufferSource();
+                source.buffer = audioBuffer.value;
+                
+                // Ajouter du gain pour le volume max
+                const gainNode = audioContext.value.createGain();
+                gainNode.gain.value = 1.0;
+                
+                source.connect(gainNode);
+                gainNode.connect(audioContext.value.destination);
+                source.start(0);
+                
+                console.log("[Audio] ✅ Web Audio API: Sound played!");
+                return;
+            } catch (e) {
+                console.warn("[Audio] Web Audio API play failed:", e.message);
+            }
+        }
+        
+        // Fallback: HTML5 Audio
+        if (notificationAudio.value) {
+            notificationAudio.value.currentTime = 0;
+            notificationAudio.value.volume = 1.0;
+            
+            notificationAudio.value.play()
+                .then(() => {
+                    console.log("[Audio] ✅ HTML5 Audio: Sound played!");
+                })
+                .catch((err) => {
+                    console.error("[Audio] ❌ HTML5 Audio play failed:", err.message);
+                });
+        } else {
+            console.error("[Audio] ❌ No audio method available");
         }
     };
 
@@ -516,31 +573,6 @@ export function useCalendar() {
             isProcessingQueue.value = false;
             setTimeout(processNotificationQueue, 2000);
         }, 15000);
-    };
-
-    const playNotificationSound = () => {
-        if (!notificationAudio.value) {
-            console.warn("[Audio] No audio element available");
-            return;
-        }
-        // Reset et jouer
-        notificationAudio.value.currentTime = 0;
-        notificationAudio.value.volume = 1.0;
-        
-        const playPromise = notificationAudio.value.play();
-        if (playPromise !== undefined) {
-            playPromise
-                .then(() => {
-                    console.log("[Audio] Notification sound played successfully");
-                })
-                .catch((err) => {
-                    console.error("[Audio] Play failed:", err.message);
-                    // Retry une fois après un court délai
-                    setTimeout(() => {
-                        notificationAudio.value.play().catch(() => {});
-                    }, 100);
-                });
-        }
     };
 
     // Function to test notifications with sound
