@@ -1,13 +1,23 @@
 <template>
     <div class="tasks-board" ref="tasksBoard">
-        <!-- Header : mise à jour -->
-        <div v-if="lastUpdate" class="tasks-header">
-            <div class="last-update">
-                Mise à jour : {{ formatLastUpdate(lastUpdate) }}
-            </div>
+        <!-- Loading state -->
+        <div v-if="loading" class="tasks-loading">
+            <span>Chargement des tâches...</span>
         </div>
-        <!-- Conteneur des colonnes -->
-        <div class="tasks-columns">
+        <!-- Error state -->
+        <div v-else-if="error" class="tasks-error">
+            <span>{{ error }}</span>
+        </div>
+        <!-- Content -->
+        <template v-else>
+            <!-- Header : mise à jour -->
+            <div v-if="lastUpdate" class="tasks-header">
+                <div class="last-update">
+                    Mise à jour : {{ formatLastUpdate(lastUpdate) }}
+                </div>
+            </div>
+            <!-- Conteneur des colonnes -->
+            <div class="tasks-columns">
             <div
                 v-for="(tasks, listTitle, index) in sortedGroupedTasks"
                 :key="listTitle"
@@ -49,7 +59,8 @@
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+        </template>
     </div>
 </template>
 
@@ -67,6 +78,8 @@ export default {
             columnTitles: [],
             columnScrollable: [],
             cycleWaiters: {},
+            loading: true,
+            error: null,
             verticalCycleTimes: {},
         };
     },
@@ -432,47 +445,50 @@ export default {
                 }, delay);
             });
         },
-    },
-    mounted() {
-        // Utiliser une URL relative pour que ça fonctionne en prod et dev
-        fetch(getApiUrl("/tasks"))
-            .then((res) => res.json())
-            .then((data) => {
+        async loadTasks() {
+            this.loading = true;
+            this.error = null;
+            const apiUrl = getApiUrl("/tasks");
+            console.log("[Tasks] Fetching from:", apiUrl);
+            
+            try {
+                const res = await fetch(apiUrl);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
                 this.tasks = data.tasks || [];
-                this.lastUpdate = data.lastUpdate
-                    ? new Date(data.lastUpdate)
-                    : null;
-                console.log("lastUpdate:", this.lastUpdate);
+                this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
+                console.log("[Tasks] Loaded:", this.tasks.length, "tasks");
+                this.loading = false;
                 this.$nextTick(() => {
                     this.startIndependentScroll();
-                    // Wait a bit for columns to render before starting horizontal scroll
-                    setTimeout(() => {
-                        this.horizontalScrollLoop();
-                    }, 100);
+                    setTimeout(() => this.horizontalScrollLoop(), 100);
                 });
-            })
-            .catch((err) => {
-                console.error("Erreur chargement tâches:", err);
-                // Fallback vers localhost si l'URL dynamique ne marche pas
-                fetch("http://127.0.0.1:3333/tasks")
-                    .then((res) => res.json())
-                    .then((data) => {
-                        this.tasks = data.tasks || [];
-                        this.lastUpdate = data.lastUpdate
-                            ? new Date(data.lastUpdate)
-                            : null;
-                        console.log("lastUpdate (fallback):", this.lastUpdate);
-                        this.$nextTick(() => {
-                            this.startIndependentScroll();
-                            setTimeout(() => {
-                                this.horizontalScrollLoop();
-                            }, 100);
-                        });
-                    })
-                    .catch((fallbackErr) => {
-                        console.error("Erreur fallback chargement tâches:", fallbackErr);
+            } catch (err) {
+                console.error("[Tasks] Primary fetch error:", err);
+                // Fallback vers localhost
+                try {
+                    console.log("[Tasks] Trying fallback: http://localhost:3333/tasks");
+                    const res = await fetch("http://localhost:3333/tasks");
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    this.tasks = data.tasks || [];
+                    this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
+                    console.log("[Tasks] Fallback loaded:", this.tasks.length, "tasks");
+                    this.loading = false;
+                    this.$nextTick(() => {
+                        this.startIndependentScroll();
+                        setTimeout(() => this.horizontalScrollLoop(), 100);
                     });
-            });
+                } catch (fallbackErr) {
+                    console.error("[Tasks] Fallback error:", fallbackErr);
+                    this.error = `Erreur: ${err.message}. API: ${apiUrl}`;
+                    this.loading = false;
+                }
+            }
+        },
+    },
+    mounted() {
+        this.loadTasks();
     },
 };
 </script>
@@ -489,6 +505,21 @@ export default {
     flex-direction: column;
     box-sizing: border-box;
     overflow: hidden;
+}
+.tasks-loading,
+.tasks-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    font-size: 1.2rem;
+    color: var(--color-text);
+}
+.tasks-error {
+    color: #ff6b6b;
+    padding: 1rem;
+    text-align: center;
+    word-break: break-word;
 }
 .tasks-header {
     display: flex;
