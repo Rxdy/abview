@@ -1,4 +1,3 @@
-```vue
 <template>
     <div class="tasks-board" ref="tasksBoard">
         <!-- Header : mise à jour -->
@@ -673,4 +672,3 @@ export default {
 }
 
 </style>
-```
