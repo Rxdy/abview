@@ -44,5 +44,7 @@ export function getTime(dateStr) {
 
 // Fonction utilitaire pour construire l'URL de l'API
 export function getApiUrl(endpoint) {
-    return window.location.protocol + "//" + window.location.hostname + ":3333" + endpoint;
+    // Utiliser 127.0.0.1 au lieu de localhost pour éviter les problèmes de résolution DNS
+    const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+    return window.location.protocol + "//" + hostname + ":3333" + endpoint;
 }

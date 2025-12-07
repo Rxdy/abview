@@ -17,12 +17,13 @@ run:
 prod:
 	@echo "Lancement en mode prod..."
 	doppler run -p abview -c dev -- docker compose up -d
-	@sleep 5
+	@echo "Attente du démarrage des services (15 secondes)..."
+	@sleep 15
 	@$(MAKE) chromium
 
 chromium:
-	@echo "Ouverture du frontend dans Chromium en mode kiosk (cache désactivé)..."
-	chromium-browser --kiosk --disable-application-cache --disk-cache-dir=/dev/null http://localhost:5173 &
+	@echo "Ouverture du frontend dans Chromium en mode kiosk..."
+	chromium-browser --kiosk --disable-web-security --disable-application-cache --disk-cache-dir=/dev/null http://127.0.0.1:5173 &
 
 get-token:
 	doppler run -p abview -c dev -- npx tsx server/scripts/get_token.ts

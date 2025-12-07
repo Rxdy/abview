@@ -46,70 +46,70 @@
         "week": 1,
         "shift": "Soir",
         "hours": ["13:00-21:00"],
-        "exceptions": { "saturday": [], "sunday": [] }
+        "exceptions": { "friday": ["12:00-19:00"], "saturday": [], "sunday": [] }
       },
       {
         "week": 2,
         "shift": "Matin",
         "hours": ["05:00-13:00"],
-        "exceptions": { "saturday": [], "sunday": [] }
+        "exceptions": { "friday": ["05:00-12:00"], "saturday": [], "sunday": [] }
       },
       {
         "week": 3,
         "shift": "Soir",
         "hours": ["13:00-21:00"],
-        "exceptions": { "saturday": [], "sunday": [] }
+        "exceptions": { "friday": ["12:00-19:00"], "saturday": [], "sunday": [] }
       },
       {
         "week": 4,
         "shift": "Matin",
         "hours": ["05:00-13:00"],
-        "exceptions": { "saturday": [], "sunday": [] }
+        "exceptions": { "friday": ["05:00-12:00"], "saturday": [], "sunday": [] }
       },
       {
         "week": 5,
         "shift": "Soir",
         "hours": ["13:00-21:00"],
-        "exceptions": { "saturday": [], "sunday": [] }
+        "exceptions": { "friday": ["12:00-19:00"], "saturday": [], "sunday": [] }
       },
       {
         "week": 6,
         "shift": "Matin",
         "hours": ["05:00-13:00"],
-        "exceptions": { "saturday": [], "sunday": [] }
+        "exceptions": { "friday": ["05:00-12:00"], "saturday": [], "sunday": [] }
       },
       {
         "week": 7,
         "shift": "Nuit",
         "hours": ["21:00-05:00"],
-        "exceptions": { "saturday": [], "sunday": [] }
+        "exceptions": { "friday": ["19:00-02:00"], "saturday": [], "sunday": [] }
       },
       {
         "week": 8,
         "shift": "Nuit",
         "hours": ["21:00-05:00"],
-        "exceptions": { "saturday": [], "sunday": [] }
+        "exceptions": { "friday": ["19:00-02:00"], "saturday": [], "sunday": [] }
       },
       {
         "week": 9,
         "shift": "Nuit",
         "hours": ["21:00-05:00"],
-        "exceptions": { "saturday": [], "sunday": [] }
+        "exceptions": { "friday": ["19:00-02:00"], "saturday": [], "sunday": [] }
       }
     ],
     "weekOverrides": {
-      "2025-50": { "shift": "Soir", "hours": ["13:00-21:00"] },
-      "2025-51": { "shift": "Matin", "hours": ["05:00-13:00"] },
-      "2025-52": { "shift": "Soir", "hours": ["13:00-21:00"] },
-      "2026-2": { "shift": "Soir", "hours": ["13:00-21:00"] },
-      "2026-3": { "shift": "Matin", "hours": ["05:00-13:00"] },
-      "2026-4": { "shift": "Nuit", "hours": ["21:00-05:00"] },
-      "2026-5": { "shift": "Nuit", "hours": ["21:00-05:00"] },
-      "2026-6": { "shift": "Nuit", "hours": ["21:00-05:00"] }
+      "2025-50": { "shift": "Soir", "hours": ["13:00-21:00"], "exceptions": { "friday": ["12:00-19:00"], "saturday": [], "sunday": [] } },
+      "2025-51": { "shift": "Matin", "hours": ["05:00-13:00"], "exceptions": { "friday": ["05:00-12:00"], "saturday": [], "sunday": [] } },
+      "2025-52": { "shift": "Soir", "hours": ["13:00-21:00"], "exceptions": { "friday": ["12:00-19:00"], "saturday": [], "sunday": [] } },
+      "2026-2": { "shift": "Soir", "hours": ["13:00-21:00"], "exceptions": { "friday": ["12:00-19:00"], "saturday": [], "sunday": [] } },
+      "2026-3": { "shift": "Matin", "hours": ["05:00-13:00"], "exceptions": { "friday": ["05:00-12:00"], "saturday": [], "sunday": [] } },
+      "2026-4": { "shift": "Nuit", "hours": ["21:00-05:00"], "exceptions": { "friday": ["19:00-02:00"], "saturday": [], "sunday": [] } },
+      "2026-5": { "shift": "Nuit", "hours": ["21:00-05:00"], "exceptions": { "friday": ["19:00-02:00"], "saturday": [], "sunday": [] } },
+      "2026-6": { "shift": "Nuit", "hours": ["21:00-05:00"], "exceptions": { "friday": ["19:00-02:00"], "saturday": [], "sunday": [] } }
     },
     "lastDayOverride": {
-      "Matin": ["03:00-11:00"],
-      "Soir": ["11:00-19:00"],
+      "Matin": ["05:00-12:00"],
+      "Soir": ["12:00-19:00"],
       "Nuit": ["19:00-02:00"]
     },
     "offset": 6
