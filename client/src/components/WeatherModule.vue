@@ -175,8 +175,8 @@ const currentDay = computed(() => {
     return day.charAt(0).toUpperCase() + day.slice(1);
 });
 
-// Forecast sans le jour actuel
-const nextForecast = computed(() => forecast.value.slice(1, 7));
+// Forecast sans le jour actuel (5 jours au lieu de 6)
+const nextForecast = computed(() => forecast.value.slice(1, 6));
 
 // Fetch météo
 const fetchWeather = async () => {
