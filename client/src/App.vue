@@ -192,6 +192,11 @@ export default {
     --rugby-color: #f28c38;
 }
 
+/* Masquer complètement le curseur de souris */
+* {
+    cursor: none !important;
+}
+
 body.dark-mode {
     --color-bg: #181818;
     --color-text: #f1f5f9;
