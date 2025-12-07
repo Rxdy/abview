@@ -97,11 +97,42 @@ export default {
         },
         sortedGroupedTasks() {
             const grouped = this.groupedTasks;
+            // Trier par nombre de tâches (décroissant) : plus grand en premier
             const sortedLists = Object.keys(grouped).sort((a, b) => {
                 return grouped[b].length - grouped[a].length;
             });
+
+            // Réorganiser pour mettre les plus grandes listes au centre
+            // Exemple avec [8,6,3,1,1] → [1,6,8,3,1] : petits aux bords, grands au centre
+            const centeredLists = [];
+            const leftSide = [];
+            const rightSide = [];
+
+            for (let i = 0; i < sortedLists.length; i++) {
+                if (i === 0) {
+                    // Le plus grand au centre
+                    centeredLists.push(sortedLists[i]);
+                } else if (i === 1) {
+                    // Le deuxième plus grand à gauche du centre
+                    leftSide.unshift(sortedLists[i]);
+                } else if (i === 2) {
+                    // Le troisième plus grand à droite du centre
+                    rightSide.push(sortedLists[i]);
+                } else {
+                    // Les autres alternés aux extrémités
+                    if (leftSide.length <= rightSide.length) {
+                        leftSide.unshift(sortedLists[i]);
+                    } else {
+                        rightSide.push(sortedLists[i]);
+                    }
+                }
+            }
+
+            // Combiner : gauche + centre + droite
+            const finalOrder = [...leftSide, ...centeredLists, ...rightSide];
+
             const sortedGrouped = {};
-            sortedLists.forEach((listName) => {
+            finalOrder.forEach((listName) => {
                 sortedGrouped[listName] = grouped[listName].sort((a, b) => {
                     const dateA = a.due ? new Date(a.due) : new Date(0);
                     const dateB = b.due ? new Date(b.due) : new Date(0);
