@@ -451,43 +451,44 @@ export default {
             const apiUrl = getApiUrl("/tasks");
             console.log("[Tasks] Fetching from:", apiUrl);
             
-            try {
-                const res = await fetch(apiUrl);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                this.tasks = data.tasks || [];
-                this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
-                console.log("[Tasks] Loaded:", this.tasks.length, "tasks");
-                this.loading = false;
-                this.$nextTick(() => {
-                    this.startIndependentScroll();
-                    setTimeout(() => this.horizontalScrollLoop(), 100);
-                });
-            } catch (err) {
-                console.error("[Tasks] Primary fetch error:", err);
-                // Fallback vers localhost
+            // Essayer plusieurs fois avec délai croissant
+            const maxRetries = 5;
+            let lastError = null;
+            
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
-                    console.log("[Tasks] Trying fallback: http://localhost:3333/tasks");
-                    const res = await fetch("http://localhost:3333/tasks");
+                    console.log(`[Tasks] Attempt ${attempt}/${maxRetries}...`);
+                    const res = await fetch(apiUrl);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const data = await res.json();
                     this.tasks = data.tasks || [];
                     this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
-                    console.log("[Tasks] Fallback loaded:", this.tasks.length, "tasks");
+                    console.log("[Tasks] Loaded:", this.tasks.length, "tasks");
                     this.loading = false;
                     this.$nextTick(() => {
                         this.startIndependentScroll();
                         setTimeout(() => this.horizontalScrollLoop(), 100);
                     });
-                } catch (fallbackErr) {
-                    console.error("[Tasks] Fallback error:", fallbackErr);
-                    this.error = `Erreur: ${err.message}. API: ${apiUrl}`;
-                    this.loading = false;
+                    return; // Succès, on sort
+                } catch (err) {
+                    console.error(`[Tasks] Attempt ${attempt} failed:`, err.message);
+                    lastError = err;
+                    if (attempt < maxRetries) {
+                        // Attendre avant de réessayer (2s, 4s, 6s, 8s)
+                        await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+                    }
                 }
             }
+            
+            // Toutes les tentatives ont échoué
+            console.error("[Tasks] All attempts failed:", lastError);
+            this.error = `Erreur après ${maxRetries} tentatives: ${lastError?.message}. API: ${apiUrl}`;
+            this.loading = false;
         },
     },
     mounted() {
+        console.log("[Tasks] Component mounted, starting loadTasks...");
+        console.log("[Tasks] getApiUrl test:", getApiUrl("/tasks"));
         this.loadTasks();
     },
 };
