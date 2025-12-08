@@ -31,6 +31,8 @@ chromium:
 		--disable-infobars \
 		--noerrdialogs \
 		--check-for-update-interval=31536000 \
+		--disable-session-crashed-bubble \
+		--disable-component-extensions-with-background-pages \
 		http://127.0.0.1:5173 &
 
 get-token:
