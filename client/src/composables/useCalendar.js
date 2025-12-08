@@ -1,5 +1,6 @@
 import { ref, computed } from "vue";
 import { getEventDate, getTime, getApiUrl } from "../utils/dateUtils";
+import logger from "../utils/logger.js";
 
 export function useCalendar() {
     const events = ref([]);
@@ -19,6 +20,7 @@ export function useCalendar() {
 
     const initAudio = async () => {
         try {
+            logger.log('audio', 'Initializing audio system');
             // Méthode 1: Audio HTML5 classique
             notificationAudio.value = new Audio("/song/notif.wav");
             notificationAudio.value.volume = 1.0;
@@ -31,36 +33,36 @@ export function useCalendar() {
                 const response = await fetch("/song/notif.wav");
                 const arrayBuffer = await response.arrayBuffer();
                 audioBuffer.value = await audioContext.value.decodeAudioData(arrayBuffer);
-                console.log("[Audio] Web Audio API ready");
+                logger.log('audio', 'Web Audio API initialized successfully');
             } catch (e) {
-                console.warn("[Audio] Web Audio API failed:", e.message);
+                logger.log('error', `Web Audio API initialization failed: ${e.message}`);
             }
             
             notificationAudio.value.addEventListener("canplaythrough", () => {
                 audioEnabled.value = true;
-                console.log("[Audio] HTML5 Audio ready");
+                logger.log('audio', 'HTML5 Audio ready');
                 
                 // Tenter de débloquer l'audio
                 notificationAudio.value.play().then(() => {
                     notificationAudio.value.pause();
                     notificationAudio.value.currentTime = 0;
-                    console.log("[Audio] Audio auto-unlocked at startup");
+                    logger.log('audio', 'Audio auto-unlocked at startup');
                 }).catch((e) => {
-                    console.warn("[Audio] Auto-unlock failed:", e.message);
+                    logger.log('error', `Audio auto-unlock failed: ${e.message}`);
                 });
             });
             
             notificationAudio.value.addEventListener("error", (e) => {
-                console.error("[Audio] Error loading sound:", e);
+                logger.log('error', `Audio loading error: ${e.message}`);
             });
             
         } catch (err) {
-            console.error("[Audio] Init error:", err);
+            logger.log('error', `Audio initialization error: ${err.message}`);
         }
     };
 
     const playNotificationSound = () => {
-        console.log("[Audio] Attempting to play sound...");
+        logger.log('audio', 'Attempting to play notification sound');
         
         // Essayer Web Audio API d'abord (plus fiable)
         if (audioContext.value && audioBuffer.value) {
@@ -81,10 +83,10 @@ export function useCalendar() {
                 gainNode.connect(audioContext.value.destination);
                 source.start(0);
                 
-                console.log("[Audio] ✅ Web Audio API: Sound played!");
+                logger.log('audio', 'Notification sound played via Web Audio API');
                 return;
             } catch (e) {
-                console.warn("[Audio] Web Audio API play failed:", e.message);
+                logger.log('error', `Web Audio API play failed: ${e.message}`);
             }
         }
         
@@ -95,13 +97,13 @@ export function useCalendar() {
             
             notificationAudio.value.play()
                 .then(() => {
-                    console.log("[Audio] ✅ HTML5 Audio: Sound played!");
+                    logger.log('audio', 'Notification sound played via HTML5 Audio');
                 })
                 .catch((err) => {
-                    console.error("[Audio] ❌ HTML5 Audio play failed:", err.message);
+                    logger.log('error', `HTML5 Audio play failed: ${err.message}`);
                 });
         } else {
-            console.error("[Audio] ❌ No audio method available");
+            logger.log('error', 'No audio method available for notification');
         }
     };
 
@@ -111,6 +113,7 @@ export function useCalendar() {
             let horairesData = { horaires: [] };
             fetchError.value = false;
 
+            logger.log('api', 'Fetching calendar data from API');
             try {
                 const calendarRes = await fetch(
                     getApiUrl("/calendar"),
@@ -118,13 +121,23 @@ export function useCalendar() {
                 );
                 if (calendarRes.ok) {
                     const text = await calendarRes.text();
-                    if (text.trim()) calendarData = JSON.parse(text);
-                    else fetchError.value = true;
-                } else fetchError.value = true;
-            } catch {
+                    if (text.trim()) {
+                        calendarData = JSON.parse(text);
+                        logger.log('api', `Calendar API success: ${calendarData.events?.length || 0} events loaded`);
+                    } else {
+                        fetchError.value = true;
+                        logger.log('error', 'Calendar API returned empty response');
+                    }
+                } else {
+                    fetchError.value = true;
+                    logger.log('error', `Calendar API failed: HTTP ${calendarRes.status}`);
+                }
+            } catch (err) {
                 fetchError.value = true;
+                logger.log('error', `Calendar API error: ${err.message}`);
             }
 
+            logger.log('api', 'Fetching horaires data from API');
             try {
                 const planningRes = await fetch(
                     getApiUrl("/horaires"),
@@ -132,11 +145,20 @@ export function useCalendar() {
                 );
                 if (planningRes.ok) {
                     const text = await planningRes.text();
-                    if (text.trim()) horairesData = JSON.parse(text);
-                    else fetchError.value = true;
-                } else fetchError.value = true;
-            } catch {
+                    if (text.trim()) {
+                        horairesData = JSON.parse(text);
+                        logger.log('api', `Horaires API success: ${horairesData.horaires?.length || 0} horaires loaded`);
+                    } else {
+                        fetchError.value = true;
+                        logger.log('error', 'Horaires API returned empty response');
+                    }
+                } else {
+                    fetchError.value = true;
+                    logger.log('error', `Horaires API failed: HTTP ${planningRes.status}`);
+                }
+            } catch (err) {
                 fetchError.value = true;
+                logger.log('error', `Horaires API error: ${err.message}`);
             }
 
             events.value.splice(

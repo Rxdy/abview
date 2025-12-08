@@ -67,6 +67,7 @@
 
 <script>
 import { getApiUrl } from "../utils/dateUtils";
+import logger from "../utils/logger.js";
 
 export default {
     name: "TasksBoard",
@@ -486,7 +487,7 @@ export default {
             this.loading = true;
             this.error = null;
             const apiUrl = getApiUrl("/tasks");
-            console.log("[Tasks] Fetching from:", apiUrl);
+            logger.log('api', `Fetching tasks from API: ${apiUrl}`);
             
             // Essayer plusieurs fois avec délai croissant
             const maxRetries = 5;
@@ -494,13 +495,13 @@ export default {
             
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
-                    console.log(`[Tasks] Attempt ${attempt}/${maxRetries}...`);
+                    logger.log('api', `Tasks API attempt ${attempt}/${maxRetries}`);
                     const res = await fetch(apiUrl);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const data = await res.json();
                     this.tasks = data.tasks || [];
                     this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
-                    console.log("[Tasks] Loaded:", this.tasks.length, "tasks");
+                    logger.log('api', `Tasks API success: ${this.tasks.length} tasks loaded`);
                     this.loading = false;
                     this.$nextTick(() => {
                         this.startIndependentScroll();
@@ -509,7 +510,7 @@ export default {
                     });
                     return; // Succès, on sort
                 } catch (err) {
-                    console.error(`[Tasks] Attempt ${attempt} failed:`, err.message);
+                    logger.log('error', `Tasks API attempt ${attempt} failed: ${err.message}`);
                     lastError = err;
                     if (attempt < maxRetries) {
                         // Attendre avant de réessayer (2s, 4s, 6s, 8s)
@@ -519,7 +520,7 @@ export default {
             }
             
             // Toutes les tentatives ont échoué
-            console.error("[Tasks] All attempts failed:", lastError);
+            logger.log('error', `Tasks API all attempts failed: ${lastError?.message}`);
             this.error = `Erreur après ${maxRetries} tentatives: ${lastError?.message}. API: ${apiUrl}`;
             this.loading = false;
         },
@@ -527,25 +528,26 @@ export default {
             // Rafraîchissement silencieux sans recharger tout le composant
             const apiUrl = getApiUrl("/tasks");
             try {
+                logger.log('api', 'Refreshing tasks from API');
                 const res = await fetch(apiUrl);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 this.tasks = data.tasks || [];
                 this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
-                console.log("[Tasks] Refresh: ", this.tasks.length, "tasks");
+                logger.log('api', `Tasks refresh success: ${this.tasks.length} tasks updated`);
             } catch (err) {
-                console.error("[Tasks] Refresh failed:", err.message);
+                logger.log('error', `Tasks refresh failed: ${err.message}`);
             }
         },
     },
     mounted() {
-        console.log("[Tasks] Component mounted, starting loadTasks...");
-        console.log("[Tasks] getApiUrl test:", getApiUrl("/tasks"));
+        logger.log('system', 'Tasks module component mounted, starting loadTasks');
+        logger.log('system', `Tasks API URL test: ${getApiUrl("/tasks")}`);
         this.loadTasks();
         
         // Rafraîchissement automatique toutes les 5 minutes
         this.refreshInterval = setInterval(() => {
-            console.log("[Tasks] Rafraîchissement périodique des tâches...");
+            logger.log('system', 'Periodic tasks refresh started');
             this.refreshTasks();
         }, 5 * 60 * 1000);
     },

@@ -24,6 +24,7 @@ import FooterBar from "./components/FooterBar.vue";
 import WeatherModule from "./components/WeatherModule.vue";
 import CalendarModule from "./components/CalendarWeekModule.vue";
 import TasksBoard from "./components/tasksModule.vue";
+import logger from "./utils/logger.js";
 
 export default {
     name: "App",
@@ -49,10 +50,14 @@ export default {
             screenOff: false,
             screenCheckInterval: null,
             themeCheckInterval: null,
+            screenSaverTimeout: null,
+            screenSaverDelay: 5 * 60 * 1000, // 5 minutes d'inactivité
+            lastActivity: Date.now(),
             manualWakeUp: false, // Si l'utilisateur a cliqué pour rallumer
         };
     },
     mounted() {
+        logger.system.info('Application démarrée');
         this.setViewportHeight();
         window.addEventListener("resize", this.setViewportHeight);
         this.applyDayNightMode();
@@ -61,6 +66,11 @@ export default {
         // Vérifier l'état de l'écran toutes les minutes
         this.checkScreenOff();
         this.screenCheckInterval = setInterval(() => this.checkScreenOff(), 60000);
+        
+        // Écouteurs pour détecter l'activité
+        this.setupActivityListeners();
+        // Démarrer la veille écran
+        this.startScreenSaver();
     },
     beforeUnmount() {
         window.removeEventListener("resize", this.setViewportHeight);
@@ -74,6 +84,7 @@ export default {
             document.documentElement.style.setProperty("--vh", `${vh}px`);
         },
         updateDarkMode(sunTimes) {
+            console.log('[Theme] Mise à jour heures soleil:', sunTimes);
             this.sunTimes = {
                 sunrise: sunTimes.sunrise || this.sunTimes.sunrise,
                 sunset: sunTimes.sunset || this.sunTimes.sunset,
@@ -93,13 +104,30 @@ export default {
             const sunriseTimeInMinutes = sunriseHour * 60 + sunriseMinute;
             const sunsetTimeInMinutes = sunsetHour * 60 + sunsetMinute;
 
+            console.log(`[Theme] Vérification thème - Current: ${now.getHours()}:${now.getMinutes()} (${currentTimeInMinutes}min), Sunrise: ${this.sunTimes.sunrise} (${sunriseTimeInMinutes}min), Sunset: ${this.sunTimes.sunset} (${sunsetTimeInMinutes}min)`);
+
+            const wasDark = document.body.classList.contains("dark-mode");
             if (
                 currentTimeInMinutes < sunriseTimeInMinutes ||
                 currentTimeInMinutes >= sunsetTimeInMinutes
             ) {
                 document.body.classList.add("dark-mode");
+                if (!wasDark) {
+                    logger.theme.info('Thème changé: mode nuit activé', {
+                        sunrise: this.sunTimes.sunrise,
+                        sunset: this.sunTimes.sunset,
+                        currentTime: now.toLocaleTimeString()
+                    });
+                }
             } else {
                 document.body.classList.remove("dark-mode");
+                if (wasDark) {
+                    logger.theme.info('Thème changé: mode jour activé', {
+                        sunrise: this.sunTimes.sunrise,
+                        sunset: this.sunTimes.sunset,
+                        currentTime: now.toLocaleTimeString()
+                    });
+                }
             }
 
             let nextChangeInMinutes;
@@ -126,11 +154,18 @@ export default {
             const startTimeInMinutes = this.screenOffStart * 60 + this.screenOffStartMinutes;
             const endTimeInMinutes = this.screenOffEnd * 60 + this.screenOffEndMinutes;
             
-            console.log(`[ScreenOff] Current: ${now.getHours()}:${now.getMinutes()} (${currentTimeInMinutes}min), Off: ${this.screenOffStart}:${this.screenOffStartMinutes} (${startTimeInMinutes}min) -> ${this.screenOffEnd}:${this.screenOffEndMinutes} (${endTimeInMinutes}min)`);
+            logger.system.info('Vérification extinction écran programmée', {
+                currentTime: `${now.getHours()}:${now.getMinutes()}`,
+                currentMinutes: currentTimeInMinutes,
+                offStart: `${this.screenOffStart}:${this.screenOffStartMinutes}`,
+                offEnd: `${this.screenOffEnd}:${this.screenOffEndMinutes}`,
+                startMinutes: startTimeInMinutes,
+                endMinutes: endTimeInMinutes
+            });
             
             // Si l'utilisateur a manuellement rallumé, ne pas rééteindre pendant 5 minutes
             if (this.manualWakeUp) {
-                console.log('[ScreenOff] Manual wake up active, skipping');
+                logger.system.info('Réveil manuel actif, extinction automatique ignorée');
                 return;
             }
             
@@ -144,18 +179,51 @@ export default {
                 shouldBeOff = currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes < endTimeInMinutes;
             }
             
-            console.log(`[ScreenOff] Should be off: ${shouldBeOff}`);
+            logger.system.info(`Écran devrait être éteint: ${shouldBeOff}`);
             this.screenOff = shouldBeOff;
         },
         wakeUpScreen() {
+            logger.system.info('Écran réveillé manuellement par l\'utilisateur');
             // Permet de rallumer temporairement l'écran en cliquant
             this.screenOff = false;
             this.manualWakeUp = true;
+            this.lastActivity = Date.now();
             // Réactiver l'extinction automatique après 5 minutes
             setTimeout(() => {
                 this.manualWakeUp = false;
                 this.checkScreenOff();
             }, 5 * 60 * 1000);
+        },
+        setupActivityListeners() {
+            // Écouteurs pour détecter toute activité utilisateur
+            const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+            events.forEach(event => {
+                document.addEventListener(event, this.onUserActivity, true);
+            });
+        },
+        onUserActivity() {
+            this.lastActivity = Date.now();
+            // Si l'écran était en veille, le réveiller
+            if (this.screenOff) {
+                logger.system.info('Activité utilisateur détectée, réveil de l\'écran');
+                this.wakeUpScreen();
+            }
+        },
+        startScreenSaver() {
+            this.screenSaverTimeout = setTimeout(() => {
+                if (!this.manualWakeUp && !this.screenOff) {
+                    logger.system.info('Veille écran activée après inactivité', {
+                        delay: this.screenSaverDelay / 1000 + 's'
+                    });
+                    this.screenOff = true;
+                }
+            }, this.screenSaverDelay);
+        },
+        resetScreenSaver() {
+            if (this.screenSaverTimeout) {
+                clearTimeout(this.screenSaverTimeout);
+            }
+            this.startScreenSaver();
         },
     },
 };
