@@ -116,6 +116,8 @@ import HailIcon from "@/components/icons/HailIcon.vue";
 import SnowIcon from "@/components/icons/SnowIcon.vue";
 import ThunderIcon from "@/components/icons/ThunderIcon.vue";
 
+const emit = defineEmits(['sun-times']);
+
 const current = ref({});
 const forecast = ref([]);
 const lastUpdate = ref("");
@@ -188,6 +190,24 @@ const fetchWeather = async () => {
 
         current.value = w.current ?? {};
         forecast.value = Array.isArray(w.forecast) ? w.forecast : [];
+        
+        // Émettre les heures de lever/coucher du soleil pour le thème
+        if (current.value.sunrise && current.value.sunset) {
+            // S'assurer que le format est HH:MM (pas HH:MM:SS)
+            const formatSunTime = (timeStr) => {
+                if (!timeStr) return null;
+                const parts = timeStr.split(':');
+                return `${parts[0]}:${parts[1]}`;
+            };
+            
+            const sunTimes = {
+                sunrise: formatSunTime(current.value.sunrise),
+                sunset: formatSunTime(current.value.sunset)
+            };
+            
+            console.log('[Weather] Émission sun-times:', sunTimes);
+            emit('sun-times', sunTimes);
+        }
         
         // Parse lastUpdate as Date and format in local time
         if (w.lastUpdate) {
