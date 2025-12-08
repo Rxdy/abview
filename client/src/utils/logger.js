@@ -79,10 +79,11 @@ class Logger {
     }
 
     sendToServer(logEntry) {
-        // Optionnel: envoyer les logs critiques au serveur
-        if (logEntry.level === 'ERROR' && navigator.onLine) {
+        // Envoyer tous les logs au serveur pour écriture dans fichiers
+        if (navigator.onLine) {
             try {
-                fetch('/api/logs', {
+                const serverUrl = this.getServerUrl();
+                fetch(`${serverUrl}/logs`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(logEntry)
@@ -91,6 +92,15 @@ class Logger {
                 // Ignore les erreurs réseau
             }
         }
+    }
+
+    getServerUrl() {
+        // Déterminer l'URL du serveur
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return 'http://localhost:3333';
+        }
+        // En production, utiliser la même origine que le frontend mais port 3333
+        return window.location.origin.replace('5173', '3333');
     }
 
     cleanupOldLogs() {
