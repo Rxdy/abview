@@ -53,30 +53,64 @@ logs:
 
 logs-api:
 	@echo "Logs API - Toutes les catégories (dernières 24h)..."
-	@curl -s http://localhost:3333/logs | jq '.logs[0:10] // []'
+	@if command -v jq >/dev/null 2>&1; then \
+		curl -s http://localhost:3333/logs | jq '.logs[0:10] // []'; \
+	else \
+		echo "jq not found. Installing jq..."; \
+		sudo apt-get update && sudo apt-get install -y jq; \
+		curl -s http://localhost:3333/logs | jq '.logs[0:10] // []'; \
+	fi
 
 logs-api-category:
 	@echo "Usage: make logs-api-category CATEGORY=api HOURS=24"
 	@echo "Exemple: make logs-api-category CATEGORY=theme HOURS=2"
 	@if [ -z "$(CATEGORY)" ]; then echo "Erreur: spécifiez CATEGORY (api, theme, error, system, audio)"; exit 1; fi
 	@echo "Logs $(CATEGORY) - dernières $(HOURS) heures..."
-	@curl -s "http://localhost:3333/logs/$(CATEGORY)?hours=$(or $(HOURS),24)" | jq '.logs[0:20] // []'
+	@if command -v jq >/dev/null 2>&1; then \
+		curl -s "http://localhost:3333/logs/$(CATEGORY)?hours=$(or $(HOURS),24)" | jq '.logs[0:20] // []'; \
+	else \
+		echo "jq not found. Installing jq..."; \
+		sudo apt-get update && sudo apt-get install -y jq; \
+		curl -s "http://localhost:3333/logs/$(CATEGORY)?hours=$(or $(HOURS),24)" | jq '.logs[0:20] // []'; \
+	fi
 
 logs-files:
 	@echo "Fichiers de logs disponibles..."
-	@curl -s http://localhost:3333/logs-files | jq .
+	@if command -v jq >/dev/null 2>&1; then \
+		curl -s http://localhost:3333/logs-files | jq .; \
+	else \
+		echo "jq not found. Installing jq..."; \
+		sudo apt-get update && sudo apt-get install -y jq; \
+		curl -s http://localhost:3333/logs-files | jq .; \
+	fi
 
 logs-stats:
 	@echo "Statistiques des logs..."
-	@curl -s http://localhost:3333/logs-stats | jq .
+	@if command -v jq >/dev/null 2>&1; then \
+		curl -s http://localhost:3333/logs-stats | jq .; \
+	else \
+		echo "jq not found. Installing jq..."; \
+		sudo apt-get update && sudo apt-get install -y jq; \
+		curl -s http://localhost:3333/logs-stats | jq .; \
+	fi
 
 logs-tail:
 	@echo "Suivi des logs en temps réel (toutes catégories)..."
-	@while true; do \
-		curl -s http://localhost:3333/logs?hours=1 | jq -r '.logs[] | "\(.timestamp) [\(.category)] \(.message)"' | head -5; \
-		sleep 30; \
-		echo "--- Mise à jour $(date) ---"; \
-	done
+	@if command -v jq >/dev/null 2>&1; then \
+		while true; do \
+			curl -s http://localhost:3333/logs?hours=1 | jq -r '.logs[] | "\(.timestamp) [\(.category)] \(.message)"' | head -5; \
+			sleep 30; \
+			echo "--- Mise à jour $$(date) ---"; \
+		done; \
+	else \
+		echo "jq not found. Installing jq..."; \
+		sudo apt-get update && sudo apt-get install -y jq; \
+		while true; do \
+			curl -s http://localhost:3333/logs?hours=1 | jq -r '.logs[] | "\(.timestamp) [\(.category)] \(.message)"' | head -5; \
+			sleep 30; \
+			echo "--- Mise à jour $$(date) ---"; \
+		done; \
+	fi
 
 logs-clean:
 	@echo "Nettoyage des logs de plus de 7 jours..."
