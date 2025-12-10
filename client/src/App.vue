@@ -1,21 +1,27 @@
 <template>
-    <!-- Écran noir quand l'écran doit être éteint -->
-    <div v-if="screenOff" class="screen-off" @click="wakeUpScreen"></div>
-    
-    <HeaderBar />
-    <main class="main-content">
-        <!-- Ligne du haut : calendrier -->
-        <div class="top-row">
-            <CalendarModule class="calendar-module" />
-        </div>
+    <!-- Écran de chargement -->
+    <LoadingScreen @loading-complete="onLoadingComplete" />
 
-        <!-- Ligne du bas : météo (gauche) + tâches (droite) -->
-        <div class="bottom-row">
-            <WeatherModule class="weather-module" @sun-times="updateDarkMode" />
-            <TasksBoard class="tasks-board" />
-        </div>
-    </main>
-    <FooterBar />
+    <!-- Application principale (masquée pendant le chargement) -->
+    <div v-if="!isLoading" class="app-content">
+        <!-- Écran noir quand l'écran doit être éteint -->
+        <div v-if="screenOff" class="screen-off" @click="wakeUpScreen"></div>
+
+        <HeaderBar />
+        <main class="main-content">
+            <!-- Ligne du haut : calendrier -->
+            <div class="top-row">
+                <CalendarModule class="calendar-module" />
+            </div>
+
+            <!-- Ligne du bas : météo (gauche) + tâches (droite) -->
+            <div class="bottom-row">
+                <WeatherModule class="weather-module" @sun-times="updateDarkMode" />
+                <TasksBoard class="tasks-board" />
+            </div>
+        </main>
+        <FooterBar />
+    </div>
 </template>
 
 <script>
@@ -24,6 +30,7 @@ import FooterBar from "./components/FooterBar.vue";
 import WeatherModule from "./components/WeatherModule.vue";
 import CalendarModule from "./components/CalendarWeekModule.vue";
 import TasksBoard from "./components/tasksModule.vue";
+import LoadingScreen from "./components/LoadingScreen.vue";
 import logger from "./utils/logger.js";
 
 export default {
@@ -34,9 +41,11 @@ export default {
         WeatherModule,
         CalendarModule,
         TasksBoard,
+        LoadingScreen,
     },
     data() {
         return {
+            isLoading: true, // Commence en chargement
             sunTimes: {
                 sunrise: "06:00",
                 sunset: "18:00",
@@ -79,6 +88,10 @@ export default {
         if (this.screenCheckInterval) clearInterval(this.screenCheckInterval);
     },
     methods: {
+        onLoadingComplete() {
+            this.isLoading = false;
+            logger.system.info('Écran de chargement terminé, application prête');
+        },
         setViewportHeight() {
             const vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty("--vh", `${vh}px`);

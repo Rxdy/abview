@@ -44,8 +44,10 @@ get-token:
 	doppler run -p abview -c dev -- npx tsx server/scripts/get_token.ts
 
 stop:
-	@echo "Arrêt des conteneurs..."
+	@echo "Arrêt des conteneurs et du navigateur..."
 	docker compose down
+	@echo "Fermeture de Chromium..."
+	-pkill chromium-browser || true
 
 logs:
 	@echo "Suivi des logs..."
