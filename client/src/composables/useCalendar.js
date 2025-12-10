@@ -203,6 +203,15 @@ export function useCalendar() {
         return `${year}-${month}-${day}`;
     };
 
+    // Obtenir l'offset du fuseau horaire actuel (ex: "+01:00" en hiver, "+02:00" en été)
+    const getTimezoneOffset = () => {
+        const offset = -new Date().getTimezoneOffset();
+        const sign = offset >= 0 ? "+" : "-";
+        const hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, "0");
+        const minutes = String(Math.abs(offset) % 60).padStart(2, "0");
+        return `${sign}${hours}:${minutes}`;
+    };
+
     const next9Days = computed(() => {
         const days = [];
         const today = new Date();
@@ -320,8 +329,8 @@ export function useCalendar() {
                         planningEvents.push({
                             id: `garde-${dateStr}`,
                             title: "Lyam & Noah",
-                            start: `${dateStr}T00:00:00+02:00`,
-                            end: `${dateStr}T23:59:59+02:00`,
+                            start: `${dateStr}T00:00:00${getTimezoneOffset()}`,
+                            end: `${dateStr}T23:59:59${getTimezoneOffset()}`,
                             startTime: null,
                             endTime: null,
                             location: "Chez Papa",
@@ -372,8 +381,8 @@ export function useCalendar() {
                         planningEvents.push({
                             id: `planning-${person.name}-${dateStr}-${hour}`,
                             title: eventTitle,
-                            start: `${dateStr}T${start}:00+02:00`,
-                            end: `${dateStr}T${end}:00+02:00`,
+                            start: `${dateStr}T${start}:00${getTimezoneOffset()}`,
+                            end: `${dateStr}T${end}:00${getTimezoneOffset()}`,
                             startTime: start,
                             endTime: end,
                             location: person.location || "",
@@ -405,8 +414,8 @@ export function useCalendar() {
                         planningEvents.push({
                             id: `allday-${person.name}-${dateStr}`,
                             title: eventTitle,
-                            start: `${dateStr}T00:00:00+02:00`,
-                            end: `${dateStr}T23:59:59+02:00`,
+                            start: `${dateStr}T00:00:00${getTimezoneOffset()}`,
+                            end: `${dateStr}T23:59:59${getTimezoneOffset()}`,
                             startTime: null,
                             endTime: null,
                             location: person.location || "",
@@ -451,8 +460,8 @@ export function useCalendar() {
                                     id: `planning-${person.name}-${dateStr}-${hour}`,
                                     title: person.name,
                                     shift: override.shift,
-                                    start: `${dateStr}T${start}:00+02:00`,
-                                    end: `${dateStr}T${end}:00+02:00`,
+                                    start: `${dateStr}T${start}:00${getTimezoneOffset()}`,
+                                    end: `${dateStr}T${end}:00${getTimezoneOffset()}`,
                                     startTime: start,
                                     endTime: end,
                                     location: "",
@@ -486,8 +495,8 @@ export function useCalendar() {
                             id: `planning-${person.name}-${dateStr}-${hour}`,
                             title: person.name,
                             shift: rotation.shift,
-                            start: `${dateStr}T${start}:00+02:00`,
-                            end: `${dateStr}T${end}:00+02:00`,
+                            start: `${dateStr}T${start}:00${getTimezoneOffset()}`,
+                            end: `${dateStr}T${end}:00${getTimezoneOffset()}`,
                             startTime: start,
                             endTime: end,
                             location: "",
