@@ -312,13 +312,13 @@ export default {
 }
 
 .loading-logo {
-    margin-bottom: 3rem;
+    margin-bottom: 4rem;
 }
 
 .logo-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    animation: bounce 2s infinite;
+    font-size: 6rem;
+    margin-bottom: 1.5rem;
+    /* Animation supprimée */
 }
 
 @keyframes bounce {
@@ -334,27 +334,27 @@ export default {
 }
 
 .loading-logo h1 {
-    font-size: 2.5rem;
+    font-size: 4rem;
     font-weight: bold;
     margin: 0.5rem 0;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .version {
-    font-size: 1rem;
+    font-size: 1.5rem;
     opacity: 0.8;
     font-weight: 300;
 }
 
 .loading-spinner {
-    margin: 2rem 0;
+    margin: 3rem 0;
 }
 
 .spinner {
-    width: 60px;
-    height: 60px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid white;
+    width: 80px;
+    height: 80px;
+    border: 6px solid rgba(255, 255, 255, 0.3);
+    border-top: 6px solid white;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto;
@@ -367,44 +367,47 @@ export default {
 
 .progress-container {
     width: 100%;
-    height: 8px;
+    height: 12px;
     background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    margin: 2rem 0;
+    border-radius: 6px;
+    margin: 3rem 0;
     overflow: hidden;
 }
 
 .progress-bar {
     height: 100%;
     background: linear-gradient(90deg, #4CAF50, #45a049);
-    border-radius: 4px;
+    border-radius: 6px;
     transition: width 0.5s ease;
-    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
 }
 
 .loading-message {
-    margin: 2rem 0;
-    min-height: 4rem;
+    margin: 3rem 0;
+    min-height: 6rem; /* Hauteur fixe pour éviter le mouvement */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .message-text {
-    font-size: 1.4rem;
+    font-size: 2.2rem;
     font-weight: 600;
     margin: 0.5rem 0;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 .sub-message {
-    font-size: 1rem;
+    font-size: 1.4rem;
     opacity: 0.9;
     margin: 0.5rem 0;
     font-style: italic;
 }
 
 .progress-indicator {
-    font-size: 1.2rem;
+    font-size: 1.8rem;
     font-weight: bold;
-    margin-top: 1rem;
+    margin-top: 2rem;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
