@@ -47,7 +47,7 @@ stop:
 	@echo "Arrêt des conteneurs et du navigateur..."
 	docker compose down
 	@echo "Fermeture de Chromium..."
-	-pkill chromium-browser || true
+	-pkill -f chromium || true
 
 logs:
 	@echo "Suivi des logs..."
