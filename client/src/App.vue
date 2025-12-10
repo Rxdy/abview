@@ -2,10 +2,11 @@
     <!-- Écran de chargement -->
     <LoadingScreen @loading-complete="onLoadingComplete" />
 
+    <!-- Écran noir quand l'écran doit être éteint (affiché même pendant le chargement) -->
+    <div v-if="screenOff" class="screen-off" @click="wakeUpScreen"></div>
+
     <!-- Application principale (masquée pendant le chargement) -->
-    <div v-if="!isLoading" class="app-content">
-        <!-- Écran noir quand l'écran doit être éteint -->
-        <div v-if="screenOff" class="screen-off" @click="wakeUpScreen"></div>
+    <div v-if="!isLoading && !screenOff" class="app-content">
 
         <HeaderBar />
         <main class="main-content">
@@ -64,6 +65,10 @@ export default {
             lastActivity: Date.now(),
             manualWakeUp: false, // Si l'utilisateur a cliqué pour rallumer
         };
+    },
+    created() {
+        // Vérifier immédiatement si l'écran doit être éteint au démarrage
+        this.checkScreenOff();
     },
     mounted() {
         logger.system.info('Application démarrée');
