@@ -18,7 +18,8 @@ export default {
     name: "HeaderBar",
     data() {
         return { 
-            now: new Date()
+            now: new Date(),
+            timeInterval: null
         };
     },
     computed: {
@@ -40,7 +41,16 @@ export default {
         },
     },
     mounted() {
-        setInterval(() => (this.now = new Date()), 1000);
+        // Mettre à jour l'heure toutes les secondes
+        this.timeInterval = setInterval(() => {
+            this.now = new Date();
+        }, 1000);
+    },
+    beforeUnmount() {
+        // Nettoyer l'intervalle quand le composant est démonté
+        if (this.timeInterval) {
+            clearInterval(this.timeInterval);
+        }
     },
 };
 </script>

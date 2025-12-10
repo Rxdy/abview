@@ -33,6 +33,8 @@
 </template>
 
 <script>
+import { getApiUrl } from "../utils/dateUtils";
+
 export default {
     name: "LoadingScreen",
     data() {
@@ -44,94 +46,234 @@ export default {
             loadingSteps: [
                 {
                     message: "Initialisation du système",
-                    subMessage: "Chargement des configurations...",
-                    duration: 500,
+                    subMessages: [
+                        "Chargement des configurations...",
+                        "Préparation de l'interface...",
+                        "Vérification des paramètres..."
+                    ],
+                    duration: 1500,
                     progress: 5
                 },
                 {
                     message: "Connexion aux services",
-                    subMessage: "Établissement de la liaison avec l'API...",
-                    duration: 800,
-                    progress: 15
-                },
-                {
-                    message: "Chargement du module calendrier",
-                    subMessage: "Synchronisation avec Google Calendar...",
-                    duration: 1000,
-                    progress: 30
+                    subMessages: [
+                        "Établissement de la liaison avec l'API...",
+                        "Handshake en cours...",
+                        "Authentification des services..."
+                    ],
+                    duration: 2000,
+                    progress: 15,
+                    action: "checkApi"
                 },
                 {
                     message: "Chargement du module météo",
-                    subMessage: "Récupération des prévisions OpenWeather...",
-                    duration: 800,
-                    progress: 45
+                    subMessages: [
+                        "Récupération des prévisions OpenWeather...",
+                        "Analyse des conditions atmosphériques...",
+                        "Calcul des heures de lever/coucher du soleil..."
+                    ],
+                    duration: 2500,
+                    progress: 35,
+                    action: "loadWeather"
+                },
+                {
+                    message: "Chargement du module calendrier",
+                    subMessages: [
+                        "Synchronisation avec Google Calendar...",
+                        "Récupération des événements à venir...",
+                        "Organisation de votre planning..."
+                    ],
+                    duration: 2500,
+                    progress: 55,
+                    action: "loadCalendar"
                 },
                 {
                     message: "Chargement du module tâches",
-                    subMessage: "Organisation de vos todos...",
-                    duration: 600,
-                    progress: 60
+                    subMessages: [
+                        "Récupération de vos todos...",
+                        "Organisation des priorités...",
+                        "Tri par date d'échéance..."
+                    ],
+                    duration: 2000,
+                    progress: 75,
+                    action: "loadTasks"
                 },
                 {
-                    message: "Configuration du système de notifications",
-                    subMessage: "Préparation des alertes sonores...",
-                    duration: 700,
-                    progress: 75
-                },
-                {
-                    message: "Paramétrage du thème",
-                    subMessage: "Adaptation aux conditions lumineuses...",
-                    duration: 500,
+                    message: "Configuration des notifications",
+                    subMessages: [
+                        "Préparation des alertes sonores...",
+                        "Test du système audio...",
+                        "Activation des rappels intelligents..."
+                    ],
+                    duration: 1500,
                     progress: 85
                 },
                 {
-                    message: "Finalisation de l'interface",
-                    subMessage: "Derniers ajustements visuels...",
-                    duration: 400,
-                    progress: 95
+                    message: "Paramétrage du thème",
+                    subMessages: [
+                        "Adaptation aux conditions lumineuses...",
+                        "Application du mode jour/nuit...",
+                        "Ajustement des contrastes..."
+                    ],
+                    duration: 1000,
+                    progress: 92
+                },
+                {
+                    message: "Finalisation",
+                    subMessages: [
+                        "Derniers ajustements visuels...",
+                        "Optimisation des performances...",
+                        "Vérification finale..."
+                    ],
+                    duration: 1000,
+                    progress: 98
                 },
                 {
                     message: "Prêt !",
-                    subMessage: "Bienvenue dans votre tableau de bord intelligent",
-                    duration: 300,
+                    subMessages: [
+                        "Bienvenue dans votre tableau de bord intelligent",
+                        "Tout est prêt, bonne journée !",
+                        "AbView à votre service !"
+                    ],
+                    duration: 800,
                     progress: 100
                 }
             ],
             currentStep: 0,
-            stepInterval: null
+            subMessageIndex: 0,
+            subMessageInterval: null,
+            apiData: {
+                weather: null,
+                calendar: null,
+                tasks: null
+            }
         };
     },
     mounted() {
         this.startLoading();
     },
+    beforeUnmount() {
+        if (this.subMessageInterval) {
+            clearInterval(this.subMessageInterval);
+        }
+    },
     methods: {
-        startLoading() {
+        async startLoading() {
             this.currentStep = 0;
             this.progress = 0;
-            this.updateMessage();
-
-            this.stepInterval = setInterval(() => {
-                this.currentStep++;
-                if (this.currentStep >= this.loadingSteps.length) {
-                    this.finishLoading();
-                    return;
-                }
-                this.updateMessage();
-            }, this.loadingSteps[this.currentStep].duration);
+            
+            for (let i = 0; i < this.loadingSteps.length; i++) {
+                this.currentStep = i;
+                await this.processStep(this.loadingSteps[i]);
+            }
+            
+            this.finishLoading();
         },
-        updateMessage() {
-            const step = this.loadingSteps[this.currentStep];
+        
+        async processStep(step) {
             this.currentMessage = step.message;
-            this.currentSubMessage = step.subMessage;
-            this.progress = step.progress;
+            this.subMessageIndex = 0;
+            this.currentSubMessage = step.subMessages[0];
+            
+            // Rotation des sous-messages
+            const subMessageDuration = step.duration / step.subMessages.length;
+            let subMessageCount = 0;
+            
+            this.subMessageInterval = setInterval(() => {
+                subMessageCount++;
+                if (subMessageCount < step.subMessages.length) {
+                    this.subMessageIndex = subMessageCount;
+                    this.currentSubMessage = step.subMessages[this.subMessageIndex];
+                }
+            }, subMessageDuration);
+            
+            // Animation fluide de la progression
+            const startProgress = this.progress;
+            const targetProgress = step.progress;
+            const progressIncrement = (targetProgress - startProgress) / (step.duration / 50);
+            
+            const progressInterval = setInterval(() => {
+                if (this.progress < targetProgress) {
+                    this.progress = Math.min(this.progress + progressIncrement, targetProgress);
+                }
+            }, 50);
+            
+            // Exécuter l'action associée si elle existe
+            if (step.action) {
+                try {
+                    await this[step.action]();
+                } catch (error) {
+                    console.warn(`Erreur lors de ${step.action}:`, error);
+                    // On continue quand même, les modules rechargeront
+                }
+            }
+            
+            // Attendre la durée de l'étape
+            await this.delay(step.duration);
+            
+            // Nettoyer les intervalles
+            clearInterval(this.subMessageInterval);
+            clearInterval(progressInterval);
+            this.progress = targetProgress;
         },
+        
+        async checkApi() {
+            try {
+                const response = await fetch(getApiUrl("/"));
+                if (response.ok) {
+                    console.log("[Loading] API accessible");
+                }
+            } catch (error) {
+                console.warn("[Loading] API non accessible, les modules réessaieront");
+            }
+        },
+        
+        async loadWeather() {
+            try {
+                const response = await fetch(getApiUrl("/weather"));
+                if (response.ok) {
+                    this.apiData.weather = await response.json();
+                    console.log("[Loading] Météo chargée");
+                }
+            } catch (error) {
+                console.warn("[Loading] Météo non chargée, le module réessaiera");
+            }
+        },
+        
+        async loadCalendar() {
+            try {
+                const response = await fetch(getApiUrl("/calendar"));
+                if (response.ok) {
+                    this.apiData.calendar = await response.json();
+                    console.log("[Loading] Calendrier chargé");
+                }
+            } catch (error) {
+                console.warn("[Loading] Calendrier non chargé, le module réessaiera");
+            }
+        },
+        
+        async loadTasks() {
+            try {
+                const response = await fetch(getApiUrl("/tasks"));
+                if (response.ok) {
+                    this.apiData.tasks = await response.json();
+                    console.log("[Loading] Tâches chargées");
+                }
+            } catch (error) {
+                console.warn("[Loading] Tâches non chargées, le module réessaiera");
+            }
+        },
+        
+        delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        },
+        
         finishLoading() {
-            clearInterval(this.stepInterval);
             this.progress = 100;
-            // Petit délai avant de masquer pour voir le 100%
+            // Petit délai pour voir le 100%
             setTimeout(() => {
                 this.isLoading = false;
-                this.$emit('loading-complete');
+                this.$emit('loading-complete', this.apiData);
             }, 500);
         }
     }
