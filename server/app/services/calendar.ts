@@ -30,17 +30,22 @@ export default class GoogleCalendarService {
     return oauth2Client
   }
 
-  private async fetchEvents(calendarId = 'primary', maxResults = 10): Promise<Event[]> {
+  private async fetchEvents(calendarId = 'primary', maxResults = 100): Promise<Event[]> {
     if (!this.calendar) {
       const authClient = await this.getAuthClient()
       this.calendar = google.calendar({ version: 'v3', auth: authClient })
     }
+    // Récupérer les événements des 8 prochains jours
+    const now = new Date()
+    const eightDaysLater = new Date(now)
+    eightDaysLater.setDate(now.getDate() + 8)
     const res = await this.calendar.events.list({
       calendarId,
       maxResults,
       singleEvents: true,
       orderBy: 'startTime',
-      timeMin: new Date().toISOString(),
+      timeMin: now.toISOString(),
+      timeMax: eightDaysLater.toISOString(),
     })
     return (res.data.items || []).map((e: any) => ({
       id: e.id,
@@ -52,7 +57,7 @@ export default class GoogleCalendarService {
     }))
   }
 
-  async listEvents(calendarId = 'primary', maxResults = 10): Promise<Event[]> {
+  async listEvents(calendarId = 'primary', maxResults = 100): Promise<Event[]> {
     const now = Date.now()
     if (now - this.lastRefresh > this.refreshInterval || this.cachedEvents.length === 0) {
       this.cachedEvents = await this.fetchEvents(calendarId, maxResults)
