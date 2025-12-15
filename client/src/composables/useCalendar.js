@@ -627,6 +627,22 @@ export function useCalendar() {
         window.testNotification = testNotification;
     }
 
+    const currentTime = ref(Date.now());
+
+    // Mettre à jour currentTime chaque seconde pour la barre de progression
+    setInterval(() => {
+        currentTime.value = Date.now();
+    }, 1000);
+
+    const refreshInterval = 5 * 60 * 1000; // 5 minutes
+
+    const calendarProgress = computed(() => {
+        if (!lastUpdate.value) return 0;
+        const timeSinceLast = currentTime.value - new Date(lastUpdate.value).getTime();
+        const progress = (timeSinceLast / refreshInterval) * 100;
+        return Math.min(progress, 100);
+    });
+
     setTimeout(() => initAudio(), 1000);
 
     return {
@@ -641,6 +657,7 @@ export function useCalendar() {
         notifiedEventsThirtyMin,
         allDayNotifications,
         next9Days,
+        calendarProgress,
         fetchData,
         checkUpcomingEvents,
         processNotificationQueue,

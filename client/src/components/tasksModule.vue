@@ -62,6 +62,11 @@
             </div>
             </div>
         </template>
+
+        <!-- Barre de progression du refresh -->
+        <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: tasksProgress + '%' }"></div>
+        </div>
     </div>
 </template>
 
@@ -84,6 +89,9 @@ export default {
             error: null,
             verticalCycleTimes: {},
             refreshInterval: null,
+            lastFetchTime: Date.now(),
+            currentTime: Date.now(),
+            progressTimer: null,
         };
     },
     computed: {
@@ -141,6 +149,11 @@ export default {
                 });
             });
             return sortedGrouped;
+        },
+        tasksProgress() {
+            const refreshInterval = 5 * 60 * 1000; // 5 minutes
+            const timeSinceLast = this.currentTime - this.lastFetchTime;
+            return Math.min((timeSinceLast / refreshInterval) * 100, 100);
         },
     },
     methods: {
@@ -503,6 +516,7 @@ export default {
                     this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
                     logger.log('api', `Tasks API success: ${this.tasks.length} tasks loaded`);
                     this.loading = false;
+                    this.lastFetchTime = Date.now();
                     this.$nextTick(() => {
                         this.startIndependentScroll();
                         // Délai plus long pour que le CSS soit stable en prod
@@ -535,6 +549,7 @@ export default {
                 this.tasks = data.tasks || [];
                 this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
                 logger.log('api', `Tasks refresh success: ${this.tasks.length} tasks updated`);
+                this.lastFetchTime = Date.now();
             } catch (err) {
                 logger.log('error', `Tasks refresh failed: ${err.message}`);
             }
@@ -545,15 +560,39 @@ export default {
         logger.log('system', `Tasks API URL test: ${getApiUrl("/tasks")}`);
         this.loadTasks();
         
-        // Rafraîchissement automatique toutes les 5 minutes
-        this.refreshInterval = setInterval(() => {
-            logger.log('system', 'Periodic tasks refresh started');
-            this.refreshTasks();
-        }, 5 * 60 * 1000);
+        // Calculer le délai pour la prochaine mise à jour alignée sur les 5 minutes
+        const now = new Date();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        const nextUpdateMinutes = Math.ceil((minutes + 1) / 5) * 5 % 60;
+        const delayMs = ((nextUpdateMinutes - minutes) * 60 - seconds) * 1000;
+        if (delayMs > 0) {
+            setTimeout(() => {
+                logger.log('system', 'Periodic tasks refresh started');
+                this.refreshTasks();
+                this.refreshInterval = setInterval(() => {
+                    logger.log('system', 'Periodic tasks refresh started');
+                    this.refreshTasks();
+                }, 5 * 60 * 1000);
+            }, delayMs);
+        } else {
+            this.refreshInterval = setInterval(() => {
+                logger.log('system', 'Periodic tasks refresh started');
+                this.refreshTasks();
+            }, 5 * 60 * 1000);
+        }
+
+        // Timer pour la barre de progression
+        this.progressTimer = setInterval(() => {
+            this.currentTime = Date.now();
+        }, 1000);
     },
     beforeUnmount() {
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
+        }
+        if (this.progressTimer) {
+            clearInterval(this.progressTimer);
         }
     },
 };
@@ -783,6 +822,21 @@ export default {
     .task-checkbox:checked::after {
         font-size: 0.55rem;
     }
+}
+
+.progress-bar {
+    width: 100%;
+    height: 5px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    background-color: var(--color-accent, #007bff);
+    transition: width 1s linear;
+    border-radius: 2px;
 }
 
 </style>

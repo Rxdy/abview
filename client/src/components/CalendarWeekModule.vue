@@ -22,6 +22,11 @@
             />
         </div>
 
+        <!-- Barre de progression du refresh -->
+        <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: calendarProgress + '%' }"></div>
+        </div>
+
         <NotificationModal
             v-if="notificationModal.show"
             :event="notificationModal.currentEvent"
@@ -53,6 +58,7 @@ const {
     notifiedEventsOneHour,
     notifiedEventsThirtyMin,
     next9Days,
+    calendarProgress,
     fetchData,
     checkUpcomingEvents,
     processNotificationQueue,
@@ -73,13 +79,35 @@ onMounted(() => {
     fetchData()
         .then(() => {
             console.log("fetchData initial terminé avec succès");
-            const fetchInterval = setInterval(() => {
-                console.log("Exécution périodique de fetchData");
-                fetchData().catch((err) => {
-                    console.error("Erreur lors du fetchData périodique :", err);
-                    fetchError.value = true;
-                });
-            }, 60 * 1000);
+            // Calculer le délai pour la prochaine mise à jour alignée sur les 5 minutes
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const nextUpdateMinutes = Math.ceil((minutes + 1) / 5) * 5 % 60;
+            const delayMs = ((nextUpdateMinutes - minutes) * 60 - seconds) * 1000;
+            if (delayMs > 0) {
+                setTimeout(() => {
+                    fetchData().catch((err) => {
+                        console.error("Erreur lors du fetchData périodique :", err);
+                        fetchError.value = true;
+                    });
+                    const fetchInterval = setInterval(() => {
+                        console.log("Exécution périodique de fetchData");
+                        fetchData().catch((err) => {
+                            console.error("Erreur lors du fetchData périodique :", err);
+                            fetchError.value = true;
+                        });
+                    }, 5 * 60 * 1000);
+                }, delayMs);
+            } else {
+                const fetchInterval = setInterval(() => {
+                    console.log("Exécution périodique de fetchData");
+                    fetchData().catch((err) => {
+                        console.error("Erreur lors du fetchData périodique :", err);
+                        fetchError.value = true;
+                    });
+                }, 5 * 60 * 1000);
+            }
             const checkInterval = setInterval(() => {
                 console.log("Vérification des événements à venir");
                 checkUpcomingEvents();
@@ -138,6 +166,7 @@ const closeNotificationModal = () => {
     padding-bottom: 5px;
     border-bottom: 1px solid var(--task-border-color);
     background: var(--module-bg, #e0e0e0);
+    flex: 0 0 auto;
 }
 .last-update {
     font-size: 12px;
@@ -154,13 +183,30 @@ const closeNotificationModal = () => {
     border-radius: 10px;
     padding: 0.5rem;
     box-sizing: border-box;
-    height: 94%;
+    flex: 1;
+    overflow-y: auto;
 }
 .error-message {
     color: red;
     text-align: center;
     margin: 10px 0;
     font-size: 1rem;
+    flex: 0 0 auto;
+}
+.progress-bar {
+    width: 100%;
+    height: 5px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.progress-fill {
+    height: 100%;
+    background-color: var(--color-accent, #007bff);
+    transition: width 1s linear;
+    border-radius: 2px;
 }
 </style>
 ```

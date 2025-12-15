@@ -2,7 +2,7 @@
     <footer class="footer">
         <div class="left">{{ timeZone }} (UTC{{ utcOffset }})</div>
         <div class="center">Développé par {{ developerName }}</div>
-        <div class="right">© {{ currentYear }} AbView v1.3.5</div>
+        <div class="right">© {{ currentYear }} AbView v1.3.6</div>
     </footer>
 </template>
 

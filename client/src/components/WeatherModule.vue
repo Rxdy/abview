@@ -97,6 +97,11 @@
         <!-- États de chargement / erreur -->
         <div v-else-if="error" class="status error">{{ error }}</div>
         <div v-else class="status loading">...</div>
+
+        <!-- Barre de progression du refresh -->
+        <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: weatherProgress + '%' }"></div>
+        </div>
     </div>
 </template>
 
@@ -125,6 +130,14 @@ const isLoaded = ref(false);
 const error = ref("");
 let refreshTimer = null;
 let dayTimer = null;
+let progressTimer = null;
+const lastFetchTime = ref(Date.now());
+const currentTime = ref(Date.now());
+
+// Mettre à jour currentTime chaque seconde pour la barre de progression
+progressTimer = setInterval(() => {
+    currentTime.value = Date.now();
+}, 1000);
 
 // Jour actuel (mis à jour toutes les minutes)
 const currentDay = ref("");
@@ -182,6 +195,14 @@ const updateCurrentDay = () => {
 // Forecast sans le jour actuel (5 jours au lieu de 6)
 const nextForecast = computed(() => forecast.value.slice(1, 6));
 
+// Barre de progression (refresh toutes les 5 minutes)
+const weatherProgress = computed(() => {
+    const refreshInterval = 5 * 60 * 1000; // 5 minutes en ms
+    const timeSinceLast = currentTime.value - lastFetchTime.value;
+    const progress = (timeSinceLast / refreshInterval) * 100;
+    return Math.min(progress, 100);
+});
+
 // Fetch météo
 const fetchWeather = async () => {
     try {
@@ -224,6 +245,7 @@ const fetchWeather = async () => {
         
         isLoaded.value = true;
         error.value = "";
+        lastFetchTime.value = Date.now();
     } catch (err) {
         error.value = "Erreur de chargement météo";
         isLoaded.value = false;
@@ -233,13 +255,28 @@ const fetchWeather = async () => {
 onMounted(() => {
     updateCurrentDay(); // Met à jour immédiatement
     fetchWeather();
-    refreshTimer = setInterval(fetchWeather, 1 * 30 * 1000);
     dayTimer = setInterval(updateCurrentDay, 60 * 1000); // Met à jour le jour toutes les minutes
+
+    // Calculer le délai pour la prochaine mise à jour alignée sur les 5 minutes
+    const now = new Date();
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+    const nextUpdateMinutes = Math.ceil((minutes + 1) / 5) * 5 % 60; // prochain multiple de 5
+    const delayMs = ((nextUpdateMinutes - minutes) * 60 - seconds) * 1000;
+    if (delayMs > 0) {
+        setTimeout(() => {
+            fetchWeather();
+            refreshTimer = setInterval(fetchWeather, 5 * 60 * 1000);
+        }, delayMs);
+    } else {
+        refreshTimer = setInterval(fetchWeather, 5 * 60 * 1000);
+    }
 });
 
 onUnmounted(() => {
     if (refreshTimer) clearInterval(refreshTimer);
     if (dayTimer) clearInterval(dayTimer);
+    if (progressTimer) clearInterval(progressTimer);
 });
 </script>
 
@@ -428,6 +465,21 @@ onUnmounted(() => {
     width: 14px;
     height: 14px;
     vertical-align: middle;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 5px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    background-color: var(--color-accent, #007bff);
+    transition: width 1s linear;
+    border-radius: 2px;
 }
 
 /* États de chargement / erreur */
