@@ -124,6 +124,10 @@ const lastUpdate = ref("");
 const isLoaded = ref(false);
 const error = ref("");
 let refreshTimer = null;
+let dayTimer = null;
+
+// Jour actuel (mis à jour toutes les minutes)
+const currentDay = ref("");
 
 const CloudIcon = CloudyIcon;
 const UVIcon = ClearDayIcon;
@@ -168,14 +172,12 @@ const formatTime = (timeStr) => {
         .padStart(2, "0")}`;
 };
 
-// Jour actuel
-const currentDay = computed(() => {
+// Mise à jour du jour actuel
+const updateCurrentDay = () => {
     const today = new Date();
-    const day = new Intl.DateTimeFormat("fr-FR", { weekday: "long" }).format(
-        today
-    );
-    return day.charAt(0).toUpperCase() + day.slice(1);
-});
+    const day = new Intl.DateTimeFormat("fr-FR", { weekday: "long" }).format(today);
+    currentDay.value = day.charAt(0).toUpperCase() + day.slice(1);
+};
 
 // Forecast sans le jour actuel (5 jours au lieu de 6)
 const nextForecast = computed(() => forecast.value.slice(1, 6));
@@ -229,12 +231,15 @@ const fetchWeather = async () => {
 };
 
 onMounted(() => {
+    updateCurrentDay(); // Met à jour immédiatement
     fetchWeather();
     refreshTimer = setInterval(fetchWeather, 1 * 30 * 1000);
+    dayTimer = setInterval(updateCurrentDay, 60 * 1000); // Met à jour le jour toutes les minutes
 });
 
 onUnmounted(() => {
     if (refreshTimer) clearInterval(refreshTimer);
+    if (dayTimer) clearInterval(dayTimer);
 });
 </script>
 

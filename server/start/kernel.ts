@@ -1,5 +1,6 @@
 import router from '@adonisjs/core/services/router'
 import server from '@adonisjs/core/services/server'
+import WeatherService from '#services/weather'
 
 /**
  * Error handler
@@ -24,3 +25,8 @@ router.use([() => import('@adonisjs/core/bodyparser_middleware')])
  * Named middleware
  */
 export const middleware = router.named({})
+
+/**
+ * Start weather service auto-refresh
+ */
+WeatherService.startRefresh()

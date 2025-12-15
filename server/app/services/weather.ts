@@ -62,7 +62,7 @@ export default class WeatherService {
         console.log('Nouvelles données récupérées:', data)
 
         const current = {
-          datetime: data.currentConditions.datetime,
+          datetime: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
           temperature: data.currentConditions.temp,
           feelsLike: data.currentConditions.feelslike,
           humidity: data.currentConditions.humidity,
@@ -110,7 +110,10 @@ export default class WeatherService {
       }
     }
 
-    // Retourne le cache tel quel, lastUpdate ne change pas
+    // Retourne le cache tel quel, mais met à jour lastUpdate à chaque appel
+    if (this.cachedData) {
+      this.cachedData.lastUpdate = new Date(now).toISOString();
+    }
     return this.cachedData
   }
 
