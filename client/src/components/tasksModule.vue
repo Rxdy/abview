@@ -23,9 +23,9 @@
                 :key="listTitle"
                 class="task-column"
                 :class="{ 'dark-postit': isDarkPostIt(listTitle) }"
-                :ref="(el) => (taskColumns[index] = el)"
+                :ref="(el) => setTaskColumnRef(el, index)"
                 :style="{
-                    '--rotation': Math.random() * 6 - 3 + 'deg',
+                    '--rotation': getRotation(listTitle) + 'deg',
                     '--postit-bg': getPostItColor(listTitle),
                 }"
             >
@@ -81,13 +81,16 @@ export default {
             tasks: [],
             lastUpdate: null,
             sortedTasks: {},
-            taskColumns: [],
+            taskColumns: new Map(), // Change to Map to avoid read-only issues
             columnTitles: [],
             columnScrollable: [],
             cycleWaiters: {},
             loading: true,
             error: null,
             verticalCycleTimes: {},
+            scrollStates: [], // Track scroll state for each column
+            savedScrollPositions: [], // Save positions during updates
+            isScrollingActive: false,
             refreshInterval: null,
             lastFetchTime: Date.now(),
             currentTime: Date.now(),
@@ -200,6 +203,16 @@ export default {
             const normalizedTitle = listTitle?.trim()?.toLowerCase();
             return darkLists.some(name => normalizedTitle === name.toLowerCase());
         },
+        getRotation(listTitle) {
+            // Rotation consistante basée sur le titre de la liste
+            let hash = 0;
+            for (let i = 0; i < listTitle.length; i++) {
+                hash = ((hash << 5) - hash) + listTitle.charCodeAt(i);
+                hash = hash & hash; // Convertir en 32 bits
+            }
+            // Retourner une rotation entre -3 et 3 degrés
+            return (Math.abs(hash) % 6) - 3;
+        },
         formatDate(dateStr) {
             const d = new Date(dateStr);
             return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
@@ -232,10 +245,7 @@ export default {
                     newStatus === "completed" ? new Date().toISOString() : null;
                 this.$forceUpdate();
             } catch (error) {
-                console.error(
-                    "Erreur lors de la mise à jour du statut de la tâche :",
-                    error
-                );
+                // Erreur silencieuse
                 // Fallback vers localhost si l'URL dynamique ne marche pas
                 try {
                     const newStatus =
@@ -257,39 +267,87 @@ export default {
                         newStatus === "completed" ? new Date().toISOString() : null;
                     this.$forceUpdate();
                 } catch (fallbackError) {
-                    console.error(
-                        "Erreur fallback lors de la mise à jour du statut de la tâche :",
-                        fallbackError
-                    );
+                    // Erreur silencieuse
                 }
             }
         },
-        startIndependentScroll() {
-            this.columnTitles = [];
-            this.columnScrollable = [];
-            this.cycleWaiters = {};
-            
-            for (let i = 0; i < this.taskColumns.length; i++) {
-                const col = this.taskColumns[i];
-                if (!col) continue;
-                
-                const title =
-                    col.querySelector(".column-title")?.textContent?.trim() ??
-                    `#${i}`;
-                const container = col.querySelector(".tasks-container");
-                if (!container) continue;
-                
-                const isScrollable =
-                    container.scrollHeight > container.clientHeight;
-                this.columnTitles[i] = title;
-                this.columnScrollable[i] = isScrollable;
-                this.cycleWaiters[i] = [];
-                
-                // Toujours démarrer le scroll vertical si overflow vertical
-                if (isScrollable) {
-                    this.scrollLoop(container, i);
-                }
+        setTaskColumnRef(el, index) {
+            if (el) {
+                this.taskColumns.set(index, el);
+            } else {
+                this.taskColumns.delete(index);
             }
+        },
+        preserveScrollPositions() {
+            this.savedScrollPositions = [];
+            this.taskColumns.forEach((col, i) => {
+                const container = col?.querySelector(".tasks-container");
+                if (container) {
+                            this.savedScrollPositions[i] = container.scrollTop;
+                }
+            });
+
+        },
+        restoreScrollPositions() {
+            this.$nextTick(() => {
+                this.taskColumns.forEach((col, i) => {
+                    const container = col?.querySelector(".tasks-container");
+                    if (container && this.savedScrollPositions[i] !== undefined) {
+                        container.scrollTop = this.savedScrollPositions[i];
+                    }
+                });
+            });
+        },
+        startIndependentScroll() {
+            
+            // Prevent multiple scroll initialization
+            if (this.isScrollingActive) {
+                return;
+            }
+            
+            this.isScrollingActive = true;
+            
+            // Wait for DOM to be ready
+            this.$nextTick(() => {
+                // taskColumns is now managed via setTaskColumnRef, no need to query
+                
+                
+                this.columnTitles = [];
+                this.columnScrollable = [];
+                this.cycleWaiters = {};
+                this.scrollStates = []; // Initialize scroll states
+                
+                this.taskColumns.forEach((col, i) => {
+                    if (!col) {
+                        return; // use return instead of continue in forEach
+                    }
+                    
+                    const title =
+                        col.querySelector(".column-title")?.textContent?.trim() ??
+                        `#${i}`;
+                    const container = col.querySelector(".tasks-container");
+                    if (!container) {
+                        return; // use return instead of continue in forEach
+                    }
+                    
+                    const isScrollable =
+                        container.scrollHeight > container.clientHeight;
+                    
+                    this.columnTitles[i] = title;
+                    this.columnScrollable[i] = isScrollable;
+                    this.cycleWaiters[i] = [];
+                    this.scrollStates[i] = { active: false, interval: null };
+                    
+                    // Toujours démarrer le scroll vertical si overflow vertical
+                    if (isScrollable && !this.scrollStates[i].active) {
+                        
+                        this.scrollStates[i].active = true;
+                        this.scrollLoop(container, i);
+                    } else if (!isScrollable) {
+                        
+                    }
+                });
+            });
         },
         waitForNextVerticalCycle(i) {
             return new Promise((resolve) => this.cycleWaiters[i].push(resolve));
@@ -300,33 +358,51 @@ export default {
         },
         async scrollLoop(container, colIndex) {
             const title = this.columnTitles[colIndex] ?? `#${colIndex}`;
-            const step = 1; // pixels par frame
-            const delay = 16; // ms entre chaque frame (~60fps)
             let firstLoop = true;
+            let cycleCount = 0;
 
-            while (true) {
+            
+
+            while (this.scrollStates[colIndex]?.active) {
+                cycleCount++;
                 const cycleStart = performance.now();
+                
+
+                // Check if still scrollable (content might have changed)
+                const isStillScrollable = container.scrollHeight > container.clientHeight;
+                if (!isStillScrollable) {
+                    
+                    this.scrollStates[colIndex].active = false;
+                    break;
+                }
 
                 // Scroll vers le bas
+                const maxScrollNow = container.scrollHeight - container.clientHeight;
                 await this.scrollOneDirection(container, "down", colIndex);
+                
 
                 // Pause en bas 5s
-                await this.wait(
-                    5000,
-                    `V: pause bas col ${colIndex} "${title}"`
-                );
+                
+                await this.wait(5000);
+
+                // Check if still active before continuing
+                if (!this.scrollStates[colIndex]?.active) {
+                    
+                    break;
+                }
 
                 // Scroll vers le haut
+                
                 await this.scrollOneDirection(container, "up", colIndex);
+                
 
                 // Pause en haut 5s
-                await this.wait(
-                    5000,
-                    `V: pause haut col ${colIndex} "${title}"`
-                );
+                
+                await this.wait(5000);
 
                 const cycleEnd = performance.now();
                 const cycleTime = cycleEnd - cycleStart;
+                
 
                 // Stocker le temps de cycle pour synchronisation horizontal
                 this.verticalCycleTimes[colIndex] = cycleTime;
@@ -336,40 +412,55 @@ export default {
 
                 if (firstLoop) firstLoop = false;
             }
+            
+            
         },
         scrollOneDirection(container, direction, colIndex) {
-            const step = 1; // pixels par frame
-            const delay = 16;
+            const step = 1;
+            const delay = 30;
+            const title = this.columnTitles[colIndex] ?? `#${colIndex}`;
+            const maxScroll = container.scrollHeight - container.clientHeight;
+            console.log(`📜 Scroll ${direction} col ${colIndex} "${title}" - max=${maxScroll}, target=${direction === 'down' ? maxScroll : 0}`);
+            
             return new Promise((resolve) => {
+                let scrollPos = container.scrollTop;
+                const directionMultiplier = direction === 'down' ? 1 : -1;
+                
                 const interval = setInterval(() => {
-                    if (direction === "down") {
-                        container.scrollTop += step;
-                        if (
-                            container.scrollTop >=
-                            container.scrollHeight - container.clientHeight
-                        ) {
-                            clearInterval(interval);
-                            resolve();
-                        }
-                    } else {
-                        container.scrollTop -= step;
-                        if (container.scrollTop <= 0) {
-                            clearInterval(interval);
-                            resolve();
-                        }
+                    // Check if scroll is still active
+                    if (!this.scrollStates[colIndex]?.active) {
+                        clearInterval(interval);
+                        resolve();
+                        return;
+                    }
+                    
+                    scrollPos += step * directionMultiplier;
+                    container.scrollTop = scrollPos;
+                    
+                    if (direction === 'down' && scrollPos >= maxScroll) {
+                        console.log(`✅ Scroll down terminé col ${colIndex} "${title}" - finalPos=${scrollPos}`);
+                        clearInterval(interval);
+                        resolve();
+                    } else if (direction === 'up' && scrollPos <= 0) {
+                        console.log(`✅ Scroll up terminé col ${colIndex} "${title}" - finalPos=${scrollPos}`);
+                        clearInterval(interval);
+                        resolve();
                     }
                 }, delay);
+                
+                // Store interval reference for cleanup
+                if (this.scrollStates[colIndex]) {
+                    this.scrollStates[colIndex].interval = interval;
+                }
             });
         },
         wait(ms) {
             return new Promise((resolve) => setTimeout(() => resolve(), ms));
         },
         async horizontalScrollLoop() {
-            console.log("🔄 horizontalScrollLoop DÉMARRÉ");
             const board = this.$refs.tasksBoard?.querySelector(".tasks-columns");
             
             if (!board) {
-                console.error("❌ Board non trouvé, retry dans 500ms");
                 setTimeout(() => this.horizontalScrollLoop(), 500);
                 return;
             }
@@ -382,19 +473,18 @@ export default {
             await this.wait(500);
 
             // Check if horizontal scroll is actually needed
-            console.log("📏 Vérification scroll nécessaire:", {
-                scrollWidth: board.scrollWidth,
-                clientWidth: board.clientWidth,
-                needsScroll: board.scrollWidth > board.clientWidth
-            });
-            
             if (board.scrollWidth <= board.clientWidth) {
-                console.log("❌ Pas besoin de scroll horizontal, arrêt");
                 return;
             }
 
-            const firstColIndex = 0;
-            const lastColIndex = this.taskColumns.length - 1;
+            // Compute numeric first/last indices from Map keys (supports Map used for refs)
+            const keys = Array.from(this.taskColumns.keys())
+                .map((k) => Number(k))
+                .filter((n) => !Number.isNaN(n))
+                .sort((a, b) => a - b);
+            if (keys.length === 0) return;
+            const firstColIndex = keys[0];
+            const lastColIndex = keys[keys.length - 1];
 
             // Attendre que le DOM ait fini de rendre
             await this.$nextTick();
@@ -425,27 +515,21 @@ export default {
                 
                 // Scroll vers la droite
                 const target = board.scrollWidth - board.clientWidth;
-                console.log("➡️ Scroll droite");
                 await this.scrollBoard(board, target, step, delay);
 
                 // Attente à droite (dernière liste)
                 const rightWait = await getWaitTime(lastColIndex);
-                console.log(`⏸️ Attente droite: ${rightWait}ms (colonne ${lastColIndex}, scrollable: ${this.columnScrollable[lastColIndex]})`);
                 await this.wait(rightWait);
                 
                 // Scroll vers la gauche
-                console.log("⬅️ Scroll gauche");
                 await this.scrollBoard(board, 0, step, delay);
 
                 // Attente à gauche (première liste)
                 const leftWait = await getWaitTime(firstColIndex);
-                console.log(`⏸️ Attente gauche: ${leftWait}ms (colonne 0, scrollable: ${this.columnScrollable[firstColIndex]})`);
                 await this.wait(leftWait);
             }
         },
         scrollBoard(board, target, step, delay) {
-            console.log("scrollBoard appelé - target:", target, "current:", board.scrollLeft);
-            console.log("scrollBoard - scrollWidth:", board.scrollWidth, "clientWidth:", board.clientWidth);
             return new Promise((resolve) => {
                 let iterations = 0;
                 const maxIterations = 10000; // Sécurité pour éviter boucle infinie
@@ -454,7 +538,6 @@ export default {
                     iterations++;
                     
                     if (iterations > maxIterations) {
-                        console.error("❌ scrollBoard timeout après", maxIterations, "itérations");
                         clearInterval(interval);
                         resolve();
                         return;
@@ -466,12 +549,7 @@ export default {
                         board.scrollLeft += step;
                         const newScroll = board.scrollLeft;
                         
-                        if (iterations % 50 === 0) {
-                            console.log("➡️ Scrolling right, iteration:", iterations, "scroll:", newScroll);
-                        }
-                        
                         if (newScroll >= target || newScroll === currentScroll) {
-                            console.log("✅ scrollBoard terminé (droite) - position:", newScroll, "iterations:", iterations);
                             clearInterval(interval);
                             resolve();
                         }
@@ -479,17 +557,11 @@ export default {
                         board.scrollLeft -= step;
                         const newScroll = board.scrollLeft;
                         
-                        if (iterations % 50 === 0) {
-                            console.log("⬅️ Scrolling left, iteration:", iterations, "scroll:", newScroll);
-                        }
-                        
                         if (newScroll <= target || newScroll === currentScroll) {
-                            console.log("✅ scrollBoard terminé (gauche) - position:", newScroll, "iterations:", iterations);
                             clearInterval(interval);
                             resolve();
                         }
                     } else {
-                        console.log("✅ scrollBoard terminé (déjà à target) - position:", currentScroll);
                         clearInterval(interval);
                         resolve();
                     }
@@ -546,9 +618,15 @@ export default {
                 const res = await fetch(apiUrl);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
-                this.tasks = data.tasks || [];
-                this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
-                logger.log('api', `Tasks refresh success: ${this.tasks.length} tasks updated`);
+                const newTasks = data.tasks || [];
+                // Ne mettre à jour que si les tâches ont changé
+                if (JSON.stringify(newTasks) !== JSON.stringify(this.tasks)) {
+                    this.tasks = newTasks;
+                    this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
+                    logger.log('api', `Tasks refresh success: ${this.tasks.length} tasks updated`);
+                } else {
+                    logger.log('api', 'Tasks refresh: no changes');
+                }
                 this.lastFetchTime = Date.now();
             } catch (err) {
                 logger.log('error', `Tasks refresh failed: ${err.message}`);

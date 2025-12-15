@@ -102,7 +102,7 @@ export default {
             document.documentElement.style.setProperty("--vh", `${vh}px`);
         },
         updateDarkMode(sunTimes) {
-            console.log('[Theme] Mise à jour heures soleil:', sunTimes);
+            // Theme sun times updated
             this.sunTimes = {
                 sunrise: sunTimes.sunrise || this.sunTimes.sunrise,
                 sunset: sunTimes.sunset || this.sunTimes.sunset,
@@ -122,7 +122,7 @@ export default {
             const sunriseTimeInMinutes = sunriseHour * 60 + sunriseMinute;
             const sunsetTimeInMinutes = sunsetHour * 60 + sunsetMinute;
 
-            console.log(`[Theme] Vérification thème - Current: ${now.getHours()}:${now.getMinutes()} (${currentTimeInMinutes}min), Sunrise: ${this.sunTimes.sunrise} (${sunriseTimeInMinutes}min), Sunset: ${this.sunTimes.sunset} (${sunsetTimeInMinutes}min)`);
+            // Theme check completed
 
             const wasDark = document.body.classList.contains("dark-mode");
             if (

@@ -2,11 +2,15 @@
     <footer class="footer">
         <div class="left">{{ timeZone }} (UTC{{ utcOffset }})</div>
         <div class="center">Développé par {{ developerName }}</div>
-        <div class="right">© {{ currentYear }} AbView v1.3.6</div>
+        <div class="right">© {{ currentYear }} AbView {{ appVersion }}</div>
     </footer>
 </template>
 
 <script>
+import pkg from "../../package.json";
+
+const APP_VERSION = import.meta.env.VITE_APP_VERSION || pkg.version || '1.4.1';
+
 export default {
     name: "FooterBar",
     data() {
@@ -15,6 +19,7 @@ export default {
             utcOffset: this.getUtcOffset(),
             developerName: "Rudy ALVES",
             currentYear: new Date().getFullYear(),
+            appVersion: `v${APP_VERSION}`,
         };
     },
     methods: {

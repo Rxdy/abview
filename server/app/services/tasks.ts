@@ -72,10 +72,9 @@ export default class GoogleTasksService {
 
   async listAllTasks(): Promise<Task[]> {
     const now = Date.now()
-    if (now - this.lastRefresh > this.refreshInterval || this.cachedTasks.length === 0) {
-      this.cachedTasks = await this.fetchAllTasks()
-      this.lastRefresh = now
-    }
+    // Toujours rafraîchir les données pour avoir les dernières tâches
+    this.cachedTasks = await this.fetchAllTasks()
+    this.lastRefresh = now
     return this.cachedTasks
   }
 

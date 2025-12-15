@@ -5,7 +5,7 @@
             <div class="loading-logo">
                 <div class="logo-icon">📱</div>
                 <h1>AbView</h1>
-                <div class="version">v1.3.5</div>
+                <div class="version">{{ appVersion }}</div>
             </div>
 
             <!-- Loader animé -->
@@ -34,6 +34,9 @@
 
 <script>
 import { getApiUrl } from "../utils/dateUtils";
+import pkg from "../../package.json";
+
+const APP_VERSION = import.meta.env.VITE_APP_VERSION || pkg.version || '1.3.5';
 
 export default {
     name: "LoadingScreen",
@@ -147,6 +150,8 @@ export default {
                 calendar: null,
                 tasks: null
             }
+            ,
+            appVersion: `v${APP_VERSION}`
         };
     },
     mounted() {
@@ -221,7 +226,7 @@ export default {
             try {
                 const response = await fetch(getApiUrl("/"));
                 if (response.ok) {
-                    console.log("[Loading] API accessible");
+                    // API accessible
                 }
             } catch (error) {
                 console.warn("[Loading] API non accessible, les modules réessaieront");
@@ -233,7 +238,6 @@ export default {
                 const response = await fetch(getApiUrl("/weather"));
                 if (response.ok) {
                     this.apiData.weather = await response.json();
-                    console.log("[Loading] Météo chargée");
                 }
             } catch (error) {
                 console.warn("[Loading] Météo non chargée, le module réessaiera");
@@ -245,7 +249,6 @@ export default {
                 const response = await fetch(getApiUrl("/calendar"));
                 if (response.ok) {
                     this.apiData.calendar = await response.json();
-                    console.log("[Loading] Calendrier chargé");
                 }
             } catch (error) {
                 console.warn("[Loading] Calendrier non chargé, le module réessaiera");
@@ -257,7 +260,6 @@ export default {
                 const response = await fetch(getApiUrl("/tasks"));
                 if (response.ok) {
                     this.apiData.tasks = await response.json();
-                    console.log("[Loading] Tâches chargées");
                 }
             } catch (error) {
                 console.warn("[Loading] Tâches non chargées, le module réessaiera");
