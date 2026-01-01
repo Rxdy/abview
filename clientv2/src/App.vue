@@ -117,6 +117,7 @@ onMounted(() => {
   flex-direction: column;
   height: 100vh;
   width: 100%;
+  cursor: none; /* Masquer le curseur pour affichage sans périphérique */
 }
 
 .content {
