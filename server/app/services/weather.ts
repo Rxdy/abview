@@ -1,5 +1,6 @@
 // app/services/weather.ts
 import axios from 'axios'
+import StatsService from '#services/stats'
 
 export interface WeatherDay {
   date: string
@@ -28,6 +29,7 @@ export interface WeatherData {
     humidity: number
     windSpeed: number
     windGust: number
+    windDirection: number
     pressure: number
     visibility: number
     cloudCover: number
@@ -47,8 +49,9 @@ export default class WeatherService {
   private baseUrl =
     'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline'
   private lastRefresh: number = 0
-  private refreshInterval = 10 * 60 * 1000 // 10 minutes en ms
+  private refreshInterval = 5 * 60 * 1000 // 5 minutes en ms
   private cachedData: WeatherData | null = null
+  private statsService = new StatsService()
 
   async getWeather(): Promise<WeatherData | null> {
     const now = Date.now()
@@ -68,6 +71,7 @@ export default class WeatherService {
           humidity: data.currentConditions.humidity,
           windSpeed: data.currentConditions.windspeed,
           windGust: data.currentConditions.windgust,
+          windDirection: data.currentConditions.winddir,
           pressure: data.currentConditions.pressure,
           visibility: data.currentConditions.visibility,
           cloudCover: data.currentConditions.cloudcover,
@@ -104,6 +108,12 @@ export default class WeatherService {
           lastUpdate: new Date(now).toISOString(),
         }
         this.lastRefresh = now
+
+        // Enregistrer les données météo quotidiennes pour les stats
+        // Utiliser les données du forecast[0] (aujourd'hui) au lieu des currentConditions
+        if (forecast.length > 0) {
+          this.statsService.recordWeatherDay(forecast[0])
+        }
       } catch (error) {
         console.error('Erreur récupération météo:', error)
         return null

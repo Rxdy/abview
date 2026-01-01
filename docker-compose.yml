@@ -45,3 +45,19 @@ services:
             - VITE_SCREEN_OFF_END_MINUTES=${VITE_SCREEN_OFF_END_MINUTES:-0}
         command: sh -c "npm install && npm run dev -- --host"
         stop_grace_period: 1s
+
+    clientv2:
+        image: node:24-alpine
+        working_dir: /app
+        volumes:
+            - ./clientv2:/app
+            - /app/node_modules
+        ports:
+            - "5174:5174"
+        environment:
+            - NODE_ENV=development
+            - TZ=Europe/Paris
+        command: sh -c "npm install && npm run dev -- --host --port 5174"
+        depends_on:
+            - api
+        stop_grace_period: 1s

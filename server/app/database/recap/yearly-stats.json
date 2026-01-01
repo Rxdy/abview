@@ -1,0 +1,80 @@
+{
+  "year": 2026,
+  "tasks": [
+    {
+      "listId": "M3otRnFjMVRJOFM3SDN1cw",
+      "listTitle": "Rudy",
+      "createdIds": [
+        "VWE1RXJsamQxN0ZpdndWeA",
+        "QnJhZnRtSjRGSkYwcEF6OA",
+        "ODBYbXpHSmEySGlESXFmSw",
+        "eFdXT1EzTkpOcUtaU0ZMNw",
+        "TkFBcDJmWmFNcUJsLUMyUA",
+        "UjN5RzlUdlRBYkFJN09kQg",
+        "dlhNaEZFampWdjJEMm1qTg",
+        "NThyQ0pXbTQyTHBHUHVhMQ"
+      ],
+      "completedIds": [],
+      "created": 8,
+      "completed": 0
+    },
+    {
+      "listId": "UUhVbEl5eTUxVUxJSlg0aQ",
+      "listTitle": "Julie",
+      "createdIds": [
+        "NXFMemNsTERnWk53bWJzbA",
+        "YUVES3J6Y3FzZ3c2UDRCVA",
+        "NTFOV2lBSVVGLVU4VXFlZA",
+        "VTNxdjE1OC1QbUZCQ2NidQ",
+        "M1ktUlNPd3Y5XzFNMUFRMg"
+      ],
+      "completedIds": [
+        "NTFOV2lBSVVGLVU4VXFlZA",
+        "VTNxdjE1OC1QbUZCQ2NidQ",
+        "M1ktUlNPd3Y5XzFNMUFRMg"
+      ],
+      "created": 5,
+      "completed": 3
+    },
+    {
+      "listId": "Z1RodXUyUW91UDBPWS02Vg",
+      "listTitle": "Luis",
+      "createdIds": [
+        "bjNRcGE4SWFxWTI1cEdScw",
+        "NHllZnZBbmRBNmduY2FDYg",
+        "N3IyUVZGR1FSbkNvSDJteg",
+        "WmRTT1RLeTlLekoyaHhkbQ",
+        "UE9OZnI4Z3dpblNQWk1fMQ",
+        "RHFlRTItV2xYZDh1YmdHNg",
+        "UF9mWmVBRENOYXNGeV9jMg",
+        "RWx3Ylc0SW9QT1JXSzV3Qw",
+        "SFVNNFhZalFKQ0ZQclA5NA",
+        "NW9BY1k3QnFVSkp5ZlhLcw",
+        "OW5SNEpVRWpfWFFhX1dqdw",
+        "MXo2ekt5bVMzc0dyY3hxWA",
+        "VkhoQXBnRlBzWXdUbVgwUg",
+        "cjcwMFBMNzhwa2FmYVlUNA",
+        "WFc1U3BDLUE3azZPSjQ1Ng"
+      ],
+      "completedIds": [
+        "N3IyUVZGR1FSbkNvSDJteg",
+        "UF9mWmVBRENOYXNGeV9jMg",
+        "RWx3Ylc0SW9QT1JXSzV3Qw"
+      ],
+      "created": 15,
+      "completed": 3
+    },
+    {
+      "listId": "R0VKSFRITDBCZmVsY0E2RQ",
+      "listTitle": "Courses",
+      "createdIds": [
+        "bU0zS2gxVzVDUzdoYzEyNw"
+      ],
+      "completedIds": [],
+      "created": 1,
+      "completed": 0
+    }
+  ],
+  "userStats": [],
+  "listStats": []
+}

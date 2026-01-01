@@ -1,0 +1,45 @@
+{
+  "year": 2025,
+  "days": [
+    {
+      "date": "2025-12-27",
+      "temp": -1.4,
+      "tempMin": -5,
+      "tempMax": 1,
+      "feelsLike": -2.5,
+      "humidity": 98.3,
+      "precip": 0,
+      "precipProb": 0,
+      "windSpeed": 9.4,
+      "windGust": 15.5,
+      "description": "Partially cloudy",
+      "icon": "partly-cloudy-day",
+      "sunrise": "08:22:34",
+      "sunset": "17:06:03",
+      "isRainy": false,
+      "isSunny": false
+    },
+    {
+      "date": "2026-01-01",
+      "temp": -4,
+      "tempMin": -9,
+      "tempMax": 3,
+      "feelsLike": -6.2,
+      "humidity": 80.5,
+      "precip": 0,
+      "precipProb": 0,
+      "windSpeed": 14.8,
+      "windGust": 24.1,
+      "description": "Clear",
+      "icon": "clear-day",
+      "sunrise": "08:23:18",
+      "sunset": "17:10:12",
+      "isRainy": false,
+      "isSunny": true
+    }
+  ],
+  "averageTemp": -2.7,
+  "rainyDays": 0,
+  "sunnyDays": 1,
+  "description": "ensoleillée avec quelques nuages"
+}
