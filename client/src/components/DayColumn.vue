@@ -63,7 +63,7 @@ defineProps({
     overflow-y: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    height: 100%;
+    height: 400px;
 }
 .events::-webkit-scrollbar {
     display: none;

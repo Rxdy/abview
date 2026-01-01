@@ -31,3 +31,42 @@ body {
 #app {
     width: 100%;
 }
+
+/* App specific colors */
+:root {
+    /* Dark theme (default) */
+    --color-primary: #ffffff;
+    --color-secondary: #333333;
+    --color-tertiary: #1a1a1a;
+    --color-accent: #007bff;
+    --color-surface: rgba(255, 255, 255, 0.08);
+    --color-border: rgba(255, 255, 255, 0.15);
+    --color-text: #ffffff;
+    --color-text-secondary: rgba(255, 255, 255, 0.7);
+    --color-background: #1a1a1a;
+    --color-gray: rgba(255, 255, 255, 0.05);
+
+    /* Error colors */
+    --error-network: #ff9500;
+    --error-no-data: #007aff;
+    --error-generic: #ff6b6b;
+}
+
+/* Light theme */
+.light-theme {
+    --color-primary: #1a1a1a;
+    --color-secondary: #f0f0f0;
+    --color-tertiary: #e0e0e0;
+    --color-accent: #007bff;
+    --color-surface: rgba(255, 255, 255, 0.9);
+    --color-border: rgba(0, 0, 0, 0.15);
+    --color-text: #1a1a1a;
+    --color-text-secondary: rgba(26, 26, 26, 0.7);
+    --color-background: #f5f5f5;
+    --color-gray: rgba(0, 0, 0, 0.05);
+
+    /* Error colors stay the same */
+    --error-network: #ff9500;
+    --error-no-data: #007aff;
+    --error-generic: #ff6b6b;
+}

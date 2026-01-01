@@ -282,15 +282,16 @@ onUnmounted(() => {
 
 <style scoped>
 .weather-kiosk {
+    height: 100%;
     background: var(--module-bg);
     color: var(--color-text);
     padding: 0.5%;
     border-radius: 8px;
     font-family: Arial, sans-serif;
-    height: 95%;
     display: flex;
     flex-direction: column;
     font-size: 11px;
+    min-height: 0;
 }
 
 .weather-header {

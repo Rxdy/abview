@@ -147,16 +147,16 @@ const closeNotificationModal = () => {
 
 <style scoped>
 .calendar-module {
-    flex: 1;
+    height: 100%;
     background: var(--module-bg, #e0e0e0);
     color: var(--color-text);
     padding: 0.5%;
     border-radius: 8px;
     font-family: Arial, sans-serif;
-    height: 95%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-height: 0;
 }
 .calendar-header {
     display: flex;

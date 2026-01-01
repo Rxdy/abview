@@ -16,50 +16,14 @@
                     Mise à jour : {{ formatLastUpdate(lastUpdate) }}
                 </div>
             </div>
-            <!-- Conteneur des colonnes -->
+            <!-- Conteneur des listes -->
             <div class="tasks-columns">
-            <div
-                v-for="(tasks, listTitle, index) in sortedGroupedTasks"
-                :key="listTitle"
-                class="task-column"
-                :class="{ 'dark-postit': isDarkPostIt(listTitle) }"
-                :ref="(el) => setTaskColumnRef(el, index)"
-                :style="{
-                    '--rotation': getRotation(listTitle) + 'deg',
-                    '--postit-bg': getPostItColor(listTitle),
-                }"
-            >
-                <div class="column-title">{{ listTitle }}</div>
-                <div class="tasks-container">
-                    <div
-                        v-for="task in tasks"
-                        :key="task.id"
-                        class="task-card"
-                        :class="{ completed: task.status === 'completed' }"
-                    >
-                        <div class="task-header">
-                            <input
-                                type="checkbox"
-                                :checked="task.status === 'completed'"
-                                @change="toggleTaskStatus(task)"
-                                class="task-checkbox"
-                            />
-                            <span class="task-title">{{ task.title }}</span>
-                            <span
-                                v-if="task.status !== 'completed' && task.due"
-                                class="task-due"
-                            >
-                                {{ formatDate(task.due) }}
-                            </span>
-                        </div>
-                        <div v-if="task.notes" class="task-notes">
-                            <span
-                                >Notes : <em>{{ task.notes }}</em></span
-                            >
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <TaskList
+                    v-for="list in sortedLists"
+                    :key="list.id"
+                    :list="list"
+                    @toggle-status="toggleTaskStatus"
+                />
             </div>
         </template>
 
@@ -73,12 +37,16 @@
 <script>
 import { getApiUrl } from "../utils/dateUtils";
 import logger from "../utils/logger.js";
+import TaskList from './TaskList.vue'
 
 export default {
     name: "TasksBoard",
+    components: {
+        TaskList,
+    },
     data() {
         return {
-            tasks: [],
+            lists: [],
             lastUpdate: null,
             sortedTasks: {},
             taskColumns: new Map(), // Change to Map to avoid read-only issues
@@ -98,60 +66,8 @@ export default {
         };
     },
     computed: {
-        groupedTasks() {
-            const grouped = {};
-            this.tasks.forEach((task) => {
-                const listName = task.taskListTitle || "Sans titre";
-                if (!grouped[listName]) grouped[listName] = [];
-                grouped[listName].push(task);
-            });
-            return grouped;
-        },
-        sortedGroupedTasks() {
-            const grouped = this.groupedTasks;
-            // Trier par nombre de tâches (décroissant) : plus grand en premier
-            const sortedLists = Object.keys(grouped).sort((a, b) => {
-                return grouped[b].length - grouped[a].length;
-            });
-
-            // Réorganiser pour mettre les plus grandes listes au centre
-            // Exemple avec [8,6,3,1,1] → [1,6,8,3,1] : petits aux bords, grands au centre
-            const centeredLists = [];
-            const leftSide = [];
-            const rightSide = [];
-
-            for (let i = 0; i < sortedLists.length; i++) {
-                if (i === 0) {
-                    // Le plus grand au centre
-                    centeredLists.push(sortedLists[i]);
-                } else if (i === 1) {
-                    // Le deuxième plus grand à gauche du centre
-                    leftSide.unshift(sortedLists[i]);
-                } else if (i === 2) {
-                    // Le troisième plus grand à droite du centre
-                    rightSide.push(sortedLists[i]);
-                } else {
-                    // Les autres alternés aux extrémités
-                    if (leftSide.length <= rightSide.length) {
-                        leftSide.unshift(sortedLists[i]);
-                    } else {
-                        rightSide.push(sortedLists[i]);
-                    }
-                }
-            }
-
-            // Combiner : gauche + centre + droite
-            const finalOrder = [...leftSide, ...centeredLists, ...rightSide];
-
-            const sortedGrouped = {};
-            finalOrder.forEach((listName) => {
-                sortedGrouped[listName] = grouped[listName].sort((a, b) => {
-                    const dateA = a.due ? new Date(a.due) : new Date(0);
-                    const dateB = b.due ? new Date(b.due) : new Date(0);
-                    return dateA - dateB;
-                });
-            });
-            return sortedGrouped;
+        sortedLists() {
+            return this.lists.sort((a, b) => b.tasks.length - a.tasks.length);
         },
         tasksProgress() {
             const refreshInterval = 5 * 60 * 1000; // 5 minutes
@@ -584,7 +500,7 @@ export default {
                     const res = await fetch(apiUrl);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const data = await res.json();
-                    this.tasks = data.tasks || [];
+                    this.lists = data.lists || [];
                     this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
                     logger.log('api', `Tasks API success: ${this.tasks.length} tasks loaded`);
                     this.loading = false;
@@ -618,10 +534,10 @@ export default {
                 const res = await fetch(apiUrl);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
-                const newTasks = data.tasks || [];
+                const newLists = data.lists || [];
                 // Ne mettre à jour que si les tâches ont changé
-                if (JSON.stringify(newTasks) !== JSON.stringify(this.tasks)) {
-                    this.tasks = newTasks;
+                if (JSON.stringify(newLists) !== JSON.stringify(this.lists)) {
+                    this.lists = newLists;
                     this.lastUpdate = data.lastUpdate ? new Date(data.lastUpdate) : null;
                     logger.log('api', `Tasks refresh success: ${this.tasks.length} tasks updated`);
                 } else {
@@ -678,16 +594,17 @@ export default {
 
 <style scoped>
 .tasks-board {
+    height: 100%;
     background: var(--module-bg, #e0e0e0);
     color: var(--color-text);
     padding: 0.5%;
     border-radius: 8px;
     font-family: Arial, sans-serif;
-    height: 100%;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     overflow: hidden;
+    min-height: 0;
 }
 .tasks-loading,
 .tasks-error {
@@ -721,8 +638,9 @@ export default {
 }
 .tasks-columns {
     display: flex;
-    gap: 0.8%;
-    overflow-x: auto;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
     height: 100%;
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -733,20 +651,20 @@ export default {
 }
 .task-column {
     background: var(--postit-bg);
-    transform: rotate(var(--rotation));
     border-radius: 10px;
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    height: 100%;
-    width: 23%;
+    height: auto;
+    width: 100%;
     position: relative;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
     border: 1px solid #ccc;
     color: #000;
     padding: 1%;
     box-sizing: border-box;
+    max-height: 50vh; /* Limit height for scroll */
 }
 .task-column.dark-postit {
     color: #fff;

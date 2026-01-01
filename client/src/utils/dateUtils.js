@@ -28,8 +28,12 @@ export function isToday(dateStr) {
     return dateStr === localDateStr;
 }
 
-export function getEventDate(dateStr) {
-    return dateStr.includes("T") ? dateStr.slice(0, 10) : dateStr;
+export function getEventDate(dateInput) {
+    // Handle both string and object formats
+    const dateStr = typeof dateInput === 'object' && dateInput?.dateTime 
+        ? dateInput.dateTime 
+        : dateInput;
+    return dateStr && dateStr.includes("T") ? dateStr.slice(0, 10) : dateStr;
 }
 
 export function getTime(dateStr) {

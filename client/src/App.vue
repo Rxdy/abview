@@ -6,7 +6,7 @@
     <div v-if="screenOff" class="screen-off" @click="wakeUpScreen"></div>
 
     <!-- Application principale (masquée pendant le chargement) -->
-    <div v-if="!isLoading && !screenOff" class="app-content">
+    <div v-if="!isLoading && !screenOff" :class="themeClass" class="app-content">
 
         <HeaderBar />
         <main class="main-content">
@@ -66,11 +66,18 @@ export default {
             manualWakeUp: false, // Si l'utilisateur a cliqué pour rallumer
         };
     },
+    computed: {
+        themeClass() {
+            return document.body.classList.contains('dark-mode') ? '' : 'light-theme';
+        }
+    },
     created() {
         // Vérifier immédiatement si l'écran doit être éteint au démarrage
         this.checkScreenOff();
     },
     mounted() {
+        console.log('🔥🔥🔥 APP MOUNTED - DEBUT 🔥🔥🔥');
+        console.log('isLoading:', this.isLoading);
         logger.system.info('Application démarrée');
         this.setViewportHeight();
         window.addEventListener("resize", this.setViewportHeight);
@@ -85,6 +92,24 @@ export default {
         this.setupActivityListeners();
         // Démarrer la veille écran
         this.startScreenSaver();
+        
+        // DEBUG: Raccourci clavier pour logs
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'l' && e.ctrlKey) {
+                e.preventDefault();
+                console.log('🔥 LOGS MANUELS déclenchés par Ctrl+L');
+                this.logAllDimensions();
+            }
+        });
+        
+        // DEBUG: Forcer les logs après montage
+        console.log('⏰ Configuration du setTimeout pour logs dans 2s');
+        setTimeout(() => {
+            console.log('⏰⏰⏰ TIMEOUT DECLENCHE - Appel de logAllDimensions');
+            console.log('isLoading dans timeout:', this.isLoading);
+            this.logAllDimensions();
+        }, 2000);
+        console.log('✅ setTimeout configuré, fin de mounted()');
     },
     beforeUnmount() {
         window.removeEventListener("resize", this.setViewportHeight);
@@ -94,8 +119,17 @@ export default {
     },
     methods: {
         onLoadingComplete() {
+            console.log('🎉🎉🎉 onLoadingComplete APPELE 🎉🎉🎉');
             this.isLoading = false;
+            console.log('isLoading mis à false');
             logger.system.info('Écran de chargement terminé, application prête');
+            
+            // DEBUG: Log des dimensions APRÈS chargement complet
+            console.log('⏰ Configuration setTimeout dans onLoadingComplete');
+            setTimeout(() => {
+                console.log('⏰⏰⏰ TIMEOUT onLoadingComplete DECLENCHE');
+                this.logAllDimensions();
+            }, 1000);
         },
         setViewportHeight() {
             const vh = window.innerHeight * 0.01;
@@ -243,6 +277,141 @@ export default {
             }
             this.startScreenSaver();
         },
+        logAllDimensions() {
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('🚀🚀🚀 DEBUT DE logAllDimensions() 🚀🚀🚀');
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('📐 DEBUG DIMENSIONS - ANALYSE COMPLÈTE');
+            console.log('═══════════════════════════════════════════════════════');
+            
+            // Taille de l'écran
+            const screenHeight = window.innerHeight;
+            const screenWidth = window.innerWidth;
+            console.log('🖥️  ÉCRAN:');
+            console.log(`   Hauteur: ${screenHeight}px`);
+            console.log(`   Largeur: ${screenWidth}px`);
+            console.log('');
+            
+            // App container
+            const app = document.querySelector('#app');
+            if (app) {
+                const appRect = app.getBoundingClientRect();
+                console.log('📦 APP CONTAINER:');
+                console.log(`   Hauteur: ${appRect.height}px`);
+                console.log(`   Computed height: ${window.getComputedStyle(app).height}`);
+                console.log(`   Débordement: ${appRect.height > screenHeight ? '❌ OUI (' + (appRect.height - screenHeight) + 'px)' : '✅ NON'}`);
+                console.log('');
+            }
+            
+            // Header
+            const header = document.querySelector('header');
+            if (header) {
+                const headerRect = header.getBoundingClientRect();
+                console.log('📌 HEADER:');
+                console.log(`   Hauteur: ${headerRect.height}px`);
+                console.log(`   Computed height: ${window.getComputedStyle(header).height}`);
+                console.log(`   % écran: ${((headerRect.height / screenHeight) * 100).toFixed(2)}%`);
+                console.log('');
+            }
+            
+            // Main
+            const main = document.querySelector('.main-content');
+            if (main) {
+                const mainRect = main.getBoundingClientRect();
+                console.log('📄 MAIN CONTENT:');
+                console.log(`   Hauteur: ${mainRect.height}px`);
+                console.log(`   Computed height: ${window.getComputedStyle(main).height}`);
+                console.log(`   % écran: ${((mainRect.height / screenHeight) * 100).toFixed(2)}%`);
+                console.log(`   ScrollHeight: ${main.scrollHeight}px`);
+                console.log(`   Débordement interne: ${main.scrollHeight > mainRect.height ? '❌ OUI (' + (main.scrollHeight - mainRect.height) + 'px)' : '✅ NON'}`);
+                console.log('');
+            }
+            
+            // Footer
+            const footer = document.querySelector('footer');
+            if (footer) {
+                const footerRect = footer.getBoundingClientRect();
+                console.log('📍 FOOTER:');
+                console.log(`   Hauteur: ${footerRect.height}px`);
+                console.log(`   Computed height: ${window.getComputedStyle(footer).height}`);
+                console.log(`   % écran: ${((footerRect.height / screenHeight) * 100).toFixed(2)}%`);
+                console.log(`   Position top: ${footerRect.top}px`);
+                console.log(`   Visible: ${footerRect.top < screenHeight ? '✅ OUI' : '❌ NON (hors écran de ' + (footerRect.top - screenHeight) + 'px)'}`);
+                console.log('');
+            }
+            
+            // Top row (calendrier)
+            const topRow = document.querySelector('.top-row');
+            if (topRow) {
+                const topRect = topRow.getBoundingClientRect();
+                console.log('📅 TOP ROW (Calendrier):');
+                console.log(`   Hauteur: ${topRect.height}px`);
+                console.log(`   Computed height: ${window.getComputedStyle(topRow).height}`);
+                console.log('');
+            }
+            
+            // Calendar module
+            const calendar = document.querySelector('.calendar-module');
+            if (calendar) {
+                const calRect = calendar.getBoundingClientRect();
+                console.log('📆 CALENDAR MODULE:');
+                console.log(`   Hauteur: ${calRect.height}px`);
+                console.log(`   Computed height: ${window.getComputedStyle(calendar).height}`);
+                console.log(`   ScrollHeight: ${calendar.scrollHeight}px`);
+                console.log(`   Débordement: ${calendar.scrollHeight > calRect.height ? '⚠️  OUI (' + (calendar.scrollHeight - calRect.height) + 'px)' : '✅ NON'}`);
+                console.log('');
+            }
+            
+            // Bottom row
+            const bottomRow = document.querySelector('.bottom-row');
+            if (bottomRow) {
+                const bottomRect = bottomRow.getBoundingClientRect();
+                console.log('📊 BOTTOM ROW (Météo + Tâches):');
+                console.log(`   Hauteur: ${bottomRect.height}px`);
+                console.log(`   Computed height: ${window.getComputedStyle(bottomRow).height}`);
+                console.log('');
+            }
+            
+            // Weather module
+            const weather = document.querySelector('.weather-module');
+            if (weather) {
+                const weatherRect = weather.getBoundingClientRect();
+                console.log('🌤️  WEATHER MODULE:');
+                console.log(`   Hauteur: ${weatherRect.height}px`);
+                console.log(`   Computed height: ${window.getComputedStyle(weather).height}`);
+                console.log(`   ScrollHeight: ${weather.scrollHeight}px`);
+                console.log(`   Débordement: ${weather.scrollHeight > weatherRect.height ? '⚠️  OUI (' + (weather.scrollHeight - weatherRect.height) + 'px)' : '✅ NON'}`);
+                console.log('');
+            }
+            
+            // Tasks module
+            const tasks = document.querySelector('.tasks-board');
+            if (tasks) {
+                const tasksRect = tasks.getBoundingClientRect();
+                console.log('📝 TASKS MODULE:');
+                console.log(`   Hauteur: ${tasksRect.height}px`);
+                console.log(`   Computed height: ${window.getComputedStyle(tasks).height}`);
+                console.log(`   ScrollHeight: ${tasks.scrollHeight}px`);
+                console.log(`   Débordement: ${tasks.scrollHeight > tasksRect.height ? '⚠️  OUI (' + (tasks.scrollHeight - tasksRect.height) + 'px)' : '✅ NON'}`);
+                console.log('');
+            }
+            
+            // Calcul total
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('🧮 CALCUL TOTAL:');
+            const headerH = header ? header.getBoundingClientRect().height : 0;
+            const mainH = main ? main.getBoundingClientRect().height : 0;
+            const footerH = footer ? footer.getBoundingClientRect().height : 0;
+            const total = headerH + mainH + footerH;
+            console.log(`   Header: ${headerH.toFixed(2)}px`);
+            console.log(`   Main: ${mainH.toFixed(2)}px`);
+            console.log(`   Footer: ${footerH.toFixed(2)}px`);
+            console.log(`   ─────────────────────`);
+            console.log(`   TOTAL: ${total.toFixed(2)}px`);
+            console.log(`   Écran: ${screenHeight}px`);
+            console.log(`   Différence: ${(total - screenHeight).toFixed(2)}px ${total > screenHeight ? '❌ DÉBORDEMENT' : '✅ OK'}`);
+            console.log('═══════════════════════════════════════════════════════');
+        },
     },
 };
 </script>
@@ -312,30 +481,41 @@ html,
 body,
 #app {
     margin: 0;
-    height: 100%;
+    height: 100vh;
     background-color: var(--color-bg);
     color: var(--color-text);
     transition: background-color 0.3s ease, color 0.3s ease;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 header {
-    height: calc(var(--vh) * 4);
-    box-sizing: border-box;
-}
-
-footer {
-    height: calc(var(--vh) * 4);
+    height: 47px !important;
+    max-height: 47px !important;
+    min-height: 47px !important;
+    flex: none !important;
     box-sizing: border-box;
 }
 
 .main-content {
-    height: calc(var(--vh) * 92);
+    height: 848px !important;
+    max-height: 848px !important;
+    min-height: 848px !important;
+    flex: none !important;
     overflow: hidden;
-    padding: 0.85% 1%;
+    padding: 4px;
     display: flex;
     flex-direction: column;
-    gap: 1%;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+footer {
+    height: 47px !important;
+    max-height: 47px !important;
+    min-height: 47px !important;
+    flex: none !important;
     box-sizing: border-box;
 }
 
@@ -343,34 +523,37 @@ footer {
 .top-row {
     display: flex;
     width: 100%;
-    height: 60%;
+    height: 420px !important;
+    max-height: 420px !important;
+    min-height: 420px !important;
+    flex: none !important;
 }
 
 .top-row > .calendar-module {
-    flex: 1;
-    max-height: 95%;
+    height: 100%;
     overflow: hidden;
 }
 
 /* Ligne du bas : météo + tâches */
 .bottom-row {
     display: flex;
-    gap: 1%;
+    gap: 8px;
     width: 100%;
-    height: 35vh;
+    height: 416px !important;
+    max-height: 416px !important;
+    min-height: 416px !important;
+    flex: none !important;
 }
 
 /* Météo en bas à gauche */
 .bottom-row > .weather-module {
-    flex: 0 0 32%;
-    max-width: 35%;
+    height: 100%;
     overflow: hidden;
 }
 
 /* Tâches à droite */
 .bottom-row > .tasks-board {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.5%;
+    height: 100%;
+    overflow: hidden;
 }
 </style>
