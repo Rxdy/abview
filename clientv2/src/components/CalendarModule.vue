@@ -18,7 +18,7 @@
         <div class="day-header">{{ day.name }} {{ day.date.getDate() }}</div>
         <div class="events" :data-day="day.date.toDateString()" :data-index="index">
           <div v-for="event in getEventsForDay(day.date)" :key="event.id || event.summary" 
-               :class="['event', event.type, { 'theme-dark': themeStore.isDark, 'theme-light': !themeStore.isDark, 'birthday-today': event.isBirthdayToday }]">
+               :class="['event', event.type, { 'theme-dark': themeStore.isDark, 'theme-light': !themeStore.isDark }]">
             <div class="event-header">
               <div class="event-title">{{ event.title }}</div>
               <div class="event-shift" v-if="event.shift && !(event.type === 'jaune' || event.type === 'noire')">{{ event.shift }}</div>
@@ -55,18 +55,8 @@ const { initAutoScroll, equalizeEventHeights } = useAutoScroll(dayColumns);
 
 // Function to trigger birthday animation for testing
 const triggerBirthdayAnimation = () => {
-  // Find all event elements
-  const eventElements = document.querySelectorAll('.event.birthday');
-  
-  eventElements.forEach((element) => {
-    // Add the birthday-today class temporarily
-    element.classList.add('birthday-today');
-    
-    // Remove it after 10 seconds
-    setTimeout(() => {
-      element.classList.remove('birthday-today');
-    }, 10000);
-  });
+  // Cette fonction est maintenant supprimée - on utilise seulement l'effet global
+  console.log('🎂 Effets sur cartes supprimés - seul l\'effet global est actif');
 };
 
 // Expose function to window for console testing
@@ -176,7 +166,6 @@ const getEventsForDay = (date: Date) => {
     let dateRange = '';
     let title = event.title || event.summary || 'Événement';
     let eventType = event.type || 'unknown';
-    let isBirthdayToday = false;
     
     // Clean up birthday titles - extract only the name
     if ((event.title || event.summary || '').toLowerCase().includes('anniversaire')) {
@@ -205,12 +194,6 @@ const getEventsForDay = (date: Date) => {
       let isBirthdayToday = false;
       if ((event.summary || event.title)?.toLowerCase().includes('anniversaire')) {
         eventType = 'birthday';
-        // Check if this birthday is today (compare only date, not time)
-        const today = new Date();
-        const eventDate = eventStart; // Use eventStart for calendar events
-        const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-        const eventDateStr = eventDate.getFullYear() + '-' + String(eventDate.getMonth() + 1).padStart(2, '0') + '-' + String(eventDate.getDate()).padStart(2, '0');
-        isBirthdayToday = eventDateStr === todayStr;
       } else {
         eventType = 'default'; // Use 'default' like in client1
       }
@@ -498,58 +481,15 @@ watch(() => calendarStore.allEvents, () => {
   color: #fff !important;
 }
 
-/* Birthday today special animation */
-.event.birthday-today {
-  position: relative;
-  overflow: hidden;
-  animation: birthday-pulse 2s ease-in-out infinite;
-}
-
-.event.birthday-today::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(255, 0, 150, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(255, 255, 0, 0.3) 0%, transparent 50%);
-  animation: birthday-confetti 3s ease-in-out infinite;
-  pointer-events: none;
-}
-
-.event.birthday-today::after {
-  content: '🎉';
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  font-size: 16px;
-  animation: birthday-emoji 1.5s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes birthday-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-@keyframes birthday-confetti {
-  0%, 100% { 
-    opacity: 0.3;
+/* Birthday today special animation - SUPPRIMÉ */
+/* Les effets sur les cartes individuelles ont été supprimés */
+/* Seul l'effet global BirthdayEffect.vue est maintenant utilisé */
     transform: rotate(0deg) scale(1);
   }
   50% { 
     opacity: 0.6;
     transform: rotate(180deg) scale(1.1);
   }
-}
-
-@keyframes birthday-emoji {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  25% { transform: scale(1.2) rotate(-10deg); }
-  75% { transform: scale(1.2) rotate(10deg); }
 }
 
 .event.sport {
