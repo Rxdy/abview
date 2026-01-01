@@ -28,23 +28,24 @@ services:
         command: sh -c "npm install && npm run dev"
         stop_grace_period: 1s
 
-    client:
-        image: node:24-alpine
-        working_dir: /app
-        volumes:
-            - ./client:/app
-            - /app/node_modules
-        ports:
-            - "5173:5173"
-        environment:
-            - NODE_ENV=development
-            - TZ=Europe/Paris
-            - VITE_SCREEN_OFF_START=${VITE_SCREEN_OFF_START:-22}
-            - VITE_SCREEN_OFF_START_MINUTES=${VITE_SCREEN_OFF_START_MINUTES:-0}
-            - VITE_SCREEN_OFF_END=${VITE_SCREEN_OFF_END:-7}
-            - VITE_SCREEN_OFF_END_MINUTES=${VITE_SCREEN_OFF_END_MINUTES:-0}
-        command: sh -c "npm install && npm run dev -- --host"
-        stop_grace_period: 1s
+    # Client v1 gardé pour référence historique - NE PAS DÉMARRER
+    # client:
+    #     image: node:24-alpine
+    #     working_dir: /app
+    #     volumes:
+    #         - ./client:/app
+    #         - /app/node_modules
+    #     ports:
+    #         - "5173:5173"
+    #     environment:
+    #         - NODE_ENV=development
+    #         - TZ=Europe/Paris
+    #         - VITE_SCREEN_OFF_START=${VITE_SCREEN_OFF_START:-22}
+    #         - VITE_SCREEN_OFF_START_MINUTES=${VITE_SCREEN_OFF_START_MINUTES:-0}
+    #         - VITE_SCREEN_OFF_END=${VITE_SCREEN_OFF_END:-7}
+    #         - VITE_SCREEN_OFF_END_MINUTES=${VITE_SCREEN_OFF_END_MINUTES:-0}
+    #     command: sh -c "npm install && npm run dev -- --host"
+    #     stop_grace_period: 1s
 
     clientv2:
         image: node:24-alpine
