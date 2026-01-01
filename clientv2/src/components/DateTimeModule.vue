@@ -16,7 +16,8 @@ const updateDateTime = () => {
   const day = now.getDate();
   const month = now.toLocaleDateString('fr-FR', { month: 'long' });
   const year = now.getFullYear();
-  currentDate.value = `${day} ${month} ${year}`; // Format personnalisé pour s'assurer que tout s'affiche
+  const weekday = now.toLocaleDateString('fr-FR', { weekday: 'long' });
+  currentDate.value = `${weekday} ${day} ${month} ${year}`; // Ajout du jour de la semaine
   currentTime.value = now.toLocaleTimeString('fr-FR');
 };
 

@@ -18,7 +18,7 @@
         <div class="skeleton-line"></div>
       </div>
       <div class="skeleton-forecast">
-        <div v-for="i in 4" :key="i" class="skeleton-forecast-day">
+        <div v-for="i in 5" :key="i" class="skeleton-forecast-day">
           <div class="skeleton-forecast-icon"></div>
           <div class="skeleton-forecast-text"></div>
           <div class="skeleton-forecast-text"></div>
@@ -153,7 +153,7 @@ watch(() => weatherStore.weather?.current, (current) => {
 const forecastDays = computed(() => {
   if (!weatherStore.weather?.forecast) return [];
 
-  return weatherStore.weather.forecast.slice(1, 5).map((day: any, index: number) => ({
+  return weatherStore.weather.forecast.slice(1, 6).map((day: any, index: number) => ({
     day: index === 0 ? languageStore.t('tomorrow') : new Date(day.date).toLocaleDateString(languageStore.language === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'short' }),
     tempMin: day.tempMin,
     tempMax: day.tempMax,
