@@ -166,6 +166,7 @@ const getEventsForDay = (date: Date) => {
     let dateRange = '';
     let title = event.title || event.summary || 'Événement';
     let eventType = event.type || 'unknown';
+    let isBirthdayToday = false;
     
     // Clean up birthday titles - extract only the name
     if ((event.title || event.summary || '').toLowerCase().includes('anniversaire')) {
@@ -191,7 +192,6 @@ const getEventsForDay = (date: Date) => {
       startTime = eventStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
       
       // Determine event type based on content FIRST
-      let isBirthdayToday = false;
       if ((event.summary || event.title)?.toLowerCase().includes('anniversaire')) {
         eventType = 'birthday';
       } else {
@@ -484,13 +484,6 @@ watch(() => calendarStore.allEvents, () => {
 /* Birthday today special animation - SUPPRIMÉ */
 /* Les effets sur les cartes individuelles ont été supprimés */
 /* Seul l'effet global BirthdayEffect.vue est maintenant utilisé */
-    transform: rotate(0deg) scale(1);
-  }
-  50% { 
-    opacity: 0.6;
-    transform: rotate(180deg) scale(1.1);
-  }
-}
 
 .event.sport {
   border-left: 4px solid #4caf50; /* Green for sport */
