@@ -1,4 +1,5 @@
 import { google } from 'googleapis'
+import { updateGlobalLastRefresh } from '#start/routes'
 
 export interface Event {
   id: string
@@ -89,6 +90,7 @@ export default class GoogleCalendarService {
     if (now - this.lastRefresh > this.refreshInterval || this.cachedEvents.length === 0) {
       this.cachedEvents = await this.fetchEvents(calendarId, maxResults)
       this.lastRefresh = now
+      updateGlobalLastRefresh() // Mettre à jour le lastRefresh global
     }
     return this.cachedEvents
   }

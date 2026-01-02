@@ -131,7 +131,7 @@ const error = ref("");
 let refreshTimer = null;
 let dayTimer = null;
 let progressTimer = null;
-const lastFetchTime = ref(Date.now());
+const progressStartTime = ref(Date.now());
 const currentTime = ref(Date.now());
 
 // Mettre à jour currentTime chaque seconde pour la barre de progression
@@ -198,8 +198,15 @@ const nextForecast = computed(() => forecast.value.slice(1, 6));
 // Barre de progression (refresh toutes les 5 minutes)
 const weatherProgress = computed(() => {
     const refreshInterval = 5 * 60 * 1000; // 5 minutes en ms
-    const timeSinceLast = currentTime.value - lastFetchTime.value;
-    const progress = (timeSinceLast / refreshInterval) * 100;
+    const timeSinceStart = currentTime.value - progressStartTime.value;
+    const progress = (timeSinceStart / refreshInterval) * 100;
+    
+    // Reset le timer quand on atteint 100%
+    if (progress >= 100) {
+        progressStartTime.value = Date.now();
+        return 0;
+    }
+    
     return Math.min(progress, 100);
 });
 
@@ -245,7 +252,7 @@ const fetchWeather = async () => {
         
         isLoaded.value = true;
         error.value = "";
-        lastFetchTime.value = Date.now();
+        // Ne pas modifier progressStartTime ici pour éviter le reset de la barre
     } catch (err) {
         error.value = "Erreur de chargement météo";
         isLoaded.value = false;

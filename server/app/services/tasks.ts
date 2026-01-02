@@ -1,5 +1,6 @@
 import { google } from 'googleapis'
 import StatsService from '#services/stats'
+import { updateGlobalLastRefresh } from '#start/routes'
 
 export interface Task {
   id: string
@@ -207,12 +208,15 @@ export default class GoogleTasksService {
 
   async listAllTasks(): Promise<TaskList[]> {
     const now = Date.now()
-    // Toujours rafraîchir les données pour avoir les dernières tâches
-    this.cachedLists = await this.fetchAllLists()
-    this.lastRefresh = now
+    // Vérifier le cache : rafraîchir seulement toutes les 5 minutes
+    if (now - this.lastRefresh > this.refreshInterval || this.cachedLists.length === 0) {
+      this.cachedLists = await this.fetchAllLists()
+      this.lastRefresh = now
+      updateGlobalLastRefresh() // Mettre à jour le lastRefresh global seulement lors d'un vrai refresh
 
-    // Update stats from current state
-    this.statsService.updateTaskStatsFromCurrentState(this.cachedLists)
+      // Update stats from current state
+      this.statsService.updateTaskStatsFromCurrentState(this.cachedLists)
+    }
 
     return this.cachedLists
   }

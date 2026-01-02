@@ -1,20 +1,66 @@
 # TODO - Fonctionnalités à implémenter
 
-## 🎯 Priorités Mars 2026
-### ✅ TERMINÉ (Février 2026)
+## 🎯 Priorités Janvier 2026 - RECAP ANNUEL COMPLET
+
+### ✅ TERMINÉ (Décembre 2025 - Janvier 2026)
 - [x] Personnalisation application (icône, titre, assets)
 - [x] Améliorations anniversaires (backgrounds adaptatifs thème, texte centré)
 - [x] Système détection événements génériques
 - [x] Corrections météo (températures colorées, UV amélioré)
 - [x] Annual Recap complet avec toutes les slides
+- [x] Système Fêtes Religieuses & Jours Fériés (Pâques, Ramadan, Carême, jours fériés français)
+- [x] Masquage curseur pour écrans d'affichage
+- [x] Nettoyage effets anniversaires individuels (garder seulement overlay global)
 
-### 🔄 EN COURS - URGENT
-- [x] **Système Fêtes Religieuses & Jours Fériés** : Calcul automatique Pâques, Ramadan, Carême, jours fériés français
-- [ ] **Finaliser Annual Recap Wrapper** : Ajouter 5ème slide manquante, corriger déclencheurs
-- [ ] **Effets Jour J Anniversaires** : Animations/confettis dans background application
-- [ ] **Optimisations Performance** : Lazy loading, virtual scrolling, bundle splitting
+### 🔄 EN COURS - URGENT (Recap Annuel)
 
-### 🎄 Système Fêtes Implémenté
+#### 📊 **SYSTÈME RECAP ANNUEL COMPLET**
+- [ ] **Collecte données annuelle** : Système de sauvegarde automatique des données toute l'année
+  - [ ] Sauvegarder les tâches terminées (par personne, total)
+  - [ ] Archiver les prévisions météo (températures, conditions)
+  - [ ] Compter les événements calendrier par mois
+  - [ ] Stocker les statistiques météo quotidiennes
+
+- [ ] **Slide Tâches & Réussite**
+  - [ ] Compter tâches faites au total et par personne
+  - [ ] Calculer taux de réussite des tâches
+  - [ ] Graphiques de progression mensuelle
+  - [ ] Comparaisons année N vs N-1
+
+- [ ] **Slide Météo Annuelle**
+  - [ ] Jour le plus chaud et le plus froid de l'année
+  - [ ] Moyennes annuelles (température, précipitations, vent)
+  - [ ] Graphiques température par mois
+  - [ ] Statistiques UV et conditions météo
+
+- [ ] **Slide Événements Calendrier**
+  - [ ] Nombre total d'événements par mois
+  - [ ] Navigation mois par mois avec détails
+  - [ ] Catégories d'événements (anniversaires, travail, sport, etc.)
+  - [ ] Statistiques par type d'événement
+
+- [ ] **Système Audit Données**
+  - [ ] Vérification données manquantes avant génération recap
+  - [ ] Alertes pour données incomplètes
+  - [ ] Possibilité ajout données manuellement si nécessaire
+
+### 🎨 **SYSTÈME BACKGROUNDS SAISONNIERS**
+- [ ] **Fond d'écran dynamique** selon les saisons
+  - [ ] Printemps (mars-mai) : thèmes floraux, couleurs pastel
+  - [ ] Été (juin-août) : thèmes estivaux, plage, soleil
+  - [ ] Automne (septembre-novembre) : feuilles, couleurs chaudes
+  - [ ] Hiver (décembre-février) : neige, thèmes hivernaux
+- [ ] **Transition fluide** entre les saisons
+- [ ] **Adaptation thème** (light/dark) pour chaque saison
+
+### 🚀 **DÉPLOIEMENT AUTOMATIQUE**
+- [ ] **GitHub Actions Runner** pour déploiement automatique
+  - [ ] Trigger sur push vers main
+  - [ ] Git pull automatique en production
+  - [ ] Build et redémarrage des services
+  - [ ] Notifications de déploiement réussi/échoué
+
+## 🎄 Système Fêtes Implémenté
 - [x] **Calcul automatique Pâques** : Algorithme de Gauss précis
 - [x] **Ramadan** : Approximation basée sur cycles lunaires
 - [x] **Carême** : 40 jours avant Pâques
@@ -23,7 +69,7 @@
 - [x] **Backgrounds par catégorie** : christmas/, easter/, ramadan/, lent/, national/
 - [ ] **Images de fond** : Créer les images pour chaque catégorie de fête
 
-### 🎨 Backgrounds Événements Réguliers (Priorité Moyenne)
+## 🎨 Backgrounds Événements Réguliers (Priorité Moyenne)
 - [ ] **Vacances/Congés** : Backgrounds estivaux pour "vacances", "congés"
 - [ ] **Fêtes Religieuses** : Noël, Pâques, Ramadan avec thèmes appropriés
 - [ ] **Événements Culturels** : Concerts, théâtre, cinéma
@@ -35,10 +81,20 @@
 - [ ] **Loisirs** : Jeux, hobbies, clubs
 - [ ] **Repas** : Restaurants, bars, soirées
 
-## Animations & UX
+## ⚡ Optimisations Performance (Priorité Moyenne)
+- [ ] **Lazy loading** des composants
+- [ ] **Virtual scrolling** pour longues listes
+- [ ] **Bundle splitting** pour optimiser le chargement
+- [ ] **Cache intelligent** des données météo/calendrier
+
+## 🎭 Animations & UX (Priorité Basse)
 - [ ] Animations sur les tâches : scale sur checkbox, fade-in pour nouvelles tâches
 - [ ] Notifications modales : slide-in depuis le haut, fade-out, pulse subtil
 - [ ] Sons pour rappels d'événements (optionnel/désactivable)
 
-## Fonctionnalités futures
-- [ ] **Effets anniversaires** (ballons/confettis pour anniversaires du jour)
+## 🔮 Fonctionnalités Futures (Idées)
+- [ ] **Effets anniversaires avancés** (ballons/confettis personnalisables)
+- [ ] **Mode économie d'énergie** pour écrans 24/7
+- [ ] **Synchronisation multi-écrans** pour installations
+- [ ] **API REST** pour intégrations tierces
+- [ ] **Mode hors-ligne** avec cache local

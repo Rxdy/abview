@@ -1,6 +1,7 @@
 // app/services/weather.ts
 import axios from 'axios'
 import StatsService from '#services/stats'
+import { updateGlobalLastRefresh } from '#start/routes'
 
 export interface WeatherDay {
   date: string
@@ -108,6 +109,7 @@ export default class WeatherService {
           lastUpdate: new Date(now).toISOString(),
         }
         this.lastRefresh = now
+        updateGlobalLastRefresh() // Mettre à jour le lastRefresh global
 
         // Enregistrer les données météo quotidiennes pour les stats
         // Utiliser les données du forecast[0] (aujourd'hui) au lieu des currentConditions
@@ -120,10 +122,7 @@ export default class WeatherService {
       }
     }
 
-    // Retourne le cache tel quel, mais met à jour lastUpdate à chaque appel
-    if (this.cachedData) {
-      this.cachedData.lastUpdate = new Date(now).toISOString();
-    }
+    // Retourne le cache tel quel avec le datetime du dernier vrai refresh (pas l'heure actuelle)
     return this.cachedData
   }
 

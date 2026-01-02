@@ -1,4 +1,4 @@
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { getEventDate, getTime, getApiUrl } from "../utils/dateUtils";
 import logger from "../utils/logger.js";
 
@@ -17,6 +17,26 @@ export function useCalendar() {
     const audioContext = ref(null);
     const audioBuffer = ref(null);
     const audioEnabled = ref(false);
+    const currentDate = ref(new Date());
+    let dateUpdateTimer = null;
+    const progressStartTime = ref(Date.now());
+    const progressCurrentTime = ref(Date.now());
+
+    const scheduleDateUpdate = () => {
+        if (dateUpdateTimer) {
+            clearTimeout(dateUpdateTimer);
+        }
+        const now = new Date();
+        const midnight = new Date(now);
+        midnight.setHours(24, 0, 0, 0);
+        const timeUntilMidnight = midnight.getTime() - now.getTime();
+        
+        dateUpdateTimer = setTimeout(() => {
+            currentDate.value = new Date();
+            console.log('Date updated to:', currentDate.value.toDateString());
+            scheduleDateUpdate();
+        }, timeUntilMidnight);
+    };
 
     const initAudio = async () => {
         try {
@@ -214,7 +234,7 @@ export function useCalendar() {
 
     const next9Days = computed(() => {
         const days = [];
-        const today = new Date();
+        const today = currentDate.value;
         const localToday = new Date(
             today.getFullYear(),
             today.getMonth(),
@@ -632,14 +652,21 @@ export function useCalendar() {
     // Mettre à jour currentTime chaque seconde pour la barre de progression
     setInterval(() => {
         currentTime.value = Date.now();
+        progressCurrentTime.value = Date.now();
     }, 1000);
 
     const refreshInterval = 5 * 60 * 1000; // 5 minutes
 
     const calendarProgress = computed(() => {
-        if (!lastUpdate.value) return 0;
-        const timeSinceLast = currentTime.value - new Date(lastUpdate.value).getTime();
-        const progress = (timeSinceLast / refreshInterval) * 100;
+        const timeSinceStart = progressCurrentTime.value - progressStartTime.value;
+        const progress = (timeSinceStart / refreshInterval) * 100;
+        
+        // Reset le timer quand on atteint 100%
+        if (progress >= 100) {
+            progressStartTime.value = Date.now();
+            return 0;
+        }
+        
         return Math.min(progress, 100);
     });
 
@@ -663,5 +690,8 @@ export function useCalendar() {
         processNotificationQueue,
         playNotificationSound,
         testNotification,
+        scheduleDateUpdate,
+        dateUpdateTimer,
+        progressStartTime,
     };
 }

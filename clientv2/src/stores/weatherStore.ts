@@ -11,21 +11,22 @@ export const useWeatherStore = defineStore('weather', {
     loading: false,
     error: null as string | null,
     lastHash: '' as string,
+    lastRefresh: null as Date | null,
   }),
   actions: {
     async fetchWeather(isRefresh = false) {
       if (!isRefresh) this.loading = true;
       this.error = null;
       try {
-        const data = await weatherService.getWeather();
-        const newHash = JSON.stringify(data);
+        const result = await weatherService.getWeather();
+        const newHash = JSON.stringify(result.weather);
         if (newHash !== this.lastHash) {
-          this.weather = data.weather;
+          this.weather = result.weather;
           // Extract sunrise/sunset for theme
-          if (data.weather?.current) {
+          if (result.weather?.current) {
             const today = new Date().toISOString().split('T')[0];
-            this.sunrise = `${today}T${data.weather.current.sunrise}`;
-            this.sunset = `${today}T${data.weather.current.sunset}`;
+            this.sunrise = `${today}T${result.weather.current.sunrise}`;
+            this.sunset = `${today}T${result.weather.current.sunset}`;
           }
           this.lastHash = newHash;
           console.log('Weather updated');
@@ -34,6 +35,10 @@ export const useWeatherStore = defineStore('weather', {
           progressStore.resetProgress();
         } else {
           console.log('Weather unchanged');
+        }
+        // Toujours mettre à jour lastRefresh avec le datetime du serveur (APIs externes)
+        if (result.lastRefresh) {
+          this.lastRefresh = new Date(result.lastRefresh);
         }
       } catch (error) {
         const err = error as Error;
@@ -57,10 +62,10 @@ export const useWeatherStore = defineStore('weather', {
       }
     },
     startPolling() {
-      // Poll every 5 minutes + 10 seconds to sync with backend
+      // Poll every minute instead of 5 minutes
       setInterval(() => {
-        this.fetchWeather();
-      }, 5 * 60 * 1000 + 10000);
+        this.fetchWeather(true);
+      }, 60 * 1000);
     },
   },
 });

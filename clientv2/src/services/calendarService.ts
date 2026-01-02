@@ -3,11 +3,17 @@ import { apiService } from './apiService';
 export const calendarService = {
   async getHoraires() {
     const res = await apiService.get('/horaires');
-    return res.horaires || [];
+    return { 
+      horaires: res.horaires || [], 
+      lastRefresh: res.lastRefresh ? new Date(res.lastRefresh) : null 
+    };
   },
   async getCalendarEvents() {
     const res = await apiService.get('/calendar');
-    return res.events || [];
+    return { 
+      events: res.events || [], 
+      lastRefresh: res.lastRefresh ? new Date(res.lastRefresh) : null 
+    };
   },
   async getPastYearCalendarEvents() {
     const res = await apiService.get('/calendar/past-year');

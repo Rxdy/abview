@@ -63,6 +63,8 @@ const {
     checkUpcomingEvents,
     processNotificationQueue,
     testNotification,
+    scheduleDateUpdate,
+    dateUpdateTimer,
 } = useCalendar();
 
 // Expose testNotification globally for console testing
@@ -76,6 +78,7 @@ import { onMounted, onBeforeUnmount } from "vue";
 
 onMounted(() => {
     console.log("Composant Calendar monté");
+    scheduleDateUpdate();
     fetchData()
         .then(() => {
             console.log("fetchData initial terminé avec succès");
@@ -130,6 +133,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    if (dateUpdateTimer) {
+        clearTimeout(dateUpdateTimer);
+    }
     dayColumns.value.forEach((col) => {
         const container = col.querySelector(".events");
         if (container) container.scrollTop = 0;

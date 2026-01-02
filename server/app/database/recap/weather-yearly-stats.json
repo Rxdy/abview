@@ -36,10 +36,28 @@
       "sunset": "17:10:12",
       "isRainy": false,
       "isSunny": true
+    },
+    {
+      "date": "2026-01-02",
+      "temp": -3.8,
+      "tempMin": -10,
+      "tempMax": 2.8,
+      "feelsLike": -5,
+      "humidity": 83.7,
+      "precip": 0,
+      "precipProb": 67.7,
+      "windSpeed": 7.9,
+      "windGust": 17.3,
+      "description": "Snow, Rain",
+      "icon": "rain",
+      "sunrise": "08:23:19",
+      "sunset": "17:11:08",
+      "isRainy": true,
+      "isSunny": false
     }
   ],
-  "averageTemp": -2.7,
-  "rainyDays": 0,
+  "averageTemp": -3.0666666666666664,
+  "rainyDays": 1,
   "sunnyDays": 1,
-  "description": "ensoleillée avec quelques nuages"
+  "description": "variable"
 }

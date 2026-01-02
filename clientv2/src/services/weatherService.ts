@@ -2,6 +2,10 @@ import { apiService } from './apiService';
 
 export const weatherService = {
   async getWeather() {
-    return apiService.get('/weather');
+    const data = await apiService.get('/weather');
+    return {
+      weather: data.weather,
+      lastRefresh: data.lastRefresh ? new Date(data.lastRefresh) : null
+    };
   },
 };

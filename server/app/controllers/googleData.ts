@@ -2,53 +2,82 @@ import type { HttpContext } from '@adonisjs/core/http'
 import GoogleCalendarService from '#services/calendar'
 import GoogleTasksService from '#services/tasks'
 import StatsService from '#services/stats'
+import { globalLastRefresh } from '#start/routes'
+
+// Instances singleton pour éviter les dépendances circulaires
+let calendarServiceInstance: GoogleCalendarService | null = null
+let tasksServiceInstance: GoogleTasksService | null = null
+let statsServiceInstance: StatsService | null = null
+
+function getCalendarService(): GoogleCalendarService {
+  if (!calendarServiceInstance) {
+    calendarServiceInstance = new GoogleCalendarService()
+  }
+  return calendarServiceInstance
+}
+
+function getTasksService(): GoogleTasksService {
+  if (!tasksServiceInstance) {
+    tasksServiceInstance = new GoogleTasksService()
+  }
+  return tasksServiceInstance
+}
+
+function getStatsService(): StatsService {
+  if (!statsServiceInstance) {
+    statsServiceInstance = new StatsService()
+  }
+  return statsServiceInstance
+}
 
 export default class GoogleDataController {
-  private calendarService = new GoogleCalendarService()
-  private tasksService = new GoogleTasksService()
-  private statsService = new StatsService()
-
   public async getCalendarEvents({ response }: HttpContext) {
-    const events = await this.calendarService.listEvents()
+    const calendarService = getCalendarService()
+    const events = await calendarService.listEvents()
     return response.json({
       events,
-      lastUpdate: this.calendarService.getLastRefresh(),
+      lastRefresh: globalLastRefresh,
     })
   }
 
   public async getPastYearCalendarEvents({ response }: HttpContext) {
-    const events = await this.calendarService.listPastYearEvents()
+    const calendarService = getCalendarService()
+    const events = await calendarService.listPastYearEvents()
     return response.json({
       events,
     })
   }
 
   public async getPastYearWeatherStats({ response }: HttpContext) {
-    const stats = this.statsService.getPastYearWeatherStats()
+    const statsService = getStatsService()
+    const stats = statsService.getPastYearWeatherStats()
     return response.json({
       stats,
     })
   }
 
   public async getPastYearStats({ response }: HttpContext) {
-    const stats = this.statsService.getPastYearStats()
+    const statsService = getStatsService()
+    const stats = statsService.getPastYearStats()
     return response.json({
       stats,
     })
   }
 
   public async getTasks({ response }: HttpContext) {
-    const lists = await this.tasksService.listAllTasks()
+    const tasksService = getTasksService()
+    const lists = await tasksService.listAllTasks()
     return response.json({
       lists,
-      lastUpdate: this.tasksService.getLastRefresh(),
+      lastRefresh: globalLastRefresh,
     })
   }
 
   public async updateTask({ request, response }: HttpContext) {
+    const tasksService = getTasksService()
     const taskId = request.param('id')
     const { status } = request.only(['status'])
-    const success = await this.tasksService.updateTask(taskId, status)
+    const success = await tasksService.updateTask(taskId, status)
     if (success) {
       return response.json({ success: true })
     } else {
@@ -58,10 +87,13 @@ export default class GoogleDataController {
 
   public async getRecapData({ response }: HttpContext) {
     try {
+      const statsService = getStatsService()
+      const calendarService = getCalendarService()
+      
       // Lire les données actuelles depuis les fichiers
-      const currentStats = this.statsService.getCurrentYearStats()
-      const weatherStats = this.statsService.getPastYearWeatherStats() // Retourne actuelles si pas d'archives
-      const events = await this.calendarService.listPastYearEvents()
+      const currentStats = statsService.getCurrentYearStats()
+      const weatherStats = statsService.getPastYearWeatherStats() // Retourne actuelles si pas d'archives
+      const events = await calendarService.listPastYearEvents()
 
       return response.json({
         year: 2025,

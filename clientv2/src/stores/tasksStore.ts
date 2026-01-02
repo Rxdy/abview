@@ -8,16 +8,17 @@ export const useTasksStore = defineStore('tasks', {
     loading: false,
     error: null as string | null,
     lastHash: '' as string,
+    lastRefresh: null as Date | null,
   }),
   actions: {
     async fetchTasks(isRefresh = false) {
       if (!isRefresh) this.loading = true;
       this.error = null;
       try {
-        const data = await tasksService.getTasks();
-        const newHash = JSON.stringify(data);
+        const result = await tasksService.getTasks();
+        const newHash = JSON.stringify(result.tasks);
         if (newHash !== this.lastHash) {
-          this.tasks = data;
+          this.tasks = result.tasks;
           this.lastHash = newHash;
           console.log('Tasks updated');
           // Reset progress bar
@@ -26,6 +27,10 @@ export const useTasksStore = defineStore('tasks', {
         } else {
           console.log('Tasks unchanged');
         }
+        // Toujours mettre à jour lastRefresh avec le datetime du serveur (APIs Google)
+        if (result.lastRefresh) {
+          this.lastRefresh = new Date(result.lastRefresh);
+        }
       } catch (error) {
         this.error = (error as Error).message;
       } finally {
@@ -33,10 +38,10 @@ export const useTasksStore = defineStore('tasks', {
       }
     },
     startPolling() {
-      // Poll every 5 minutes + 10 seconds
+      // Poll every minute instead of 5 minutes
       setInterval(() => {
         this.fetchTasks(true);
-      }, 5 * 60 * 1000 + 10000);
+      }, 60 * 1000);
     },
   },
 });

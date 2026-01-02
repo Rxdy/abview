@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useCalendarStore } from '../stores/calendarStore';
 import { useThemeStore } from '../stores/themeStore';
 import ErrorDisplay from './ErrorDisplay.vue';
@@ -46,6 +46,8 @@ import { getAllSpecialEvents, isHoliday } from '../utils/holidays';
 const calendarStore = useCalendarStore();
 const themeStore = useThemeStore();
 const dayColumns = ref([]);
+const currentDate = ref(new Date());
+let dateUpdateTimer: number | null = null;
 
 const setDayColumnRef = (index: number, el: any) => {
   dayColumns.value[index] = el;
@@ -64,15 +66,39 @@ if (typeof window !== 'undefined') {
   (window as any).triggerBirthdayAnimation = triggerBirthdayAnimation;
 }
 
+// Function to schedule next date update at midnight
+const scheduleDateUpdate = () => {
+  if (dateUpdateTimer) {
+    clearTimeout(dateUpdateTimer);
+  }
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0); // Next midnight
+  const timeUntilMidnight = midnight.getTime() - now.getTime();
+  
+  dateUpdateTimer = window.setTimeout(() => {
+    currentDate.value = new Date();
+    console.log('Date updated to:', currentDate.value.toDateString());
+    scheduleDateUpdate(); // Schedule next update
+  }, timeUntilMidnight);
+};
+
 onMounted(() => {
   calendarStore.fetchAll();
   calendarStore.startPolling();
+  scheduleDateUpdate(); // Start the date update timer
   
   // Initialize auto-scroll after data is loaded
   setTimeout(() => {
     equalizeEventHeights();
     initAutoScroll();
   }, 1000);
+});
+
+onUnmounted(() => {
+  if (dateUpdateTimer) {
+    clearTimeout(dateUpdateTimer);
+  }
 });
 
 // Re-initialize auto-scroll when events change
@@ -87,7 +113,7 @@ watch(() => calendarStore.allEvents, (newEvents) => {
 
 const weekDays = computed(() => {
   const days = [];
-  const today = new Date();
+  const today = currentDate.value;
   for (let i = 0; i < 8; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() + i);

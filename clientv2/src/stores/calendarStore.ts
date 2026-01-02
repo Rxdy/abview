@@ -9,6 +9,7 @@ export const useCalendarStore = defineStore('calendar', {
     loading: false,
     error: null as string | null,
     lastHash: '' as string,
+    lastRefresh: null as Date | null,
   }),
   getters: {
     allEvents: (state) => {
@@ -24,18 +25,25 @@ export const useCalendarStore = defineStore('calendar', {
   actions: {
     async fetchHoraires() {
       try {
-        this.horaires = await calendarService.getHoraires();
+        const data = await calendarService.getHoraires();
+        this.horaires = data.horaires;
+        // Ne pas mettre à jour lastRefresh pour horaires (pas lié aux APIs externes)
       } catch (error) {
         console.error('Failed to fetch horaires:', error);
-        this.horaires = []; // No mock data, use real API
+        this.horaires = [];
       }
     },
     async fetchCalendarEvents() {
       try {
-        this.calendarEvents = await calendarService.getCalendarEvents();
+        const data = await calendarService.getCalendarEvents();
+        this.calendarEvents = data.events;
+        // Mettre à jour lastRefresh seulement avec le datetime du serveur (APIs Google)
+        if (data.lastRefresh) {
+          this.lastRefresh = new Date(data.lastRefresh);
+        }
       } catch (error) {
         console.error('Failed to fetch calendar events:', error);
-        this.calendarEvents = []; // No mock data, use real API
+        this.calendarEvents = [];
       }
     },
     async fetchAll(isRefresh = false) {
@@ -62,10 +70,10 @@ export const useCalendarStore = defineStore('calendar', {
       }
     },
     startPolling() {
-      // Poll every 5 minutes + 10 seconds
+      // Poll every minute instead of 5 minutes
       setInterval(() => {
-        this.fetchAll();
-      }, 5 * 60 * 1000 + 10000);
+        this.fetchAll(true);
+      }, 60 * 1000);
     },
   },
 });
