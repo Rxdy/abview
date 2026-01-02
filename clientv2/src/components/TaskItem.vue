@@ -6,12 +6,13 @@
   >
     <div class="task-header">
       <input
+        v-if="!hasChildren"
         type="checkbox"
         class="task-checkbox"
         :checked="task.status === 'completed'"
         disabled
       />
-      <span class="task-title">{{ task.title }}</span>
+      <span class="task-title">{{ isCompleted && task.level === 1 && parentTitle ? parentTitle + ' - ' + task.title : task.title }}</span>
       <span
         v-if="task.status !== 'completed' && task.due"
         class="task-due"
@@ -42,6 +43,9 @@ interface Task {
 interface Props {
   task: Task
   isDark: boolean
+  hasChildren: boolean
+  isCompleted: boolean
+  parentTitle: string
 }
 
 const props = defineProps<Props>()

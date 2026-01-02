@@ -12,6 +12,9 @@
           :key="task.id"
           :task="task"
           :isDark="isDark"
+          :hasChildren="parentsWithChildren.has(task.id)"
+          :isCompleted="false"
+          :parentTitle="''"
         />
       </div>
       <!-- Completed Tasks -->
@@ -22,6 +25,9 @@
           :key="task.id"
           :task="task"
           :isDark="isDark"
+          :hasChildren="parentsWithChildren.has(task.id)"
+          :isCompleted="true"
+          :parentTitle="''"
         />
       </div>
     </div>
@@ -68,15 +74,93 @@ const adjustedListColor = computed(() => {
   return props.listColor; // Luis keeps #004C99
 });
 
+const tasksMap = computed(() => {
+  const map = new Map();
+  props.tasks.forEach(task => map.set(task.id, task));
+  return map;
+});
+
+const parentsWithChildren = computed(() => {
+  const parents = new Set();
+  props.tasks.forEach(task => {
+    if (task.parent) parents.add(task.parent);
+  });
+  return parents;
+});
+
+const taskStats = computed(() => {
+  const stats = new Map<string, { hasPending: boolean, hasCompleted: boolean }>();
+  props.tasks.forEach(task => {
+    if (task.level === 0) {
+      stats.set(task.id, { hasPending: false, hasCompleted: false });
+    }
+  });
+  props.tasks.forEach(task => {
+    if (task.parent && stats.has(task.parent)) {
+      const stat = stats.get(task.parent)!;
+      if (task.status === 'completed') {
+        stat.hasCompleted = true;
+      } else {
+        stat.hasPending = true;
+      }
+    }
+  });
+  return stats;
+});
+
 const sortedTasks = computed(() => {
   return [...props.tasks].sort((a, b) => {
-    if (a.level !== b.level) return a.level - b.level;
-    return a.title.localeCompare(b.title);
+    const aKey = a.level === 0 ? a.title : (tasksMap.value.get(a.parent)?.title || '') + '|' + a.title;
+    const bKey = b.level === 0 ? b.title : (tasksMap.value.get(b.parent)?.title || '') + '|' + b.title;
+    return aKey.localeCompare(bKey);
   });
 });
 
-const pendingTasks = computed(() => sortedTasks.value.filter(t => t.status !== 'completed'));
-const completedTasks = computed(() => sortedTasks.value.filter(t => t.status === 'completed'));
+const pendingTasks = computed(() => {
+  return sortedTasks.value.filter(task => {
+    if (task.level === 1) {
+      return task.status !== 'completed';
+    } else { // level 0
+      const stat = taskStats.value.get(task.id);
+      if (stat && (stat.hasPending || stat.hasCompleted)) {
+        return stat.hasPending;
+      } else {
+        return task.status !== 'completed';
+      }
+    }
+  });
+});
+
+const completedTasks = computed(() => {
+  const result = [];
+  const addedParents = new Set<string>();
+  
+  sortedTasks.value.forEach(task => {
+    if (task.level === 1 && task.status === 'completed') {
+      // Add parent first if not already added
+      if (task.parent && tasksMap.value.has(task.parent)) {
+        const parent = tasksMap.value.get(task.parent);
+        if (parent && !addedParents.has(parent.id)) {
+          result.push(parent);
+          addedParents.add(parent.id);
+        }
+      }
+      // Then add the completed subtask
+      result.push(task);
+    } else if (task.level === 0) {
+      const stat = taskStats.value.get(task.id);
+      if (stat && stat.hasCompleted && !stat.hasPending) {
+        // Parent with only completed children (no pending)
+        result.push(task);
+      } else if (!stat && task.status === 'completed') {
+        // Task without children that is completed
+        result.push(task);
+      }
+    }
+  });
+  
+  return result;
+});
 
 const tasksContainer = ref<HTMLElement | null>(null);
 let scrollInterval: number | null = null;
