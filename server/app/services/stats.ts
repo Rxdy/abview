@@ -211,9 +211,33 @@ export default class StatsService {
       taskStat.createdIds.add(taskId)
       taskStat.created = taskStat.createdIds.size
       this.saveStats(stats)
+    }
+  }
+
+  public recordTaskCompleted(listId: string, listTitle: string, taskId?: string): void {
+    const stats = this.getCurrentYearStats()
+    let taskStat = stats.tasks.find(t => t.listId === listId)
+
+    if (!taskStat) {
+      taskStat = {
+        listId,
+        listTitle,
+        createdIds: new Set<string>(),
+        completedIds: new Set<string>(),
+        created: 0,
+        completed: 0
+      }
+      stats.tasks.push(taskStat)
+    }
+
+    // Only increment if this task hasn't been recorded yet
+    if (taskId && !taskStat.completedIds.has(taskId)) {
+      taskStat.completedIds.add(taskId)
+      taskStat.completed = taskStat.completedIds.size
+      this.saveStats(stats)
     } else if (!taskId) {
-      // Fallback for backward compatibility (but this will accumulate!)
-      taskStat.created += 1
+      // Fallback for backward compatibility
+      taskStat.completed += 1
       this.saveStats(stats)
     }
   }

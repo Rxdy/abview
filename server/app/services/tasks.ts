@@ -56,10 +56,10 @@ export default class GoogleTasksService {
 
         if (!previousTask) {
           // New task created
-          this.statsService.recordTaskCreated(listId, currentLists.find(l => l.id === listId)?.title || 'Unknown')
+          this.statsService.recordTaskCreated(listId, currentLists.find(l => l.id === listId)?.title || 'Unknown', taskId)
         } else if (currentTask.status === 'completed' && previousTask.status !== 'completed') {
           // Task completed
-          this.statsService.recordTaskCompleted(listId, currentLists.find(l => l.id === listId)?.title || 'Unknown')
+          this.statsService.recordTaskCompleted(listId, currentLists.find(l => l.id === listId)?.title || 'Unknown', taskId)
         }
       })
     })
