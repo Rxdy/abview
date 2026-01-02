@@ -152,8 +152,8 @@ const completedTasks = computed(() => {
       if (stat && stat.hasCompleted && !stat.hasPending) {
         // Parent with only completed children (no pending)
         result.push(task);
-      } else if (!stat && task.status === 'completed') {
-        // Task without children that is completed
+      } else if (task.status === 'completed') {
+        // Task without children that is completed, or parent with some pending children
         result.push(task);
       }
     }
