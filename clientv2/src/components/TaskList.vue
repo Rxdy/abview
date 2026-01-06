@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import TaskItem from './TaskItem.vue'
 import { useThemeStore } from '../stores/themeStore';
 
@@ -62,6 +62,13 @@ interface Props {
 const props = defineProps<Props>()
 
 const themeStore = useThemeStore();
+
+// Watcher to start scroll when tasks are loaded
+watch(() => props.tasks.length, (newLength, oldLength) => {
+  if (newLength > 0 && oldLength === 0) {
+    setTimeout(() => startVerticalScroll(), 100);
+  }
+});
 
 const adjustedListColor = computed(() => {
   if (themeStore.isDark) {
