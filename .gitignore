@@ -4,3 +4,6 @@ token.json
 
 # Generated recap files
 server/app/database/recap/*.json
+
+# Log files
+logs/*.log
