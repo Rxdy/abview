@@ -37,6 +37,18 @@ export const useTasksStore = defineStore('tasks', {
         this.loading = false;
       }
     },
+
+    async updateTask(taskId: string, status: string) {
+      try {
+        await tasksService.updateTask(taskId, status);
+        // Forcer un refresh immédiat après la mise à jour
+        await this.fetchTasks(true);
+      } catch (error) {
+        console.error('Error updating task:', error);
+        throw error;
+      }
+    },
+
     startPolling() {
       // Poll every minute instead of 5 minutes
       setInterval(() => {

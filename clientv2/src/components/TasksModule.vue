@@ -49,6 +49,10 @@ const showProgress = ref(false);
 const progressPercent = ref(0);
 const progressSide = ref<'left' | 'right'>('right');
 
+onMounted(() => {
+  tasksStore.startPolling();
+});
+
 const groupedLists = computed(() => {
   const groups: { [key: string]: { title: string; color: string; tasks: any[] } } = {};
   tasksStore.tasks.forEach(task => {

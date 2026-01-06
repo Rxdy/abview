@@ -244,6 +244,13 @@ export default class GoogleTasksService {
           } else {
             task.completed = null
           }
+          
+          // Invalider le cache pour forcer un refresh immédiat au prochain appel
+          this.lastRefresh = 0;
+          
+          // Mettre à jour le globalLastRefresh pour que la progress bar reflète ce changement
+          updateGlobalLastRefresh();
+          
           return true
         } catch (error) {
           console.error('Error updating task:', error)

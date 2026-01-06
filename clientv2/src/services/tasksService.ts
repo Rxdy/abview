@@ -16,4 +16,8 @@ export const tasksService = {
       lastRefresh: data.lastRefresh ? new Date(data.lastRefresh) : null
     };
   },
+
+  async updateTask(taskId: string, status: string) {
+    return await apiService.patch(`/tasks/${taskId}`, { status });
+  },
 };

@@ -23,9 +23,9 @@ export const apiService = {
     return response.json();
   },
 
-  async put(endpoint: string, data: any) {
+  async patch(endpoint: string, data: any) {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
