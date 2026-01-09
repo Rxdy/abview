@@ -1,7 +1,7 @@
 <template>
   <footer class="footer">
     <div class="left">
-      <span>&copy; 2025 Abview. All rights reserved.</span>
+      <span>&copy; {{ currentYear }} Abview. All rights reserved.</span>
     </div>
     <div class="center">
       <ProgressBar />
@@ -13,7 +13,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import ProgressBar from './ProgressBar.vue';
+
+const currentYear = computed(() => new Date().getFullYear());
 </script>
 
 <style scoped>
