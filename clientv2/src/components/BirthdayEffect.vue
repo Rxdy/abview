@@ -29,11 +29,11 @@ let isTestMode = false;
 
 // Fonction pour déclencher l'animation
 const showBirthdayEffect = (person: string = 'Quelqu\'un', testMode: boolean = false) => {
-  console.log('🎂 showBirthdayEffect called with person:', person, 'testMode:', testMode);
+  // // console.log('🎂 showBirthdayEffect called with person:', person, 'testMode:', testMode);
   currentBirthdayPerson = person;
   isTestMode = testMode;
   isVisible.value = true;
-  console.log('🎂 Birthday overlay should now be visible');
+  // // console.log('🎂 Birthday overlay should now be visible');
   
   // Nettoyer le timeout précédent
   if (birthdayTimeout) {
@@ -43,13 +43,13 @@ const showBirthdayEffect = (person: string = 'Quelqu\'un', testMode: boolean = f
   if (testMode) {
     // Mode test : durée courte (15 secondes) puis arrêt
     birthdayTimeout = setTimeout(() => {
-      console.log('🎂 Test mode: stopping birthday effect after 15 seconds');
+      // console.log('🎂 Test mode: stopping birthday effect after 15 seconds');
       stopBirthdayEffect();
     }, 15000);
   } else {
     // Mode réel : durée visible de 1 minute puis masquage (mais répétition continue)
     birthdayTimeout = setTimeout(() => {
-      console.log('🎂 Real mode: hiding birthday effect after 1 minute, but will repeat in 10 minutes');
+      // console.log('🎂 Real mode: hiding birthday effect after 1 minute, but will repeat in 10 minutes');
       isVisible.value = false; // Masquer l'effet visuellement
       
       // Programmer la prochaine répétition dans 10 minutes
@@ -57,12 +57,12 @@ const showBirthdayEffect = (person: string = 'Quelqu\'un', testMode: boolean = f
         // Vérifier si c'est encore aujourd'hui et s'il y a encore des anniversaires
         const today = new Date();
         const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-        console.log('🎂 Checking if still birthday day for:', currentBirthdayPerson, 'on', todayStr);
+        // console.log('🎂 Checking if still birthday day for:', currentBirthdayPerson, 'on', todayStr);
         
         // Pour le mode réel, on continue tant qu'il y a une personne définie
         // La logique d'arrêt est gérée par checkForTodaysBirthdays
         if (currentBirthdayPerson && !isTestMode) {
-          console.log('🎂 Scheduling next birthday effect in 10 minutes');
+          // console.log('🎂 Scheduling next birthday effect in 10 minutes');
           showBirthdayEffect(currentBirthdayPerson, false);
         }
       }, 600000); // 10 minutes = 600000 millisecondes
@@ -77,7 +77,7 @@ const hide = () => {
 
 // Fonction pour arrêter complètement l'effet d'anniversaire
 const stopBirthdayEffect = () => {
-  console.log('🎂 Stopping birthday effect for:', currentBirthdayPerson, 'testMode:', isTestMode);
+  // console.log('🎂 Stopping birthday effect for:', currentBirthdayPerson, 'testMode:', isTestMode);
   isVisible.value = false;
   currentBirthdayPerson = '';
   isTestMode = false;
@@ -94,18 +94,18 @@ if (typeof window !== 'undefined') {
 }
 
 onMounted(() => {
-  console.log('🎂 BirthdayEffect component mounted and listening for events');
+  // console.log('🎂 BirthdayEffect component mounted and listening for events');
   
   // Écouter les événements d'anniversaire depuis le calendrier
   document.addEventListener('birthday-detected', (event: any) => {
-    console.log('🎂 BirthdayEffect received birthday-detected event:', event.detail);
+    // console.log('🎂 BirthdayEffect received birthday-detected event:', event.detail);
     
     if (event.detail && event.detail.person) {
       const testMode = event.detail.testMode || false;
-      console.log('🎂 Showing birthday effect for:', event.detail.person, 'testMode:', testMode);
+      // console.log('🎂 Showing birthday effect for:', event.detail.person, 'testMode:', testMode);
       showBirthdayEffect(event.detail.person, testMode);
     } else {
-      console.log('🎂 Event received but no person detail found');
+      // console.log('🎂 Event received but no person detail found');
     }
   });
 });

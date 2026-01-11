@@ -7,28 +7,42 @@
       <!-- Pending Tasks -->
       <div v-if="pendingTasks.length > 0" class="tasks-section">
         <div class="section-title">À faire</div>
-        <TaskItem
-          v-for="task in pendingTasks"
-          :key="task.id"
-          :task="task"
-          :isDark="isDark"
-          :hasChildren="parentsWithChildren.has(task.id)"
-          :isCompleted="false"
-          :parentTitle="''"
-        />
+        <div v-for="item in pendingTasks" :key="item.task.id">
+          <TaskItem
+            :task="item.task"
+            :isDark="isDark"
+            :hasChildren="item.children.length > 0"
+            :isCompleted="false"
+          />
+          <TaskItem
+            v-for="child in item.children"
+            :key="child.id"
+            :task="child"
+            :isDark="isDark"
+            :hasChildren="false"
+            :isCompleted="false"
+          />
+        </div>
       </div>
       <!-- Completed Tasks -->
       <div v-if="completedTasks.length > 0" class="tasks-section completed-section">
         <div class="section-title">Terminées</div>
-        <TaskItem
-          v-for="task in completedTasks"
-          :key="task.id"
-          :task="task"
-          :isDark="isDark"
-          :hasChildren="parentsWithChildren.has(task.id)"
-          :isCompleted="true"
-          :parentTitle="''"
-        />
+        <div v-for="item in completedTasks" :key="item.task.id">
+          <TaskItem
+            :task="item.task"
+            :isDark="isDark"
+            :hasChildren="item.children.length > 0"
+            :isCompleted="true"
+          />
+          <TaskItem
+            v-for="child in item.children"
+            :key="child.id"
+            :task="child"
+            :isDark="isDark"
+            :hasChildren="false"
+            :isCompleted="true"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -124,49 +138,28 @@ const sortedTasks = computed(() => {
 });
 
 const pendingTasks = computed(() => {
-  return sortedTasks.value.filter(task => {
-    if (task.level === 1) {
-      return task.status !== 'completed';
-    } else { // level 0
-      const stat = taskStats.value.get(task.id);
-      if (stat && (stat.hasPending || stat.hasCompleted)) {
-        return stat.hasPending;
-      } else {
-        return task.status !== 'completed';
-      }
-    }
+  const level0Tasks = props.tasks.filter(t => t.level === 0 && t.status !== 'completed');
+  const withChildren = level0Tasks.filter(t => parentsWithChildren.value.has(t.id));
+  const withoutChildren = level0Tasks.filter(t => !parentsWithChildren.value.has(t.id));
+  const sortedLevel0 = [...withoutChildren, ...withChildren]; // without children first, then with
+  return sortedLevel0.map(parent => {
+    const children = props.tasks.filter(t => t.parent === parent.id && t.status !== 'completed');
+    return { task: parent, children };
   });
 });
 
 const completedTasks = computed(() => {
-  const result = [];
-  const addedParents = new Set<string>();
-  
-  sortedTasks.value.forEach(task => {
-    if (task.level === 1 && task.status === 'completed') {
-      // Add parent first if not already added
-      if (task.parent && tasksMap.value.has(task.parent)) {
-        const parent = tasksMap.value.get(task.parent);
-        if (parent && !addedParents.has(parent.id)) {
-          result.push(parent);
-          addedParents.add(parent.id);
-        }
-      }
-      // Then add the completed subtask
-      result.push(task);
-    } else if (task.level === 0) {
-      const stat = taskStats.value.get(task.id);
-      if (stat && stat.hasCompleted && !stat.hasPending) {
-        // Parent with only completed children (no pending)
-        result.push(task);
-      } else if (task.status === 'completed') {
-        // Task without children that is completed, or parent with some pending children
-        result.push(task);
-      }
-    }
+  const level0Tasks = props.tasks.filter(t => t.level === 0);
+  const withCompletedChildren = level0Tasks.filter(t => {
+    const stat = taskStats.value.get(t.id);
+    return stat && stat.hasCompleted;
   });
-  
-  return result;
+  const completedWithoutChildren = level0Tasks.filter(t => t.status === 'completed' && !parentsWithChildren.value.has(t.id));
+  const sortedLevel0 = [...completedWithoutChildren, ...withCompletedChildren]; // completed without children first, then with completed children
+  return sortedLevel0.map(parent => {
+    const children = props.tasks.filter(t => t.parent === parent.id && t.status === 'completed');
+    return { task: parent, children };
+  });
 });
 
 const tasksContainer = ref<HTMLElement | null>(null);

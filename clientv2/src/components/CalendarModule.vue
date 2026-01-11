@@ -28,8 +28,7 @@
             </div>
             <div class="event-time" v-if="event.startTime && event.type !== 'birthday'">{{ event.startTime }}<span v-if="event.endTime"> - {{ event.endTime }}</span></div>
             <div class="event-date-range" v-if="event.dateRange && event.type !== 'birthday'">{{ event.dateRange }}</div>
-            <div v-if="event.location && event.startTime" class="event-location">📍 {{ event.location.split(',')[0] }}</div>
-            <div v-if="event.location" class="event-location">📍 {{ event.location.split(',')[0] }}</div>
+            <div v-if="event.location && event.type !== 'sport'" class="event-location">📍 {{ event.location.split(',')[0] }}</div>
           </div>
         </div>
       </div>
@@ -60,7 +59,7 @@ const { initAutoScroll, equalizeEventHeights } = useAutoScroll(dayColumns);
 // Function to trigger birthday animation for testing
 const triggerBirthdayAnimation = () => {
   // Cette fonction est maintenant supprimée - on utilise seulement l'effet global
-  console.log('🎂 Effets sur cartes supprimés - seul l\'effet global est actif');
+  // console.log('🎂 Effets sur cartes supprimés - seul l\'effet global est actif');
 };
 
 // Expose function to window for console testing
@@ -80,7 +79,7 @@ const scheduleDateUpdate = () => {
   
   dateUpdateTimer = window.setTimeout(() => {
     currentDate.value = new Date();
-    console.log('Date updated to:', currentDate.value.toDateString());
+    // console.log('Date updated to:', currentDate.value.toDateString());
     scheduleDateUpdate(); // Schedule next update
   }, timeUntilMidnight);
 };
@@ -105,9 +104,9 @@ onUnmounted(() => {
 
 // Re-initialize auto-scroll when events change
 watch(() => calendarStore.allEvents, (newEvents) => {
-  // console.log('Events changed, new count:', newEvents.length);
+  // // console.log('Events changed, new count:', newEvents.length);
   setTimeout(() => {
-    // console.log('Re-initializing auto-scroll after events change');
+    // // console.log('Re-initializing auto-scroll after events change');
     equalizeEventHeights();
     initAutoScroll();
   }, 500);
@@ -391,25 +390,25 @@ const getEventsForDay = (date: Date) => {
 
 // Function to check for birthdays today and trigger global effect
 const checkForTodaysBirthdays = () => {
-  console.log('🎂 Checking for today\'s birthdays...');
+  // console.log('🎂 Checking for today\'s birthdays...');
   const today = new Date();
   const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-  console.log('🎂 Today\'s date string:', todayStr);
+  // console.log('🎂 Today\'s date string:', todayStr);
   
   // Get all events for today
   const todaysEvents = getEventsForDay(today);
-  console.log('🎂 Total events for today:', todaysEvents.length);
+  // console.log('🎂 Total events for today:', todaysEvents.length);
   
   // Find birthday events that are today
   const todaysBirthdays = todaysEvents.filter(event => 
     event.type === 'birthday' && event.isBirthdayToday
   );
-  console.log('🎂 Birthday events found:', todaysBirthdays.length);
+  // console.log('🎂 Birthday events found:', todaysBirthdays.length);
   
   if (todaysBirthdays.length > 0) {
     // Il y a des anniversaires aujourd'hui
     todaysBirthdays.forEach(birthday => {
-      console.log('🎉 REAL BIRTHDAY détecté aujourd\'hui:', birthday.title);
+      // console.log('🎉 REAL BIRTHDAY détecté aujourd\'hui:', birthday.title);
       
       // Dispatch custom event to trigger global birthday effect
       const birthdayEvent = new CustomEvent('birthday-detected', {
@@ -419,7 +418,7 @@ const checkForTodaysBirthdays = () => {
     });
   } else {
     // Plus d'anniversaires aujourd'hui, arrêter l'effet
-    console.log('🎂 No birthdays found for today, stopping effect');
+    // console.log('🎂 No birthdays found for today, stopping effect');
     if ((window as any).stopBirthdayEffect) {
       (window as any).stopBirthdayEffect();
     }
@@ -436,6 +435,11 @@ onMounted(() => {
 watch(() => calendarStore.allEvents, () => {
   setTimeout(checkForTodaysBirthdays, 500);
 }, { deep: true });
+
+// Watch for date changes to re-check birthdays (important for day transitions)
+watch(() => currentDate.value, () => {
+  setTimeout(checkForTodaysBirthdays, 500);
+});
 </script>
 
 <style scoped>

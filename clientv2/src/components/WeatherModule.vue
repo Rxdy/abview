@@ -142,7 +142,7 @@ watch(() => weatherStore.weather?.current, (current) => {
       sunset: formatSunTime(current.sunset)
     };
     
-    console.log('WeatherModule: Emitting sun times to theme store:', sunTimes);
+    // console.log('WeatherModule: Emitting sun times to theme store:', sunTimes);
     themeStore.updateSunTimes(sunTimes);
     
     // Update theme immediately when we get real sun times

@@ -44,10 +44,11 @@ const tasksStore = useTasksStore();
 const tasksContainer = ref<HTMLElement | null>(null);
 let scrollInterval: number | null = null;
 let pauseTimeout: number | null = null;
-const pauseDuration = 20000; // 20 seconds
+const pauseDuration = 10000; // 10 seconds
 const showProgress = ref(false);
 const progressPercent = ref(0);
-const progressSide = ref<'left' | 'right'>('right');
+const progressSide = ref<'left' | 'right'>('left');
+let currentSide: 'left' | 'right' = 'left';
 
 onMounted(() => {
   tasksStore.startPolling();
@@ -63,8 +64,12 @@ const groupedLists = computed(() => {
     groups[key].tasks.push(task);
   });
   
-  // Sort by task count descending
-  const sorted = Object.values(groups).sort((a, b) => b.tasks.length - a.tasks.length);
+  // Sort: empty lists first, then by task count descending
+  const sorted = Object.values(groups).sort((a, b) => {
+    if (a.tasks.length === 0 && b.tasks.length > 0) return -1;
+    if (b.tasks.length === 0 && a.tasks.length > 0) return 1;
+    return b.tasks.length - a.tasks.length;
+  });
   
   // Center the list with most tasks
   if (sorted.length <= 1) return sorted;
@@ -96,76 +101,64 @@ const groupedLists = computed(() => {
   return result;
 });
 
-const startHorizontalScroll = () => {
+const startTimer = (side: 'left' | 'right') => {
+  progressSide.value = side;
+  showProgress.value = true;
+  progressPercent.value = 100;
+  let elapsed = 0;
+  const timerInterval = setInterval(() => {
+    elapsed += 50;
+    progressPercent.value = Math.max(0, 100 - (elapsed / pauseDuration) * 100);
+    if (elapsed >= pauseDuration) {
+      clearInterval(timerInterval);
+      showProgress.value = false;
+      onTimerEnd(side);
+    }
+  }, 50);
+};
+
+const onTimerEnd = (side: 'left' | 'right') => {
+  if (side === 'left') {
+    startScroll('right');
+  } else {
+    startScroll('left');
+  }
+};
+
+const startScroll = (direction: 'left' | 'right') => {
   if (!tasksContainer.value) return;
   const container = tasksContainer.value;
   const totalWidth = container.scrollWidth;
   const visibleWidth = container.clientWidth;
 
-  if (totalWidth <= visibleWidth) return; // No need to scroll
+  if (totalWidth <= visibleWidth) {
+    // No overflow, go back to timer
+    currentSide = direction === 'right' ? 'right' : 'left';
+    startTimer(currentSide);
+    return;
+  }
 
-  let currentScroll = 0; // Start from left since largest is now centered
-  let direction = 1; // 1: right, -1: left
-  const step = 1; // pixels per step
-  const delay = 50; // ms
+  let currentScroll = container.scrollLeft;
+  const step = direction === 'right' ? 2 : -2;
+  const delay = 25;
 
   const scroll = () => {
-    currentScroll += step * direction;
-    if (direction === 1 && currentScroll >= totalWidth - visibleWidth + 20) {
-      // Reached right, pause
-      currentScroll = totalWidth - visibleWidth + 20;
-      direction = -1;
-      pauseAtRight();
-    } else if (direction === -1 && currentScroll <= 0) {
-      // Reached left, pause
-      currentScroll = 0;
-      direction = 1;
-      pauseAtLeft();
+    currentScroll += step;
+    if ((direction === 'right' && currentScroll >= totalWidth - visibleWidth) ||
+        (direction === 'left' && currentScroll <= 0)) {
+      // Reached end
+      clearInterval(scrollInterval!);
+      scrollInterval = null;
+      container.scrollLeft = direction === 'right' ? totalWidth - visibleWidth : 0;
+      // Start timer on the other side
+      currentSide = direction === 'right' ? 'right' : 'left';
+      startTimer(currentSide);
+      return;
     }
     container.scrollLeft = currentScroll;
   };
 
-  const pauseAtRight = () => {
-    clearInterval(scrollInterval!);
-    scrollInterval = null;
-    showProgress.value = true;
-    progressSide.value = 'right';
-    progressPercent.value = 100;
-    let elapsed = 0;
-    pauseTimeout = window.setInterval(() => {
-      elapsed += 100;
-      progressPercent.value = Math.max(0, 100 - (elapsed / pauseDuration) * 100);
-      if (elapsed >= pauseDuration) {
-        clearInterval(pauseTimeout!);
-        pauseTimeout = null;
-        showProgress.value = false;
-        tasksStore.fetchTasks(true);
-        scrollInterval = window.setInterval(scroll, delay);
-      }
-    }, 100);
-  };
-
-  const pauseAtLeft = () => {
-    clearInterval(scrollInterval!);
-    scrollInterval = null;
-    showProgress.value = true;
-    progressSide.value = 'left';
-    progressPercent.value = 100;
-    let elapsed = 0;
-    pauseTimeout = window.setInterval(() => {
-      elapsed += 100;
-      progressPercent.value = Math.max(0, 100 - (elapsed / pauseDuration) * 100);
-      if (elapsed >= pauseDuration) {
-        clearInterval(pauseTimeout!);
-        pauseTimeout = null;
-        showProgress.value = false;
-        tasksStore.fetchTasks(true);
-        scrollInterval = window.setInterval(scroll, delay);
-      }
-    }, 100);
-  };
-
-  scrollInterval = window.setInterval(scroll, delay);
+  scrollInterval = setInterval(scroll, delay);
 };
 
 const stopHorizontalScroll = () => {
@@ -173,25 +166,34 @@ const stopHorizontalScroll = () => {
     clearInterval(scrollInterval);
     scrollInterval = null;
   }
+  if (pauseTimeout) {
+    clearInterval(pauseTimeout);
+    pauseTimeout = null;
+  }
+  showProgress.value = false;
 };
 
 onMounted(() => {
   tasksStore.fetchTasks();
-  // Start scroll after a delay
+  // Start with left timer
   setTimeout(() => {
-    startHorizontalScroll();
+    startTimer('left');
   }, 1000);
 });
 
 // Watch for changes in the number of lists
-watch(() => groupedLists.value.length, (newLength, oldLength) => {
-  if (newLength !== oldLength) {
-    stopHorizontalScroll();
-    setTimeout(() => {
-      startHorizontalScroll();
-    }, 500);
-  }
-});
+// watch(() => groupedLists.value.length, (newLength, oldLength) => {
+//   if (newLength !== oldLength) {
+//     stopHorizontalScroll();
+//     setTimeout(() => {
+//       // Restart cycle
+//       if (scrollInterval) clearInterval(scrollInterval);
+//       if (pauseTimeout) clearInterval(pauseTimeout);
+//       showProgress.value = false;
+//       startTimer('left');
+//     }, 500);
+//   }
+// });
 </script>
 
 <style scoped>

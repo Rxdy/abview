@@ -12,7 +12,7 @@
         :checked="task.status === 'completed'"
         disabled
       />
-      <span class="task-title">{{ isCompleted && task.level === 1 && parentTitle ? parentTitle + ' - ' + task.title : task.title }}</span>
+      <span class="task-title">{{ task.title }}</span>
       <span
         v-if="task.status !== 'completed' && task.due"
         class="task-due"
@@ -45,7 +45,6 @@ interface Props {
   isDark: boolean
   hasChildren: boolean
   isCompleted: boolean
-  parentTitle: string
 }
 
 const props = defineProps<Props>()
@@ -67,6 +66,7 @@ const formatDate = (dateStr: string) => {
   padding: 0.25rem 0.3rem;
   color: #000;
   min-height: 1.8rem;
+  margin-bottom: 0.25rem;
 }
 
 .task-item.completed {

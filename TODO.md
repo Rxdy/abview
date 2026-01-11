@@ -12,6 +12,7 @@ Ce fichier sert à suivre les tâches en cours, les améliorations à apporter, 
 - [x] Créer et appliquer les DEV_GUIDELINES
 - [x] Supprimer les références au starter v2 des guidelines
 - [x] Corriger le background de la météo actuelle en mode clair
+- [x] Réduire la durée des timers verticaux à 10 secondes et améliorer la fluidité
 
 ## 🔄 Tâches en Cours
 
