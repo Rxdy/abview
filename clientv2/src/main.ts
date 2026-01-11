@@ -26,7 +26,7 @@ async function initApp() {
   themeStore.setTheme(false) // Force light theme
   
   // Make stores globally available for console testing
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && import.meta.env.DEV) {
     (window as any).themeStore = themeStore
     const notificationsStore = useNotificationsStore()
     ;(window as any).notificationsStore = notificationsStore

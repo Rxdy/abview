@@ -28,6 +28,8 @@
             </div>
             <div class="event-time" v-if="event.startTime && event.type !== 'birthday'">{{ event.startTime }}<span v-if="event.endTime"> - {{ event.endTime }}</span></div>
             <div class="event-date-range" v-if="event.dateRange && event.type !== 'birthday'">{{ event.dateRange }}</div>
+            <div v-if="event.location && event.startTime" class="event-location">📍 {{ event.location.split(',')[0] }}</div>
+            <div v-if="event.location" class="event-location">📍 {{ event.location.split(',')[0] }}</div>
           </div>
         </div>
       </div>
@@ -144,12 +146,20 @@ const getEventsForDay = (date: Date) => {
         : eventStart;
       
       // Event spans this day if it starts before day end and ends after day start
-      const spansDay = eventStart <= dayEnd && eventEnd >= dayStart;
+      let spansDay = eventStart <= dayEnd && eventEnd >= dayStart;
       
       // For birthdays, only show on the start date, not on all days of the range
       const isBirthday = (event.summary || event.title)?.toLowerCase().includes('anniversaire');
       if (isBirthday) {
         // Only show birthday on its start date
+        const eventStartDate = new Date(eventStart);
+        eventStartDate.setHours(0, 0, 0, 0);
+        return eventStartDate.getTime() === dayStart.getTime();
+      }
+      
+      // For all-day events, only show on the start date
+      const isAllDay = !event.start?.dateTime && !event.end?.dateTime;
+      if (isAllDay) {
         const eventStartDate = new Date(eventStart);
         eventStartDate.setHours(0, 0, 0, 0);
         return eventStartDate.getTime() === dayStart.getTime();
@@ -215,7 +225,14 @@ const getEventsForDay = (date: Date) => {
         ? (typeof event.end === 'object' && event.end?.dateTime ? new Date(event.end.dateTime) : new Date(event.end))
         : eventStart;
       
-      startTime = eventStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const isAllDay = !event.start?.dateTime && !event.end?.dateTime;
+      
+      if (isAllDay) {
+        startTime = '';
+        endTime = '';
+      } else {
+        startTime = eventStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      }
       
       // Determine event type based on content FIRST
       if ((event.summary || event.title)?.toLowerCase().includes('anniversaire')) {
@@ -226,7 +243,9 @@ const getEventsForDay = (date: Date) => {
       
       // Handle multi-day logic based on event type
       if (event.end) {
-        endTime = eventEnd.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        if (!isAllDay) {
+          endTime = eventEnd.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        }
         
         // Check if this is a multi-day event
         const startDay = eventStart.toDateString();
@@ -236,14 +255,31 @@ const getEventsForDay = (date: Date) => {
           if (eventType === 'birthday') {
             // Keep start time, don't set dateRange
             dateRange = '';
+            if (!isAllDay) {
+              startTime = eventStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            }
           } else {
             // Multi-day event - show date range instead of time
-            const startDateStr = eventStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-            const endDateStr = eventEnd.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-            dateRange = `${startDateStr} - ${endDateStr}`;
-            startTime = ''; // Don't show time for multi-day events
-            endTime = '';
+            if (isAllDay) {
+              dateRange = '';
+            } else {
+              const startDateStr = eventStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+              const endDateStr = eventEnd.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+              dateRange = `${startDateStr} - ${endDateStr}`;
+              startTime = ''; // Don't show time for multi-day events
+              endTime = '';
+            }
           }
+        } else {
+          // Single day event
+          if (!isAllDay) {
+            startTime = eventStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          }
+        }
+      } else {
+        // No end date
+        if (!isAllDay) {
+          startTime = eventStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
         }
       }
     } else if (event.time) {
@@ -303,7 +339,8 @@ const getEventsForDay = (date: Date) => {
       endTime,
       dateRange,
       type: eventType,
-      isBirthdayToday
+      isBirthdayToday,
+      location: event.location
     };
   });
 
@@ -653,6 +690,12 @@ watch(() => calendarStore.allEvents, () => {
   margin-top: 0.15rem;
 }
 
+.event-location {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  margin-top: 0.15rem;
+}
+
 .color-badge {
   font-size: 0.8rem;
   color: var(--color-accent);
@@ -671,6 +714,11 @@ watch(() => calendarStore.allEvents, () => {
 .color-badge.noire {
   background-color: #424242;
   color: #fff;
+}
+
+.event-location {
+  font-size: clamp(0.8rem, 1.5vh, 1.2rem);
+  margin-top: 0.25rem;
 }
 
 .loading {

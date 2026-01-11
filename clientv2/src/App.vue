@@ -14,88 +14,92 @@ const weatherStore = useWeatherStore();
 onMounted(() => {
   weatherStore.fetchWeather();
   
-  // DEBUG: Raccourci clavier pour logs
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'l' && e.ctrlKey) {
-      e.preventDefault();
-      console.log('🔥 LOGS MANUELS déclenchés par Ctrl+L');
-      // Trouver et appeler logAllDimensions sur le dashboard
-      const dashboard = document.querySelector('.dashboard');
-      if (dashboard && dashboard.__vue__) {
-        dashboard.__vue__.logAllDimensions();
+  if (import.meta.env.DEV) {
+    // DEBUG: Raccourci clavier pour logs
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'l' && e.ctrlKey) {
+        e.preventDefault();
+        console.log('🔥 LOGS MANUELS déclenchés par Ctrl+L');
+        // Trouver et appeler logAllDimensions sur le dashboard
+        const dashboard = document.querySelector('.dashboard');
+        if (dashboard && dashboard.__vue__) {
+          dashboard.__vue__.logAllDimensions();
+        }
       }
-    }
-  });
+    });
 
-  // DEBUG: Raccourci clavier pour le recap annuel
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'r' && e.ctrlKey && e.altKey) {
-      e.preventDefault();
-      console.log('🎉 RECAP ANNUEL déclenché par Ctrl+Alt+R');
-      if ((window as any).showAnnualRecap) {
-        (window as any).showAnnualRecap();
+    // DEBUG: Raccourci clavier pour le recap annuel
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'r' && e.ctrlKey && e.altKey) {
+        e.preventDefault();
+        console.log('🎉 RECAP ANNUEL déclenché par Ctrl+Alt+R');
+        if ((window as any).showAnnualRecap) {
+          (window as any).showAnnualRecap();
+        }
       }
-    }
-  });
+    });
 
-  // DEBUG: Raccourcis pour contrôler les slides du recap
-  document.addEventListener('keydown', (e) => {
-    // Flèche droite pour slide suivante
-    if (e.key === 'ArrowRight' && e.altKey) {
-      e.preventDefault();
-      if ((window as any).nextSlide) {
-        (window as any).nextSlide();
+    // DEBUG: Raccourcis pour contrôler les slides du recap
+    document.addEventListener('keydown', (e) => {
+      // Flèche droite pour slide suivante
+      if (e.key === 'ArrowRight' && e.altKey) {
+        e.preventDefault();
+        if ((window as any).nextSlide) {
+          (window as any).nextSlide();
+        }
       }
-    }
-    // Flèche gauche pour slide précédente
-    if (e.key === 'ArrowLeft' && e.altKey) {
-      e.preventDefault();
-      if ((window as any).prevSlide) {
-        (window as any).prevSlide();
+      // Flèche gauche pour slide précédente
+      if (e.key === 'ArrowLeft' && e.altKey) {
+        e.preventDefault();
+        if ((window as any).prevSlide) {
+          (window as any).prevSlide();
+        }
       }
-    }
-    // Chiffres 1-5 pour aller directement à une slide
-    if (e.key >= '1' && e.key <= '5' && e.altKey) {
-      e.preventDefault();
-      const slideNumber = parseInt(e.key) - 1;
-      if ((window as any).goToSlide) {
-        (window as any).goToSlide(slideNumber);
+      // Chiffres 1-5 pour aller directement à une slide
+      if (e.key >= '1' && e.key <= '5' && e.altKey) {
+        e.preventDefault();
+        const slideNumber = parseInt(e.key) - 1;
+        if ((window as any).goToSlide) {
+          (window as any).goToSlide(slideNumber);
+        }
       }
-    }
-    // S pour status
-    if (e.key === 's' && e.altKey) {
-      e.preventDefault();
-      if ((window as any).recapStatus) {
-        (window as any).recapStatus();
+      // S pour status
+      if (e.key === 's' && e.altKey) {
+        e.preventDefault();
+        if ((window as any).recapStatus) {
+          (window as any).recapStatus();
+        }
       }
-    }
-  });
+    });
 
-  // DEBUG: Raccourci clavier pour les anniversaires
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'b' && e.ctrlKey && e.altKey) {
-      e.preventDefault();
-      console.log('🎂 EFFET ANNIVERSAIRE déclenché par Ctrl+Alt+B');
-      console.log('🎂 Test mode: dispatching birthday-detected event...');
-      
-      // Déclencher l'effet d'anniversaire global en mode test
-      const birthdayEvent = new CustomEvent('birthday-detected', {
-        detail: { person: 'Test Person', testMode: true }
-      });
-      document.dispatchEvent(birthdayEvent);
-      
-      console.log('🎂 Event dispatched, checking if BirthdayEffect is listening...');
-    }
+    // DEBUG: Raccourci clavier pour les anniversaires
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'b' && e.ctrlKey && e.altKey) {
+        e.preventDefault();
+        console.log('🎂 EFFET ANNIVERSAIRE déclenché par Ctrl+Alt+B');
+        console.log('🎂 Test mode: dispatching birthday-detected event...');
+        
+        // Déclencher l'effet d'anniversaire global en mode test
+        const birthdayEvent = new CustomEvent('birthday-detected', {
+          detail: { person: 'Test Person', testMode: true }
+        });
+        document.dispatchEvent(birthdayEvent);
+        
+        console.log('🎂 Event dispatched, checking if BirthdayEffect is listening...');
+      }
+    });
     
     // Raccourci pour arrêter l'effet d'anniversaire
-    if (e.key === 'b' && e.ctrlKey && e.shiftKey) {
-      e.preventDefault();
-      console.log('🛑 ARRÊT EFFET ANNIVERSAIRE par Ctrl+Shift+B');
-      if ((window as any).stopBirthdayEffect) {
-        (window as any).stopBirthdayEffect();
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'b' && e.ctrlKey && e.shiftKey) {
+        e.preventDefault();
+        console.log('🛑 ARRÊT EFFET ANNIVERSAIRE par Ctrl+Shift+B');
+        if ((window as any).stopBirthdayEffect) {
+          (window as any).stopBirthdayEffect();
+        }
       }
-    }
-  });
+    });
+  }
 });
 </script>
 

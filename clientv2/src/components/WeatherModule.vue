@@ -292,6 +292,10 @@ const getWeatherIconClass = (conditions: string) => {
   padding: 0.5rem;
 }
 
+.light-theme .current-weather {
+  background: rgba(0, 0, 0, 0.1);
+}
+
 .current-quick {
   display: flex;
   flex-direction: column;

@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useTasksStore } from '../stores/tasksStore';
 import ErrorDisplay from './ErrorDisplay.vue';
 import TaskList from './TaskList.vue';
@@ -181,6 +181,16 @@ onMounted(() => {
   setTimeout(() => {
     startHorizontalScroll();
   }, 1000);
+});
+
+// Watch for changes in the number of lists
+watch(() => groupedLists.value.length, (newLength, oldLength) => {
+  if (newLength !== oldLength) {
+    stopHorizontalScroll();
+    setTimeout(() => {
+      startHorizontalScroll();
+    }, 500);
+  }
 });
 </script>
 
