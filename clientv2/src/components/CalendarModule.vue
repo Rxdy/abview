@@ -127,10 +127,14 @@ const weekDays = computed(() => {
 });
 
 const getEventsForDay = (date: Date) => {
-  const dayStart = new Date(date);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(date);
-  dayEnd.setHours(23, 59, 59, 999);
+  // Create day boundaries in local time, then convert to UTC for comparison
+  const localDayStart = new Date(date);
+  localDayStart.setHours(0, 0, 0, 0);
+  const localDayEnd = new Date(date);
+  localDayEnd.setHours(23, 59, 59, 999);
+  
+  // Convert to ISO string and extract just the date part
+  const dateStr = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
 
   // Get all events for this day + daily events (no date)
   const dayEvents = calendarStore.allEvents.filter(event => {
@@ -144,50 +148,28 @@ const getEventsForDay = (date: Date) => {
         ? (typeof event.end === 'object' && event.end?.dateTime ? new Date(event.end.dateTime) : new Date(event.end))
         : eventStart;
       
-      // Event spans this day if it starts before day end and ends after day start
-      let spansDay = eventStart <= dayEnd && eventEnd >= dayStart;
+      // Get event date string
+      const eventDateStr = eventStart.getFullYear() + '-' + String(eventStart.getMonth() + 1).padStart(2, '0') + '-' + String(eventStart.getDate()).padStart(2, '0');
       
-      // For birthdays, only show on the start date, not on all days of the range
+      // For birthdays, only show on the start date
       const isBirthday = (event.summary || event.title)?.toLowerCase().includes('anniversaire');
       if (isBirthday) {
-        // Only show birthday on its start date
-        const eventStartDate = new Date(eventStart);
-        eventStartDate.setHours(0, 0, 0, 0);
-        return eventStartDate.getTime() === dayStart.getTime();
+        return eventDateStr === dateStr;
       }
       
       // For all-day events, only show on the start date
-      const isAllDay = !event.start?.dateTime && !event.end?.dateTime;
+      const isAllDay = !event.startTime && !event.start?.includes?.('T');
       if (isAllDay) {
-        const eventStartDate = new Date(eventStart);
-        eventStartDate.setHours(0, 0, 0, 0);
-        return eventStartDate.getTime() === dayStart.getTime();
+        return eventDateStr === dateStr;
       }
       
-      // Don't show events that have already ended (with 1 hour grace period)
-      const hasEnded = eventEnd && eventEnd.getTime() + 60 * 60 * 1000 < Date.now();
-      
-      return spansDay && !hasEnded;
+      // For timed events, check if they fall on this day
+      return eventDateStr === dateStr;
     }
     
     // Handle planning events (already have date field)
     if (event.date) {
-      const eventDate = new Date(event.date + ' ' + (event.time || '00:00'));
-      const eventEndTime = event.endTime ? event.endTime : (event.time ? event.time.split('-')[1] : null);
-      
-      // If event has an end time, check if it has passed
-      if (eventEndTime) {
-        const [endHour, endMinute] = eventEndTime.split(':').map(Number);
-        const eventEndDate = new Date(event.date);
-        eventEndDate.setHours(endHour, endMinute, 0, 0);
-        
-        // Don't show events that have ended (with 1 hour grace period)
-        if (eventEndDate.getTime() + 60 * 60 * 1000 < Date.now()) {
-          return false;
-        }
-      }
-      
-      return eventDate >= dayStart && eventDate <= dayEnd;
+      return event.date === dateStr;
     }
     
     // No date = daily event, show on all days
@@ -196,12 +178,8 @@ const getEventsForDay = (date: Date) => {
 
   // Transform events to consistent format
   const transformedEvents = dayEvents.map(event => {
-    let startTime = '';
-    let endTime = '';
-    let dateRange = '';
     let title = event.title || event.summary || 'Événement';
     let eventType = event.type || 'unknown';
-    let isBirthdayToday = false;
     
     // Clean up birthday titles - extract only the name
     if ((event.title || event.summary || '').toLowerCase().includes('anniversaire')) {
@@ -215,130 +193,24 @@ const getEventsForDay = (date: Date) => {
       }
     }
     
-    if (event.start && !event.date) {
-      // Calendar event
-      const eventStart = typeof event.start === 'object' && event.start?.dateTime 
-        ? new Date(event.start.dateTime) 
-        : new Date(event.start);
-      const eventEnd = event.end 
-        ? (typeof event.end === 'object' && event.end?.dateTime ? new Date(event.end.dateTime) : new Date(event.end))
-        : eventStart;
-      
-      const isAllDay = !event.start?.dateTime && !event.end?.dateTime;
-      
-      if (isAllDay) {
-        startTime = '';
-        endTime = '';
-      } else {
-        startTime = eventStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-      }
-      
-      // Determine event type based on content FIRST
-      if ((event.summary || event.title)?.toLowerCase().includes('anniversaire')) {
-        eventType = 'birthday';
-      } else {
-        eventType = 'default'; // Use 'default' like in client1
-      }
-      
-      // Handle multi-day logic based on event type
-      if (event.end) {
-        if (!isAllDay) {
-          endTime = eventEnd.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        }
-        
-        // Check if this is a multi-day event
-        const startDay = eventStart.toDateString();
-        const endDay = eventEnd.toDateString();
-        if (startDay !== endDay) {
-          // For birthdays, don't show date range - only show start date/time
-          if (eventType === 'birthday') {
-            // Keep start time, don't set dateRange
-            dateRange = '';
-            if (!isAllDay) {
-              startTime = eventStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-            }
-          } else {
-            // Multi-day event - show date range instead of time
-            if (isAllDay) {
-              dateRange = '';
-            } else {
-              const startDateStr = eventStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-              const endDateStr = eventEnd.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-              dateRange = `${startDateStr} - ${endDateStr}`;
-              startTime = ''; // Don't show time for multi-day events
-              endTime = '';
-            }
-          }
-        } else {
-          // Single day event
-          if (!isAllDay) {
-            startTime = eventStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-          }
-        }
-      } else {
-        // No end date
-        if (!isAllDay) {
-          startTime = eventStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        }
-      }
-    } else if (event.time) {
-      // Horaire event - use startTime and endTime from the event data
-      startTime = event.startTime || event.time;
-      endTime = event.endTime;
-      
-      // Check if event spans midnight (end time is before start time)
-      if (startTime && endTime) {
-        const startHour = parseInt(startTime.split(':')[0]);
-        const endHour = parseInt(endTime.split(':')[0]);
-        
-        if (endHour < startHour) {
-          // Event spans midnight - no need to show date range for night workers
-          // Removed date range display as requested
-        }
-      }
-      
-      // Determine event type based on person and content
-      if (event.title === 'Lyam & Noah') {
-        eventType = 'garde-alternee';
-      } else if (event.title?.includes('Poubelle')) {
-        eventType = event.type; // Already set to 'jaune' or 'noire'
-      } else if (event.title?.includes('Rugby')) {
-        eventType = 'rugby';
-      } else if (['Rudy', 'Caroline', 'Luis'].includes(event.title)) {
-        eventType = 'work';
-      } else {
-        // Generic event type detection based on title keywords
-        const title = (event.title || event.summary || '').toLowerCase();
-        if (title.includes('anniversaire') || title.includes('birthday') || title.includes('fête') || title.includes('party')) {
-          eventType = 'birthday';
-          // Check if this birthday is today
-          const today = new Date();
-          const eventDate = event.date ? new Date(event.date + ' ' + (event.time || '00:00')) : today;
-          const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-          const eventDateStr = eventDate.getFullYear() + '-' + String(eventDate.getMonth() + 1).padStart(2, '0') + '-' + String(eventDate.getDate()).padStart(2, '0');
-          isBirthdayToday = eventDateStr === todayStr;
-        } else if (title.includes('sport') || title.includes('rugby') || title.includes('foot') || title.includes('tennis') || title.includes('match')) {
-          eventType = 'sport';
-        } else if (title.includes('médecin') || title.includes('dentiste') || title.includes('docteur') || title.includes('rdv médical')) {
-          eventType = 'medical';
-        } else if (title.includes('famille') || title.includes('enfants') || title.includes('naissance')) {
-          eventType = 'family';
-        } else if (title.includes('réunion') || title.includes('meeting') || title.includes('travail')) {
-          eventType = 'work';
-        } else {
-          eventType = 'planning';
-        }
-      }
+    // Use startTime and endTime already calculated in the store
+    const startTime = event.startTime || '';
+    const endTime = event.endTime || '';
+    
+    // Determine event type based on content
+    if ((event.summary || event.title)?.toLowerCase().includes('anniversaire')) {
+      eventType = 'birthday';
+    } else {
+      eventType = event.type || 'default';
     }
     
+    // Return transformed event with calculated properties
     return {
       ...event,
       title,
       startTime,
       endTime,
-      dateRange,
       type: eventType,
-      isBirthdayToday,
       location: event.location
     };
   });
@@ -368,9 +240,8 @@ const getEventsForDay = (date: Date) => {
   const daySpecialEvents = getAllSpecialEvents(new Date().getFullYear())
     .filter(holiday => {
       // Only include holidays that fall on this specific day
-      const holidayDate = new Date(holiday.date);
-      holidayDate.setHours(0, 0, 0, 0);
-      return holidayDate.getTime() === dayStart.getTime();
+      const holidayDate = new Date(holiday.date).getFullYear() + '-' + String(new Date(holiday.date).getMonth() + 1).padStart(2, '0') + '-' + String(new Date(holiday.date).getDate()).padStart(2, '0');
+      return holidayDate === dateStr;
     })
     .map(holiday => ({
       id: `holiday-${holiday.name.toLowerCase().replace(/\s+/g, '-')}`,

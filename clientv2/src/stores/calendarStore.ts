@@ -146,7 +146,12 @@ function transformHorairesToEvents(horaires: any[]): any[] {
         hours?.forEach((hour: string) => {
           const [start, end] = hour.split("-");
           let eventTitle = person.name;
-          let eventType = isRugbyEvent ? "rugby" : "planning";
+          let eventType = isRugbyEvent ? "rugby" : "work";
+
+          // Force Luis and Caroline to be work type (blue)
+          if (person.name === "Luis" || person.name === "Caroline") {
+            eventType = "work";
+          }
 
           if (person.name === "Echange enfants" && childrenLocation !== "Chez Papa") {
             return;
@@ -179,12 +184,51 @@ function transformHorairesToEvents(horaires: any[]): any[] {
         });
       }
 
+      // Shift schedule (Luis, Caroline)
+      if (person.type === "shift") {
+        // Calculate which week in the cycle
+        const cycleLength = person.cycleLength || person.rotation?.length || 1;
+        const offset = person.offset || 0;
+        let weekInCycle = (weekNumber + offset) % cycleLength;
+        
+        // Check for week overrides
+        let currentShift = null;
+        if (person.weekOverrides && person.weekOverrides[weekNumber.toString()]) {
+          currentShift = person.weekOverrides[weekNumber.toString()];
+        } else if (person.rotation && person.rotation[weekInCycle]) {
+          currentShift = person.rotation[weekInCycle];
+        }
+        
+        if (currentShift) {
+          // Check for day-specific exceptions
+          const dayExceptions = currentShift.exceptions?.[dayName] || currentShift.hours;
+          
+          dayExceptions?.forEach((hour: string) => {
+            const [start, end] = hour.split("-");
+            let eventTitle = person.name;
+            let eventType = "work"; // Force blue for Luis and Caroline
+            
+            events.push({
+              id: `shift-${person.name}-${dateStr}-${hour}`,
+              title: eventTitle,
+              date: dateStr,
+              time: start,
+              startTime: start,
+              endTime: end,
+              location: person.location || "",
+              isPlanning: true,
+              type: eventType,
+            });
+          });
+        }
+      }
+
       // All-day events
       if (person.type === "allday") {
         const shouldShow = person.days?.includes(dayName);
         if (shouldShow) {
           let eventTitle = person.name;
-          let eventType = person.colorType || "planning";
+          let eventType = person.colorType || "work";
 
           if (person.rotationType === "alternate" && person.alternating) {
             const weekMod2 = weekNumber % 2;
@@ -209,35 +253,6 @@ function transformHorairesToEvents(horaires: any[]): any[] {
           });
         }
       }
-
-      // Shift schedules (simplified version)
-      if (person.type === "shift") {
-        const cycleLength = person.cycleLength || person.rotation?.length || 0;
-        if (cycleLength === 0) return;
-        
-        let weekInCycle = ((weekNumber - 1) % cycleLength) + 1;
-        if (person.offset) weekInCycle = ((weekNumber - 1 - person.offset + cycleLength) % cycleLength) + 1;
-        
-        const rotation = person.rotation?.find((r: any) => r.week === weekInCycle);
-        if (!rotation) return;
-        
-        let hours = rotation.exceptions?.[dayName] || rotation.hours;
-        hours?.forEach((hour: string) => {
-          let [start, end] = hour.split("-");
-          events.push({
-            id: `planning-${person.name}-${dateStr}-${hour}`,
-            title: person.name,
-            shift: rotation.shift,
-            date: dateStr,
-            time: start,
-            startTime: start,
-            endTime: end,
-            location: "",
-            isPlanning: true,
-            type: "planning",
-          });
-        });
-      }
     });
   }
 
@@ -245,11 +260,24 @@ function transformHorairesToEvents(horaires: any[]): any[] {
 }
 
 function transformCalendarEvents(calendarEvents: any[]): any[] {
-  return calendarEvents.map(event => ({
-    ...event,
-    title: event.summary || 'Événement',
-    startTime: event.start?.dateTime ? new Date(event.start.dateTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null,
-  }));
+  return calendarEvents.map(event => {
+    const hasTime = event.start?.includes('T') || false;
+    const startTime = hasTime ? new Date(event.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null;
+    const endTime = hasTime && event.end ? new Date(event.end).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null;
+    
+    let eventType = 'default';
+    if (event.summary?.toLowerCase().includes('anniversaire')) {
+      eventType = 'birthday';
+    }
+    
+    return {
+      ...event,
+      title: event.summary || 'Événement',
+      startTime,
+      endTime,
+      type: eventType,
+    };
+  });
 }
 
 function getWeekNumber(date: Date): number {

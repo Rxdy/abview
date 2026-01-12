@@ -310,11 +310,6 @@ export function useCalendar() {
                         e.summary?.includes("Enfant");
                     if (isChildEvent && childrenLocation !== "Chez Papa")
                         return false;
-                    if (
-                        e.end &&
-                        new Date(e.end).getTime() + 60 * 60 * 1000 < Date.now()
-                    )
-                        return false;
                     return true;
                 })
                 .map((e) => ({
