@@ -30,7 +30,7 @@ let isTestMode = false;
 
 // Fonction pour déclencher l'animation
 const showBirthdayEffect = (person: string = 'Quelqu\'un', testMode: boolean = false) => {
-  console.log('🎂 showBirthdayEffect CALLED with person:', person, 'testMode:', testMode);
+  // console.log('🎂 showBirthdayEffect called with person:', person, 'testMode:', testMode);
   
   // Extraire le nom de la personne (au cas où elle contient déjà une date)
   const cleanPerson = person.split('|')[0];
@@ -39,7 +39,6 @@ const showBirthdayEffect = (person: string = 'Quelqu\'un', testMode: boolean = f
   if (!currentBirthdayPerson || testMode) {
     const today = new Date();
     currentBirthdayDate = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-    console.log('🎂 Setting birthday date to:', currentBirthdayDate);
   }
   
   // Stocker seulement le nom de la personne
@@ -47,7 +46,7 @@ const showBirthdayEffect = (person: string = 'Quelqu\'un', testMode: boolean = f
   
   isTestMode = testMode;
   isVisible.value = true;
-  console.log('🎂 Birthday effect is now VISIBLE for:', currentBirthdayPerson);
+  // console.log('🎂 Birthday overlay should now be visible');
   
   // Nettoyer le timeout précédent
   if (birthdayTimeout) {
