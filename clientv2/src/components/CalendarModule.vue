@@ -148,8 +148,15 @@ const getEventsForDay = (date: Date) => {
         ? (typeof event.end === 'object' && event.end?.dateTime ? new Date(event.end.dateTime) : new Date(event.end))
         : eventStart;
       
-      // Get event date string
-      const eventDateStr = eventStart.getFullYear() + '-' + String(eventStart.getMonth() + 1).padStart(2, '0') + '-' + String(eventStart.getDate()).padStart(2, '0');
+      // Get event date string - handle date-only events properly
+      let eventDateStr;
+      if (typeof event.start === 'string' && !event.start.includes('T')) {
+        // Date-only event (like birthdays), parse as local date
+        eventDateStr = event.start;
+      } else {
+        // Timed event, use Date object
+        eventDateStr = eventStart.getFullYear() + '-' + String(eventStart.getMonth() + 1).padStart(2, '0') + '-' + String(eventStart.getDate()).padStart(2, '0');
+      }
       
       // For birthdays, only show on the start date
       const isBirthday = (event.summary || event.title)?.toLowerCase().includes('anniversaire');
@@ -272,7 +279,7 @@ const checkForTodaysBirthdays = () => {
   
   // Find birthday events that are today
   const todaysBirthdays = todaysEvents.filter(event => 
-    event.type === 'birthday' && event.isBirthdayToday
+    event.type === 'birthday'
   );
   // console.log('🎂 Birthday events found:', todaysBirthdays.length);
   
@@ -298,13 +305,25 @@ const checkForTodaysBirthdays = () => {
 
 // Check for birthdays when component mounts and when events change
 onMounted(() => {
-  // Small delay to ensure events are loaded
-  setTimeout(checkForTodaysBirthdays, 1000);
+  // Wait for events to be loaded
+  const waitForEvents = () => {
+    if (!calendarStore.loading && calendarStore.allEvents.length > 0) {
+      checkForTodaysBirthdays();
+    } else {
+      setTimeout(waitForEvents, 500);
+    }
+  };
+  waitForEvents();
 });
 
 // Watch for events changes to re-check birthdays
 watch(() => calendarStore.allEvents, () => {
-  setTimeout(checkForTodaysBirthdays, 500);
+  // Wait a bit for the update to settle
+  setTimeout(() => {
+    if (!calendarStore.loading) {
+      checkForTodaysBirthdays();
+    }
+  }, 500);
 }, { deep: true });
 
 // Watch for date changes to re-check birthdays (important for day transitions)
