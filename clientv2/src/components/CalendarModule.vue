@@ -268,35 +268,44 @@ const getEventsForDay = (date: Date) => {
 
 // Function to check for birthdays today and trigger global effect
 const checkForTodaysBirthdays = () => {
-  // console.log('🎂 Checking for today\'s birthdays...');
+  console.log('🎂 CHECKING FOR TODAY\'S BIRTHDAYS...');
   const today = new Date();
   const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-  // console.log('🎂 Today\'s date string:', todayStr);
+  console.log('🎂 Today\'s date string:', todayStr);
   
   // Get all events for today
   const todaysEvents = getEventsForDay(today);
-  // console.log('🎂 Total events for today:', todaysEvents.length);
+  console.log('🎂 Total events for today:', todaysEvents.length);
   
   // Find birthday events that are today
   const todaysBirthdays = todaysEvents.filter(event => 
     event.type === 'birthday'
   );
-  // console.log('🎂 Birthday events found:', todaysBirthdays.length);
+  console.log('🎂 Birthday events found:', todaysBirthdays.length, todaysBirthdays);
   
   if (todaysBirthdays.length > 0) {
     // Il y a des anniversaires aujourd'hui
     todaysBirthdays.forEach(birthday => {
-      // console.log('🎉 REAL BIRTHDAY détecté aujourd\'hui:', birthday.title);
+      console.log('🎉 REAL BIRTHDAY détecté aujourd\'hui:', birthday.title);
       
-      // Dispatch custom event to trigger global birthday effect
-      const birthdayEvent = new CustomEvent('birthday-detected', {
-        detail: { person: birthday.title, testMode: false }
-      });
-      document.dispatchEvent(birthdayEvent);
+      // Vérifier si l'effet est déjà actif pour cette personne aujourd'hui
+      const currentEffectActive = (window as any).currentBirthdayPerson === birthday.title && 
+                                 (window as any).currentBirthdayDate === todayStr;
+      
+      if (!currentEffectActive) {
+        console.log('🎂 Triggering birthday effect for:', birthday.title);
+        // Dispatch custom event to trigger global birthday effect
+        const birthdayEvent = new CustomEvent('birthday-detected', {
+          detail: { person: birthday.title, testMode: false }
+        });
+        document.dispatchEvent(birthdayEvent);
+      } else {
+        console.log('🎂 Birthday effect already active for:', birthday.title, 'today');
+      }
     });
   } else {
     // Plus d'anniversaires aujourd'hui, arrêter l'effet
-    // console.log('🎂 No birthdays found for today, stopping effect');
+    console.log('🎂 No birthdays found for today, stopping effect');
     if ((window as any).stopBirthdayEffect) {
       (window as any).stopBirthdayEffect();
     }
@@ -330,6 +339,13 @@ watch(() => calendarStore.allEvents, () => {
 watch(() => currentDate.value, () => {
   setTimeout(checkForTodaysBirthdays, 500);
 });
+
+// Vérification périodique toutes les heures pour arrêter l'effet si nécessaire
+setInterval(() => {
+  if (!calendarStore.loading) {
+    checkForTodaysBirthdays();
+  }
+}, 60 * 60 * 1000); // Toutes les heures
 </script>
 
 <style scoped>

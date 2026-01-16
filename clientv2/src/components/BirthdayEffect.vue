@@ -24,16 +24,30 @@ import { ref, onMounted } from 'vue';
 
 const isVisible = ref(false);
 let currentBirthdayPerson = '';
+let currentBirthdayDate = ''; // Nouvelle variable pour stocker la date de départ
 let birthdayTimeout: number | null = null;
 let isTestMode = false;
 
 // Fonction pour déclencher l'animation
 const showBirthdayEffect = (person: string = 'Quelqu\'un', testMode: boolean = false) => {
-  // // console.log('🎂 showBirthdayEffect called with person:', person, 'testMode:', testMode);
-  currentBirthdayPerson = person;
+  console.log('🎂 showBirthdayEffect CALLED with person:', person, 'testMode:', testMode);
+  
+  // Extraire le nom de la personne (au cas où elle contient déjà une date)
+  const cleanPerson = person.split('|')[0];
+  
+  // Ne définir la date que si c'est la première fois (pas une répétition)
+  if (!currentBirthdayPerson || testMode) {
+    const today = new Date();
+    currentBirthdayDate = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    console.log('🎂 Setting birthday date to:', currentBirthdayDate);
+  }
+  
+  // Stocker seulement le nom de la personne
+  currentBirthdayPerson = cleanPerson;
+  
   isTestMode = testMode;
   isVisible.value = true;
-  // // console.log('🎂 Birthday overlay should now be visible');
+  console.log('🎂 Birthday effect is now VISIBLE for:', currentBirthdayPerson);
   
   // Nettoyer le timeout précédent
   if (birthdayTimeout) {
@@ -57,13 +71,28 @@ const showBirthdayEffect = (person: string = 'Quelqu\'un', testMode: boolean = f
         // Vérifier si c'est encore aujourd'hui et s'il y a encore des anniversaires
         const today = new Date();
         const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-        // console.log('🎂 Checking if still birthday day for:', currentBirthdayPerson, 'on', todayStr);
         
-        // Pour le mode réel, on continue tant qu'il y a une personne définie
-        // La logique d'arrêt est gérée par checkForTodaysBirthdays
-        if (currentBirthdayPerson && !isTestMode) {
-          // console.log('🎂 Scheduling next birthday effect in 10 minutes');
+        console.log('🎂 Checking if still birthday day for:', currentBirthdayPerson, 'on', todayStr, 'started on:', currentBirthdayDate);
+        
+        // Vérifier que c'est encore le même jour
+        const isSameDay = currentBirthdayDate === todayStr;
+        
+        console.log('🎂 BIRTHDAY CHECK:', {
+          currentBirthdayPerson,
+          currentBirthdayDate,
+          todayStr,
+          isSameDay,
+          isTestMode,
+          shouldContinue: currentBirthdayPerson && !isTestMode && isSameDay
+        });
+        
+        // Pour le mode réel, on continue tant qu'il y a une personne définie ET que c'est le même jour
+        if (currentBirthdayPerson && !isTestMode && isSameDay) {
+          console.log('🎂 Continuing birthday effect for 10 more minutes');
           showBirthdayEffect(currentBirthdayPerson, false);
+        } else {
+          console.log('🎂 STOPPING birthday effect - day changed or no more birthdays');
+          stopBirthdayEffect();
         }
       }, 600000); // 10 minutes = 600000 millisecondes
     }, 60000); // 1 minute = 60000 millisecondes
@@ -77,9 +106,10 @@ const hide = () => {
 
 // Fonction pour arrêter complètement l'effet d'anniversaire
 const stopBirthdayEffect = () => {
-  // console.log('🎂 Stopping birthday effect for:', currentBirthdayPerson, 'testMode:', isTestMode);
+  console.log('🎂 STOPPING birthday effect for:', currentBirthdayPerson, 'testMode:', isTestMode);
   isVisible.value = false;
   currentBirthdayPerson = '';
+  currentBirthdayDate = '';
   isTestMode = false;
   if (birthdayTimeout) {
     clearTimeout(birthdayTimeout);
@@ -91,6 +121,15 @@ const stopBirthdayEffect = () => {
 if (typeof window !== 'undefined') {
   (window as any).showBirthdayEffect = showBirthdayEffect;
   (window as any).stopBirthdayEffect = stopBirthdayEffect;
+  // Exposer aussi les variables pour vérification
+  Object.defineProperty(window, 'currentBirthdayPerson', {
+    get: () => currentBirthdayPerson,
+    enumerable: true
+  });
+  Object.defineProperty(window, 'currentBirthdayDate', {
+    get: () => currentBirthdayDate,
+    enumerable: true
+  });
 }
 
 onMounted(() => {
