@@ -1,0 +1,49 @@
+{
+  "docs": "Configuration du dashboard Abview. Le grid définit le nombre de colonnes (columns) et les lignes (rows: 'auto' pour automatique). Chaque module a un id unique, un composant Vue, une position x/y (1-based), largeur/hauteur en unités de grille, et visible pour activer/désactiver.",
+  "legend": {
+    "grid": "Définit la grille: columns = nombre de colonnes, rows = 'auto' pour automatique ou 'repeat(N, 1fr)' pour N lignes égales",
+    "modules": "Liste des modules à afficher",
+    "id": "Identifiant unique du module",
+    "component": "Nom du composant Vue (ex: WeatherModule)",
+    "x": "Position horizontale (colonne de départ, 1-based)",
+    "y": "Position verticale (ligne de départ, 1-based)",
+    "width": "Largeur en colonnes",
+    "height": "Hauteur en lignes",
+    "visible": "true pour afficher, false pour masquer"
+  },
+  "grid": {
+    "columns": 12,
+    "rows": "repeat(4, 1fr)"
+  },
+  "name": "Alves",
+  "language": "fr",
+  "modules": [
+    {
+      "id": "calendar",
+      "component": "CalendarModule",
+      "x": 1,
+      "y": 1,
+      "width": 12,
+      "height": 2,
+      "visible": true
+    },
+    {
+      "id": "weather",
+      "component": "WeatherModule",
+      "x": 1,
+      "y": 3,
+      "width": 3,
+      "height": 2,
+      "visible": true
+    },
+    {
+      "id": "tasks",
+      "component": "TasksModule",
+      "x": 4,
+      "y": 3,
+      "width": 9,
+      "height": 2,
+      "visible": true
+    }
+  ]
+}

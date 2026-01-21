@@ -1,0 +1,6 @@
+export { default as CelebrationSlide } from './CelebrationSlide.vue'
+export { default as EventsSlide } from './EventsSlide.vue'
+export { default as TasksSlide } from './TasksSlide.vue'
+export { default as WeatherSlide } from './WeatherSlide.vue'
+export { default as UserStatsSlide } from './UserStatsSlide.vue'
+export { default as AnnualRecapWrapper } from './AnnualRecapWrapper.vue'
