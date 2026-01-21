@@ -1,14 +1,14 @@
 # Makefile pour AbView
-# Utilise clientv2 comme frontend principal (port 5174)
-# client (port 5173) gardé pour référence historique
+# Utilise clientv3 comme frontend principal (port 5175)
+# clientv2 gardé pour backup et référence
 
 .PHONY: help run prod chromium get-token stop logs logs-api logs-files logs-stats logs-tail logs-clean reset
 
 help:
-	@echo "Commandes disponibles (utilise clientv2 - client gardé pour référence):"
+	@echo "Commandes disponibles (utilise clientv3 - clientv2 gardé pour backup):"
 	@echo "  run         - Lancement en mode développement"
 	@echo "  prod        - Lancement en mode production"
-	@echo "  chromium    - Ouverture du frontend clientv2 dans Chromium en mode kiosk"
+	@echo "  chromium    - Ouverture du frontend clientv3 dans Chromium en mode kiosk"
 	@echo "  get-token   - Récupération du token"
 	@echo "  stop        - Arrêt des conteneurs"
 	@echo "  logs        - Suivi des logs Docker"
@@ -31,7 +31,7 @@ prod:
 	@$(MAKE) chromium
 
 chromium:
-	@echo "Ouverture du frontend clientv2 dans Chromium en mode kiosk..."
+	@echo "Ouverture du frontend clientv3 dans Chromium en mode kiosk..."
 	chromium-browser \
 		--kiosk \
 		--autoplay-policy=no-user-gesture-required \
@@ -42,7 +42,7 @@ chromium:
 		--check-for-update-interval=31536000 \
 		--disable-session-crashed-bubble \
 		--disable-component-extensions-with-background-pages \
-		http://127.0.0.1:5174 &
+		http://127.0.0.1:5175 &
 
 get-token:
 	doppler run -p abview -c dev -- npx tsx server/scripts/get_token.ts

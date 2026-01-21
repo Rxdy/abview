@@ -1,6 +1,7 @@
 import router from '@adonisjs/core/services/router'
 import server from '@adonisjs/core/services/server'
 import WeatherService from '#services/weather'
+import StatsService from '#services/stats'
 
 /**
  * Error handler
@@ -30,3 +31,8 @@ export const middleware = router.named({})
  * Start weather service auto-refresh
  */
 WeatherService.startRefresh()
+
+/**
+ * Start stats archiving check
+ */
+StatsService.startArchivingCheck()

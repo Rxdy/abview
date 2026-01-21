@@ -62,3 +62,19 @@ services:
         depends_on:
             - api
         stop_grace_period: 1s
+
+    clientv3:
+        image: node:24-alpine
+        working_dir: /app
+        volumes:
+            - ./clientv3:/app
+            - /app/node_modules
+        ports:
+            - "5175:5175"
+        environment:
+            - NODE_ENV=development
+            - TZ=Europe/Paris
+        command: sh -c "npm install && npm run dev -- --host --port 5175"
+        depends_on:
+            - api
+        stop_grace_period: 1s
