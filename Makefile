@@ -24,8 +24,8 @@ run:
 	doppler run -p abview -c dev -- docker compose up
 
 prod:
-	@echo "Lancement en mode prod..."
-	doppler run -p abview -c dev -- docker compose up -d
+	@echo "Lancement en mode prod (clientv3 seulement)..."
+	doppler run -p abview -c dev -- docker compose up -d clientv3 api
 	@echo "Attente du démarrage des services (15 secondes)..."
 	@sleep 15
 	@$(MAKE) chromium
