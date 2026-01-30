@@ -32,7 +32,29 @@ Ce fichier sert à suivre les tâches en cours, les améliorations à apporter, 
 - [ ] Implémenter un système de cache pour les données météo
 - [ ] Configurer les notifications push (si applicable)
 
-## 🐛 Bugs à Corriger
+## � Audits - TODOs Prioritaires
+
+### Événements Spéciaux (Jours Fériés & Fêtes)
+- [ ] Créer image pour "labor" (Fête du Travail)
+- [ ] Créer image pour "victory" (Victoire 1945)
+- [ ] Créer image pour "bastille" (Fête Nationale)
+- [ ] Créer image pour "armistice" (Armistice 1918)
+- [ ] Créer image générique pour "catholic" (fêtes religieuses chrétiennes)
+- [ ] Créer image pour "caresme" (lent)
+- [ ] Créer image pour "national" (générique national)
+- [ ] Créer image pour "noel" (christmas)
+- [ ] Créer image pour "ramadan"
+- [ ] Ajouter des tests unitaires pour les fonctions de calcul de dates (holidays.ts)
+
+### Wrap de Fin d'Année
+- [ ] Vérifier que l'API /recap retourne bien toutes les données requises (events, tasks, weather)
+- [ ] Ajouter fallback si données manquantes pour certains modules
+- [ ] Tester l'affichage en conditions réelles le 1er janvier 2026
+- [ ] Ajouter logs de debug pour diagnostiquer les données manquantes
+- [ ] Implémenter système de sauvegarde automatique des données toute l'année
+- [ ] Ajouter vérification d'intégrité des données avant affichage
+
+## �🐛 Bugs à Corriger
 
 - [ ] Vérifier l'affichage des événements multi-jours
 - [ ] Tester la synchronisation horaire en conditions réelles
@@ -50,4 +72,4 @@ Ce fichier sert à suivre les tâches en cours, les améliorations à apporter, 
 
 ---
 
-*Dernière mise à jour: 11 janvier 2026*
+*Dernière mise à jour: 30 janvier 2026*
