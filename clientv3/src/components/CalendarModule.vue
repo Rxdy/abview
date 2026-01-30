@@ -14,7 +14,7 @@
 
     <!-- Calendar Content -->
     <div class="calendar-grid">
-      <div v-for="(day, index) in weekDays" :key="day.date.toISOString()" class="day-column" :ref="el => setDayColumnRef(index, el)">
+      <div v-for="(day, index) in weekDays" :key="day.date.toISOString()" class="day-column" :ref="el => setDayColumnRef(index, el)" :style="getDayStyle(day.date)">
         <div class="day-header">{{ day.name }} {{ day.date.getDate() }}</div>
         <div class="events" :data-day="day.date.toDateString()" :data-index="index">
           <div v-for="event in getEventsForDay(day.date)" :key="event.id || event.summary" 
@@ -125,6 +125,30 @@ const weekDays = computed(() => {
   }
   return days;
 });
+
+const getHolidayForDay = (date: Date) => {
+  const year = date.getFullYear();
+  const holidays = getAllSpecialEvents(year);
+  return holidays.find(holiday => 
+    holiday.date.getDate() === date.getDate() &&
+    holiday.date.getMonth() === date.getMonth()
+  );
+};
+
+const getDayStyle = (date: Date) => {
+  const holiday = getHolidayForDay(date);
+  if (holiday) {
+    const theme = themeStore.isDark ? 'dark' : 'light';
+    const imagePath = `/src/assets/card/${theme}/${holiday.category}.png`;
+    return {
+      backgroundImage: `url(${imagePath})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    };
+  }
+  return {};
+};
 
 const getEventsForDay = (date: Date) => {
   // Create day boundaries in local time, then convert to UTC for comparison

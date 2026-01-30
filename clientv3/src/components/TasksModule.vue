@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch, nextTick } from 'vue';
 import { useTasksStore } from '../stores/tasksStore';
 import ErrorDisplay from './ErrorDisplay.vue';
 import TaskList from './TaskList.vue';
@@ -173,27 +173,37 @@ const stopHorizontalScroll = () => {
   showProgress.value = false;
 };
 
-onMounted(() => {
-  tasksStore.fetchTasks();
-  // Start with left timer
+const needsScrolling = () => {
+  if (!tasksContainer.value) return false;
+  return tasksContainer.value.scrollWidth > tasksContainer.value.clientWidth;
+};
+
+onMounted(async () => {
+  await tasksStore.fetchTasks();
+  await nextTick();
+  // Start with left timer if scrolling is needed
   setTimeout(() => {
-    startTimer('left');
+    if (needsScrolling()) {
+      startTimer('left');
+    }
   }, 1000);
 });
 
 // Watch for changes in the number of lists
-// watch(() => groupedLists.value.length, (newLength, oldLength) => {
-//   if (newLength !== oldLength) {
-//     stopHorizontalScroll();
-//     setTimeout(() => {
-//       // Restart cycle
-//       if (scrollInterval) clearInterval(scrollInterval);
-//       if (pauseTimeout) clearInterval(pauseTimeout);
-//       showProgress.value = false;
-//       startTimer('left');
-//     }, 500);
-//   }
-// });
+watch(() => groupedLists.value.length, (newLength, oldLength) => {
+  if (newLength !== oldLength) {
+    stopHorizontalScroll();
+    setTimeout(() => {
+      // Restart cycle only if scrolling is needed
+      if (scrollInterval) clearInterval(scrollInterval);
+      if (pauseTimeout) clearInterval(pauseTimeout);
+      showProgress.value = false;
+      if (needsScrolling()) {
+        startTimer('left');
+      }
+    }, 500);
+  }
+});
 </script>
 
 <style scoped>

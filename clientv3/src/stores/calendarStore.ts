@@ -19,7 +19,27 @@ export const useCalendarStore = defineStore('calendar', {
       
       // Combine and sort by date/time
       const all = [...planningEvents, ...calendarEvents];
-      return all.sort((a, b) => new Date(a.start || a.date).getTime() - new Date(b.start || b.date).getTime());
+      const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      return all.filter(event => {
+        const eventDate = new Date(event.start || event.date).toISOString().split('T')[0];
+        if (eventDate < today) return false;
+        if (eventDate > today) return true;
+        // Same day, check end time
+        if (event.endTime && event.startTime) {
+          const [startHour, startMinute] = event.startTime.split(':').map(Number);
+          const [endHour, endMinute] = event.endTime.split(':').map(Number);
+          const eventEnd = new Date(now);
+          eventEnd.setHours(endHour, endMinute, 0, 0);
+          // If end time < start time, it spans midnight, so end is tomorrow
+          if (endHour < startHour || (endHour === startHour && endMinute < startMinute)) {
+            // Spans midnight, don't hide
+          } else {
+            if (now > eventEnd) return false;
+          }
+        }
+        return true;
+      }).sort((a, b) => new Date(a.start || a.date).getTime() - new Date(b.start || b.date).getTime());
     },
     pastYearEvents: (state) => {
       // Return events from the past year (placeholder - would need actual implementation)
@@ -201,8 +221,9 @@ function transformHorairesToEvents(horaires: any[]): any[] {
         
         // Check for week overrides
         let currentShift = null;
-        if (person.weekOverrides && person.weekOverrides[weekNumber.toString()]) {
-          currentShift = person.weekOverrides[weekNumber.toString()];
+        const weekKey = `${date.getFullYear()}-${weekNumber}`;
+        if (person.weekOverrides && person.weekOverrides[weekKey]) {
+          currentShift = person.weekOverrides[weekKey];
         } else if (person.rotation && person.rotation[weekInCycle]) {
           currentShift = person.rotation[weekInCycle];
         }
@@ -213,7 +234,7 @@ function transformHorairesToEvents(horaires: any[]): any[] {
           
           dayExceptions?.forEach((hour: string) => {
             const [start, end] = hour.split("-");
-            let eventTitle = person.name;
+            let eventTitle = `${person.name} - ${currentShift.shift}`;
             let eventType = "work"; // Force blue for Luis and Caroline
             
             events.push({
