@@ -90,16 +90,16 @@ export default class GoogleDataController {
       const statsService = getStatsService()
       const calendarService = getCalendarService()
       
-      // Lire les données actuelles depuis les fichiers
-      const currentStats = statsService.getCurrentYearStats()
-      const weatherStats = statsService.getPastYearWeatherStats() // Retourne actuelles si pas d'archives
+      // Lire les données archivées de l'année passée
+      const pastYearStats = statsService.getPastYearStats()
+      const weatherStats = statsService.getPastYearWeatherStats()
       const events = await calendarService.listPastYearEvents()
 
       return response.json({
-        year: 2025,
-        tasks: currentStats, // Données actuelles de 2025
-        weather: weatherStats, // Données actuelles de 2025
-        events: events, // Événements de l'année passée (2024)
+        year: new Date().getFullYear() - 1, // Année passée
+        tasks: pastYearStats, // Données archivées de l'année passée
+        weather: weatherStats, // Données archivées de l'année passée
+        events: events, // Événements de l'année passée
         generatedAt: new Date().toISOString()
       })
     } catch (error) {

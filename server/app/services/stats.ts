@@ -475,8 +475,64 @@ export default class StatsService {
       // Reset for new year
       this.saveStats({ year: currentYear + 1, tasks: [], userStats: [], listStats: [] })
     }
+    
+    // Archive weather data
+    this.archiveWeatherCurrentYear()
+    
     // Clean old weather data in February
     this.cleanOldWeatherData()
+  }
+
+  public archiveWeatherCurrentYear(): void {
+    const currentYear = new Date().getFullYear()
+    const stats = this.loadWeatherStats()
+
+    if (stats.year === currentYear) {
+      const archiveFile = path.join(this.statsDir, `weather-yearly-stats-${currentYear}.json`)
+
+      fs.writeFileSync(archiveFile, JSON.stringify(stats, null, 2))
+
+      // Reset for new year
+      const newStats: WeatherYearStats = {
+        year: currentYear + 1,
+        days: [],
+        averageTemp: 15,
+        rainyDays: 0,
+        sunnyDays: 0,
+        description: 'ensoleillée'
+      }
+      this.saveWeatherStats(newStats)
+      
+      console.log(`🌤️ Données météo archivées pour l'année ${currentYear}`)
+    }
+  }
+
+  public checkAndArchiveIfNeeded(): void {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1 // 1-12
+    const currentDay = now.getDate()
+
+    // Archive at the end of the year (December 31st)
+    if (currentMonth === 12 && currentDay === 31) {
+      console.log(`📅 Fin d'année ${currentYear} détectée - Archiving des données...`)
+      this.archiveCurrentYear()
+    }
+  }
+
+  // Vérification automatique quotidienne de l'archivage
+  static startArchivingCheck() {
+    const service = new StatsService()
+    // Vérifier une fois par jour (toutes les 24 heures)
+    setInterval(
+      () => {
+        service.checkAndArchiveIfNeeded()
+      },
+      24 * 60 * 60 * 1000
+    )
+    
+    // Vérifier immédiatement au démarrage
+    service.checkAndArchiveIfNeeded()
   }
 
   private cleanOldWeatherData(): void {
