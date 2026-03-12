@@ -34,8 +34,30 @@ export default class GoogleDataController {
   public async getCalendarEvents({ response }: HttpContext) {
     const calendarService = getCalendarService()
     const events = await calendarService.listEvents()
+    // Déplier les événements all-day multi-jours en un événement par jour
+    const expandedEvents = events.flatMap(event => {
+      // On ne déplie que les événements all-day (date sans T) et multi-jours
+      const isAllDay = typeof event.start === 'string' && !event.start.includes('T') && typeof event.end === 'string' && !event.end.includes('T');
+      if (isAllDay) {
+        const start = new Date(event.start);
+        const end = new Date(event.end);
+        // Google Calendar: end est exclusif
+        const days = [];
+        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+          const dateStr = d.toISOString().split('T')[0];
+          days.push({
+            ...event,
+            id: `${event.id}_${dateStr}`,
+            start: dateStr,
+            end: dateStr,
+          });
+        }
+        return days;
+      }
+      return [event];
+    });
     return response.json({
-      events,
+      events: expandedEvents,
       lastRefresh: globalLastRefresh,
     })
   }

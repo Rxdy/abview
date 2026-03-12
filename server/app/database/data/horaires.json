@@ -115,45 +115,6 @@
     "offset": 6
   },
   {
-    "name": "Lyam & Noah",
-    "type": "garde_alternee",
-    "weeks": {
-      "odd": "Chez Papa",
-      "even": "Chez Maman"
-    },
-    "overrides": [
-      {
-        "month_start": 7,
-        "day_start": 1,
-        "month_end": 7,
-        "day_end": 31,
-        "location": "Chez Maman"
-      },
-      {
-        "month_start": 8,
-        "day_start": 1,
-        "month_end": 8,
-        "day_end": 31,
-        "location": "Chez Papa"
-      }
-    ]
-  },
-  {
-    "name": "Rugby",
-    "type": "fixed",
-    "schedule": {
-      "monday": [],
-      "tuesday": [],
-      "wednesday": ["14:15-15:45"],
-      "thursday": [],
-      "friday": [],
-      "saturday": ["10:30-12:00"],
-      "sunday": []
-    },
-    "location": "Stade Baudras",
-    "linkedTo": "Lyam & Noah"
-  },
-  {
     "name": "Poubelle",
     "type": "allday",
     "days": ["thursday"],
