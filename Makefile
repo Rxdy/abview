@@ -1,14 +1,13 @@
 # Makefile pour AbView
-# Utilise clientv3 comme frontend principal (port 5175)
-# clientv2 gardé pour backup et référence
+# Utilise client comme frontend principal (port 5175)
 
 .PHONY: help run prod chromium get-token stop logs logs-api logs-files logs-stats logs-tail logs-clean reset
 
 help:
-	@echo "Commandes disponibles (utilise clientv3 - clientv2 gardé pour backup):"
+	@echo "Commandes disponibles (utilise client comme frontend principal):"
 	@echo "  run         - Lancement en mode développement"
 	@echo "  prod        - Lancement en mode production"
-	@echo "  chromium    - Ouverture du frontend clientv3 dans Chromium en mode kiosk"
+	@echo "  chromium    - Ouverture du frontend client dans Chromium en mode kiosk"
 	@echo "  get-token   - Récupération du token"
 	@echo "  stop        - Arrêt des conteneurs"
 	@echo "  logs        - Suivi des logs Docker"
@@ -24,14 +23,13 @@ run:
 	doppler run -p abview -c dev -- docker compose up
 
 prod:
-	@echo "Lancement en mode prod (clientv3 seulement)..."
-	doppler run -p abview -c dev -- docker compose up -d clientv3 api
+	@echo "Lancement en mode prod (client + api)..."
+	doppler run -p abview -c dev -- docker compose up -d client api
 	@echo "Attente du démarrage des services (15 secondes)..."
 	@sleep 15
 	@$(MAKE) chromium
 
-chromium:
-	@echo "Ouverture du frontend clientv3 dans Chromium en mode kiosk..."
+	@echo "Ouverture du frontend client dans Chromium en mode kiosk..."
 	chromium-browser \
 		--kiosk \
 		--autoplay-policy=no-user-gesture-required \
