@@ -36,28 +36,46 @@ export default class GoogleDataController {
     const events = await calendarService.listEvents()
     // Déplier les événements all-day multi-jours en un événement par jour
     const expandedEvents = events.flatMap(event => {
-      // On ne déplie que les événements all-day (date sans T) et multi-jours
+      // On ne déplie que les événements all-day (date sans T) et vraiment multi-jours
       const isAllDay = typeof event.start === 'string' && !event.start.includes('T') && typeof event.end === 'string' && !event.end.includes('T');
       if (isAllDay) {
         const start = new Date(event.start);
         const end = new Date(event.end);
-        // Google Calendar: end est exclusif
-        const days = [];
-        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-          const dateStr = d.toISOString().split('T')[0];
-          days.push({
-            ...event,
-            id: `${event.id}_${dateStr}`,
-            start: dateStr,
-            end: dateStr,
-          });
+        // Calculer la différence en jours
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        // Ne déplier que si c'est vraiment multi-jours (différence > 1 jour)
+        if (diffDays > 1) {
+          // Google Calendar: end est exclusif
+          const days = [];
+          for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+            const dateStr = d.toISOString().split('T')[0];
+            days.push({
+              ...event,
+              id: `${event.id}_${dateStr}`,
+              start: dateStr,
+              end: dateStr,
+            });
+          }
+          return days;
         }
-        return days;
       }
       return [event];
     });
+    
+    // Supprimer les doublons basés sur l'ID
+    const seenIds = new Set<string>();
+    const uniqueEvents = expandedEvents.filter(event => {
+      if (seenIds.has(event.id)) {
+        return false;
+      }
+      seenIds.add(event.id);
+      return true;
+    });
+    
     return response.json({
-      events: expandedEvents,
+      events: uniqueEvents,
       lastRefresh: globalLastRefresh,
     })
   }
