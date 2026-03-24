@@ -17,8 +17,25 @@ export const useCalendarStore = defineStore('calendar', {
       const planningEvents = transformHorairesToEvents(state.horaires);
       const calendarEvents = transformCalendarEvents(state.calendarEvents);
       
+      // Create a set of planning event keys to avoid duplicates
+      const planningEventKeys = new Set<string>();
+      planningEvents.forEach(event => {
+        const date = event.date || event.start;
+        const time = event.startTime || '';
+        const key = `${event.title}_${date}_${time}`.toLowerCase();
+        planningEventKeys.add(key);
+      });
+      
+      // Filter out calendar events that duplicate planning events
+      const filteredCalendarEvents = calendarEvents.filter(event => {
+        const date = event.start || event.date;
+        const time = event.startTime || '';
+        const key = `${event.title || event.summary}_${date}_${time}`.toLowerCase();
+        return !planningEventKeys.has(key);
+      });
+      
       // Combine and sort by date/time
-      const all = [...planningEvents, ...calendarEvents];
+      const all = [...planningEvents, ...filteredCalendarEvents];
       const today = new Date().toISOString().split('T')[0];
       const now = new Date();
       return all.filter(event => {
