@@ -112,7 +112,7 @@
       "Soir": ["12:00-19:00"],
       "Nuit": ["19:00-02:00"]
     },
-    "offset": 6
+    "cycleAnchor": { "year": 2026, "week": 13, "position": 0 }
   },
   {
     "name": "Poubelle",

@@ -36,12 +36,18 @@ export const useCalendarStore = defineStore('calendar', {
       
       // Combine and sort by date/time
       const all = [...planningEvents, ...filteredCalendarEvents];
-      const today = new Date().toISOString().split('T')[0];
+      const today: string = new Date().toISOString().split('T')[0] || '';
       const now = new Date();
       return all.filter(event => {
-        const eventDate = new Date(event.start || event.date).toISOString().split('T')[0];
-        if (eventDate < today) return false;
-        if (eventDate > today) return true;
+        const eventDateStr = event.start || event.date;
+        if (!eventDateStr) return false;
+        try {
+          const eventDate: string = new Date(eventDateStr).toISOString().split('T')[0] || '';
+          if (eventDate < today) return false;
+          if (eventDate > today) return true;
+        } catch {
+          return false; // Skip invalid dates
+        }
         // Same day, check end time
         if (event.endTime && event.startTime) {
           const [startHour, startMinute] = event.startTime.split(':').map(Number);
@@ -233,8 +239,20 @@ function transformHorairesToEvents(horaires: any[]): any[] {
       if (person.type === "shift") {
         // Calculate which week in the cycle
         const cycleLength = person.cycleLength || person.rotation?.length || 1;
-        const offset = person.offset || 0;
-        let weekInCycle = (weekNumber + offset) % cycleLength;
+        let weekInCycle: number;
+
+        if (person.cycleAnchor) {
+          // Anchor-based calculation: anchor defines a reference week/year at a known cycle position
+          const anchor = person.cycleAnchor;
+          const anchorAbsWeek = anchor.year * 52 + anchor.week;
+          const currentAbsWeek = date.getFullYear() * 52 + weekNumber;
+          const weeksDiff = currentAbsWeek - anchorAbsWeek;
+          weekInCycle = ((anchor.position + weeksDiff) % cycleLength + cycleLength) % cycleLength;
+        } else {
+          // Legacy offset-based calculation
+          const offset = person.offset || 0;
+          weekInCycle = (weekNumber + offset) % cycleLength;
+        }
         
         // Check for week overrides
         let currentShift = null;
@@ -312,7 +330,7 @@ function transformCalendarEvents(calendarEvents: any[]): any[] {
     const endTime = hasTime && event.end ? new Date(event.end).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null;
     
     let eventType = 'default';
-    if (event.summary?.toLowerCase().includes('anniversaire')) {
+    if (event.summary?.toLowerCase().includes('anniversaire') || event.summary?.toLowerCase().includes('birthday')) {
       eventType = 'birthday';
     }
     
