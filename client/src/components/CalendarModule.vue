@@ -183,7 +183,8 @@ const getEventsForDay = (date: Date) => {
       }
       
       // For birthdays, only show on the start date
-      const isBirthday = (event.summary || event.title)?.toLowerCase().includes('anniversaire');
+      const isBirthday = (event.summary || event.title)?.toLowerCase().includes('anniversaire') || 
+                        (event.summary || event.title)?.toLowerCase().includes('birthday');
       if (isBirthday) {
         return eventDateStr === dateStr;
       }
@@ -213,7 +214,8 @@ const getEventsForDay = (date: Date) => {
     let eventType = event.type || 'unknown';
     
     // Clean up birthday titles - extract only the name
-    if ((event.title || event.summary || '').toLowerCase().includes('anniversaire')) {
+    if ((event.title || event.summary || '').toLowerCase().includes('anniversaire') || 
+        (event.title || event.summary || '').toLowerCase().includes('birthday')) {
       const fullTitle = event.title || event.summary || '';
       // Extract name after "anniversaire de" or similar patterns
       const nameMatch = fullTitle.match(/(?:anniversaire de|birthday of)\s+(.+)/i) || 
@@ -229,7 +231,8 @@ const getEventsForDay = (date: Date) => {
     const endTime = event.endTime || '';
     
     // Determine event type based on content
-    if ((event.summary || event.title)?.toLowerCase().includes('anniversaire')) {
+    if ((event.summary || event.title)?.toLowerCase().includes('anniversaire') || 
+        (event.summary || event.title)?.toLowerCase().includes('birthday')) {
       eventType = 'birthday';
     } else {
       eventType = event.type || 'default';
@@ -478,6 +481,20 @@ setInterval(() => {
   color: #fff !important;
 }
 
+.event.christmas .event-title,
+.event.easter .event-title,
+.event.newyear .event-title,
+.event.ramadan .event-title,
+.event.lent .event-title,
+.event.labor .event-title,
+.event.victory .event-title,
+.event.bastille .event-title,
+.event.catholic .event-title {
+  text-align: center;
+  font-weight: bold;
+  width: 100%;
+}
+
 /* Birthday today special animation - SUPPRIMÉ */
 /* Les effets sur les cartes individuelles ont été supprimés */
 /* Seul l'effet global BirthdayEffect.vue est maintenant utilisé */
@@ -504,7 +521,7 @@ setInterval(() => {
 
 /* Holiday backgrounds based on theme and event type */
 .event.christmas.theme-dark {
-  background-image: url('@/assets/card/dark/noel.png');
+  background-image: url('@/assets/card/dark/newyear.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -512,7 +529,7 @@ setInterval(() => {
 }
 
 .event.christmas.theme-light {
-  background-image: url('@/assets/card/light/noel.png');
+  background-image: url('@/assets/card/light/newyear.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -535,32 +552,16 @@ setInterval(() => {
   border-left: 4px solid #00bcd4; /* Cyan for all holidays */
 }
 
-.event.ramadan.theme-dark {
-  background-image: url('@/assets/card/dark/ramadan.png');
+.event.newyear.theme-dark {
+  background-image: url('@/assets/card/dark/newyear.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   border-left: 4px solid #00bcd4; /* Cyan for all holidays */
 }
 
-.event.ramadan.theme-light {
-  background-image: url('@/assets/card/light/ramadan.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-left: 4px solid #00bcd4; /* Cyan for all holidays */
-}
-
-.event.lent.theme-dark {
-  background-image: url('@/assets/card/dark/caresme.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-left: 4px solid #00bcd4; /* Cyan for all holidays */
-}
-
-.event.lent.theme-light {
-  background-image: url('@/assets/card/light/caresme.png');
+.event.newyear.theme-light {
+  background-image: url('@/assets/card/light/newyear.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -573,7 +574,6 @@ setInterval(() => {
 .event.bastille.theme-dark,
 .event.armistice.theme-dark,
 .event.catholic.theme-dark {
-  background-image: url('@/assets/card/dark/national.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -586,7 +586,6 @@ setInterval(() => {
 .event.bastille.theme-light,
 .event.armistice.theme-light,
 .event.catholic.theme-light {
-  background-image: url('@/assets/card/light/national.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
