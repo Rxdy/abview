@@ -179,10 +179,13 @@ const getUvLabel = (uvIndex: number) => {
 };
 
 const getTempColor = (temp: number) => {
-  if (temp <= 0) return '#0000ff'; // Bleu froid
-  if (temp <= 15) return '#0080ff';
-  if (temp <= 25) return '#ffa500'; // Orange
-  return '#ff0000'; // Rouge chaud
+  if (temp <= -10) return '#0033cc'; // Très froid
+  if (temp <= 0) return '#3366ff'; // Froid
+  if (temp <= 10) return '#33b3ff'; // Frais
+  if (temp <= 20) return '#ffcc33'; // Doux / léger
+  if (temp <= 30) return '#ff8c00'; // Chaud
+  if (temp <= 40) return '#ff3300'; // Très chaud
+  return '#cc0000'; // Canicule
 };
 
 const getWindDirection = (degrees: number) => {
