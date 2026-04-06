@@ -1,7 +1,7 @@
 <template>
   <header class="header">
     <div class="logo">
-      <img alt="Logo" src="/plop-rmbg.png" width="40" height="40" />
+      <img alt="Logo" src="/abview-logo.png" width="40" height="40" />
       <h1>Abview</h1>
     </div>
     <div class="center">
