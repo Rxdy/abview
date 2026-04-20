@@ -36,32 +36,27 @@ export const useCalendarStore = defineStore('calendar', {
       
       // Combine and sort by date/time
       const all = [...planningEvents, ...filteredCalendarEvents];
-      const today: string = new Date().toISOString().split('T')[0] || '';
-      const now = new Date();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       return all.filter(event => {
-        const eventDateStr = event.start || event.date;
-        if (!eventDateStr) return false;
-        try {
-          const eventDate: string = new Date(eventDateStr).toISOString().split('T')[0] || '';
-          if (eventDate < today) return false;
-          if (eventDate > today) return true;
-        } catch {
-          return false; // Skip invalid dates
+        const eventStartStr = event.start || event.date;
+        if (!eventStartStr) return false;
+
+        const eventStart = new Date(eventStartStr);
+        if (Number.isNaN(eventStart.getTime())) return false;
+
+        let eventEnd = event.end ? new Date(event.end) : new Date(eventStart);
+        if (Number.isNaN(eventEnd.getTime())) {
+          eventEnd = new Date(eventStart);
         }
-        // Same day, check end time
-        if (event.endTime && event.startTime) {
-          const [startHour, startMinute] = event.startTime.split(':').map(Number);
-          const [endHour, endMinute] = event.endTime.split(':').map(Number);
-          const eventEnd = new Date(now);
-          eventEnd.setHours(endHour, endMinute, 0, 0);
-          // If end time < start time, it spans midnight, so end is tomorrow
-          if (endHour < startHour || (endHour === startHour && endMinute < startMinute)) {
-            // Spans midnight, don't hide
-          } else {
-            if (now > eventEnd) return false;
-          }
+
+        const isAllDay = typeof event.start === 'string' && !event.start.includes('T');
+        if (isAllDay && (!event.end || eventEnd.getTime() === eventStart.getTime())) {
+          eventEnd = new Date(eventStart);
+          eventEnd.setDate(eventEnd.getDate() + 1);
         }
-        return true;
+
+        return eventEnd.getTime() >= today.getTime();
       }).sort((a, b) => new Date(a.start || a.date).getTime() - new Date(b.start || b.date).getTime());
     },
     pastYearEvents: (state) => {

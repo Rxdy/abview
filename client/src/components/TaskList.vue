@@ -6,7 +6,6 @@
     <div ref="tasksContainer" class="tasks-container">
       <!-- Pending Tasks -->
       <div v-if="pendingTasks.length > 0" class="tasks-section">
-        <div class="section-title">À faire</div>
         <div v-for="item in pendingTasks" :key="item.task.id">
           <TaskItem
             :task="item.task"
@@ -24,32 +23,12 @@
           />
         </div>
       </div>
-      <!-- Completed Tasks -->
-      <div v-if="completedTasks.length > 0" class="tasks-section completed-section">
-        <div class="section-title">Terminées</div>
-        <div v-for="item in completedTasks" :key="item.task.id">
-          <TaskItem
-            :task="item.task"
-            :isDark="isDark"
-            :hasChildren="item.children.length > 0"
-            :isCompleted="true"
-          />
-          <TaskItem
-            v-for="child in item.children"
-            :key="child.id"
-            :task="child"
-            :isDark="isDark"
-            :hasChildren="false"
-            :isCompleted="true"
-          />
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import TaskItem from './TaskItem.vue'
 import { useThemeStore } from '../stores/themeStore';
 
@@ -102,31 +81,17 @@ const tasksMap = computed(() => {
 });
 
 const parentsWithChildren = computed(() => {
+  // Simplified: only check for pending tasks
   const parents = new Set();
   props.tasks.forEach(task => {
-    if (task.parent) parents.add(task.parent);
+    if (task.parent && task.status !== 'completed') parents.add(task.parent);
   });
   return parents;
 });
 
 const taskStats = computed(() => {
-  const stats = new Map<string, { hasPending: boolean, hasCompleted: boolean }>();
-  props.tasks.forEach(task => {
-    if (task.level === 0) {
-      stats.set(task.id, { hasPending: false, hasCompleted: false });
-    }
-  });
-  props.tasks.forEach(task => {
-    if (task.parent && stats.has(task.parent)) {
-      const stat = stats.get(task.parent)!;
-      if (task.status === 'completed') {
-        stat.hasCompleted = true;
-      } else {
-        stat.hasPending = true;
-      }
-    }
-  });
-  return stats;
+  // Removed: no longer needed for completed tasks
+  return new Map();
 });
 
 const sortedTasks = computed(() => {
@@ -149,29 +114,33 @@ const pendingTasks = computed(() => {
 });
 
 const completedTasks = computed(() => {
-  const level0Tasks = props.tasks.filter(t => t.level === 0);
-  const withCompletedChildren = level0Tasks.filter(t => {
-    const stat = taskStats.value.get(t.id);
-    return stat && stat.hasCompleted;
-  });
-  const completedWithoutChildren = level0Tasks.filter(t => t.status === 'completed' && !parentsWithChildren.value.has(t.id));
-  const sortedLevel0 = [...completedWithoutChildren, ...withCompletedChildren]; // completed without children first, then with completed children
-  return sortedLevel0.map(parent => {
-    const children = props.tasks.filter(t => t.parent === parent.id && t.status === 'completed');
-    return { task: parent, children };
-  });
+  // Removed: no longer showing completed tasks
+  return [];
 });
 
 const tasksContainer = ref<HTMLElement | null>(null);
 let scrollInterval: number | null = null;
+let scrollTimeout: number | null = null;
+
+const clearVerticalScroll = () => {
+  if (scrollInterval) {
+    clearInterval(scrollInterval);
+    scrollInterval = null;
+  }
+  if (scrollTimeout) {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = null;
+  }
+};
 
 const startVerticalScroll = () => {
+  clearVerticalScroll();
   if (!tasksContainer.value) return;
   const container = tasksContainer.value;
   const totalHeight = container.scrollHeight;
   const visibleHeight = container.clientHeight;
 
-  if (totalHeight <= visibleHeight) return; // No need to scroll
+  if (totalHeight - visibleHeight < 12) return; // Ignore tiny overflows that can cause jitter
 
   let currentScroll = 0;
   let direction = 1; // 1: down, -1: up
@@ -182,12 +151,10 @@ const startVerticalScroll = () => {
   const scroll = () => {
     currentScroll += step * direction;
     if (direction === 1 && currentScroll >= totalHeight - visibleHeight) {
-      // Reached bottom, pause
       currentScroll = totalHeight - visibleHeight;
       direction = -1;
       pauseAtBottom();
     } else if (direction === -1 && currentScroll <= 0) {
-      // Reached top, pause
       currentScroll = 0;
       direction = 1;
       pauseAtTop();
@@ -196,23 +163,26 @@ const startVerticalScroll = () => {
   };
 
   const pauseAtBottom = () => {
-    clearInterval(scrollInterval!);
-    scrollInterval = null;
-    setTimeout(() => {
+    if (scrollInterval) {
+      clearInterval(scrollInterval);
+      scrollInterval = null;
+    }
+    scrollTimeout = window.setTimeout(() => {
       scrollInterval = window.setInterval(scroll, delay);
     }, pauseDuration);
   };
 
   const pauseAtTop = () => {
-    clearInterval(scrollInterval!);
-    scrollInterval = null;
-    setTimeout(() => {
+    if (scrollInterval) {
+      clearInterval(scrollInterval);
+      scrollInterval = null;
+    }
+    scrollTimeout = window.setTimeout(() => {
       scrollInterval = window.setInterval(scroll, delay);
     }, pauseDuration);
   };
 
-  // Initial pause before starting
-  setTimeout(() => {
+  scrollTimeout = window.setTimeout(() => {
     scrollInterval = window.setInterval(scroll, delay);
   }, pauseDuration);
 };
@@ -221,6 +191,10 @@ onMounted(() => {
   setTimeout(() => {
     startVerticalScroll();
   }, 1000);
+});
+
+onUnmounted(() => {
+  clearVerticalScroll();
 });
 
 const isDark = computed(() => {

@@ -164,41 +164,35 @@ const getEventsForDay = (date: Date) => {
   const dayEvents = calendarStore.allEvents.filter(event => {
     // Handle calendar events (may span multiple days)
     if (event.start && !event.date) {
-      // This is a calendar event
-      const eventStart = typeof event.start === 'object' && event.start?.dateTime 
-        ? new Date(event.start.dateTime) 
-        : new Date(event.start);
-      const eventEnd = event.end 
-        ? (typeof event.end === 'object' && event.end?.dateTime ? new Date(event.end.dateTime) : new Date(event.end))
-        : eventStart;
-      
-      // Get event date string - handle date-only events properly
-      let eventDateStr;
-      if (typeof event.start === 'string' && !event.start.includes('T')) {
-        // Date-only event (like birthdays), parse as local date
-        eventDateStr = event.start;
-      } else {
-        // Timed event, use Date object
-        eventDateStr = eventStart.getFullYear() + '-' + String(eventStart.getMonth() + 1).padStart(2, '0') + '-' + String(eventStart.getDate()).padStart(2, '0');
+      const getDateFrom = (value: any) => {
+        if (!value) return null;
+        if (typeof value === 'object' && value.dateTime) return new Date(value.dateTime);
+        if (typeof value === 'string' && !value.includes('T')) {
+          const [year, month, day] = value.split('-').map(Number);
+          return new Date(year, month - 1, day, 0, 0, 0, 0);
+        }
+        return new Date(value);
+      };
+
+      const eventStart = getDateFrom(event.start);
+      let eventEnd = event.end ? getDateFrom(event.end) : null;
+
+      if (!eventStart || Number.isNaN(eventStart.getTime())) {
+        return false;
       }
-      
-      // For birthdays, only show on the start date
-      const isBirthday = (event.summary || event.title)?.toLowerCase().includes('anniversaire') || 
-                        (event.summary || event.title)?.toLowerCase().includes('birthday');
-      if (isBirthday) {
-        return eventDateStr === dateStr;
+
+      if (!eventEnd || Number.isNaN(eventEnd.getTime())) {
+        eventEnd = new Date(eventStart);
       }
-      
-      // For all-day events, only show on the start date
-      const isAllDay = !event.startTime && !event.start?.includes?.('T');
-      if (isAllDay) {
-        return eventDateStr === dateStr;
+
+      if (typeof event.start === 'string' && !event.start.includes('T') && (!event.end || eventEnd.getTime() === eventStart.getTime())) {
+        eventEnd = new Date(eventStart);
+        eventEnd.setDate(eventEnd.getDate() + 1);
       }
-      
-      // For timed events, check if they fall on this day
-      return eventDateStr === dateStr;
+
+      return eventStart < localDayEnd && eventEnd > localDayStart;
     }
-    
+
     // Handle planning events (already have date field)
     if (event.date) {
       return event.date === dateStr;
@@ -212,6 +206,27 @@ const getEventsForDay = (date: Date) => {
   const transformedEvents = dayEvents.map(event => {
     let title = event.title || event.summary || 'Événement';
     let eventType = event.type || 'unknown';
+
+    const getDateFrom = (value: any) => {
+      if (!value) return null;
+      if (typeof value === 'object' && value.dateTime) return new Date(value.dateTime);
+      return new Date(value);
+    };
+
+    const eventStart = event.start ? getDateFrom(event.start) : null;
+    const eventEnd = event.end ? getDateFrom(event.end) : null;
+    const formatLocalDate = (d: Date) => {
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    };
+    const isMultiDayTimedEvent = eventStart && eventEnd && eventStart.getTime() < eventEnd.getTime() &&
+      !!event.startTime && !!event.endTime &&
+      formatLocalDate(eventStart) !== formatLocalDate(eventEnd);
+
+    const eventStartDate = eventStart ? formatLocalDate(eventStart) : null;
+    const startTime = event.startTime || '';
+    const endTime = event.endTime || '';
+    const displayStartTime = (isMultiDayTimedEvent && eventStartDate && eventStartDate !== dateStr) ? '' : startTime;
+    const displayEndTime = (isMultiDayTimedEvent && eventStartDate && eventStartDate !== dateStr) ? '' : endTime;
     
     // Clean up birthday titles - extract only the name
     if ((event.title || event.summary || '').toLowerCase().includes('anniversaire') || 
@@ -226,10 +241,6 @@ const getEventsForDay = (date: Date) => {
       }
     }
     
-    // Use startTime and endTime already calculated in the store
-    const startTime = event.startTime || '';
-    const endTime = event.endTime || '';
-    
     // Determine event type based on content
     if ((event.summary || event.title)?.toLowerCase().includes('anniversaire') || 
         (event.summary || event.title)?.toLowerCase().includes('birthday')) {
@@ -242,8 +253,8 @@ const getEventsForDay = (date: Date) => {
     return {
       ...event,
       title,
-      startTime,
-      endTime,
+      startTime: displayStartTime,
+      endTime: displayEndTime,
       type: eventType,
       location: event.location
     };

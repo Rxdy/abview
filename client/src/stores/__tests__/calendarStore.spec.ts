@@ -79,6 +79,26 @@ describe('useCalendarStore', () => {
       expect(Array.isArray(events)).toBe(true)
     })
 
+    it('should keep multi-day calendar events active while the interval is still ongoing', () => {
+      const store = useCalendarStore()
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-04-20T12:00:00Z'))
+
+      store.calendarEvents = [{
+        id: '805472o3nf47o3tckttqtep268',
+        summary: 'Quentin et Julie Canaries☀️☀️',
+        start: '2026-04-18T13:30:00+02:00',
+        end: '2026-04-25T21:10:00+02:00',
+        description: '',
+        location: 'Lanzarote, 35340 Lanzarote, Las Palmas, Espagne'
+      }]
+
+      const events = store.allEvents
+      expect(events.some(event => event.id === '805472o3nf47o3tckttqtep268')).toBe(true)
+
+      vi.useRealTimers()
+    })
+
     it('should provide pastYearStats', () => {
       const store = useCalendarStore()
       const stats = store.pastYearStats

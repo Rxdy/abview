@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, nextTick } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue';
 import { useTasksStore } from '../stores/tasksStore';
 import ErrorDisplay from './ErrorDisplay.vue';
 import TaskList from './TaskList.vue';
@@ -131,8 +131,8 @@ const startScroll = (direction: 'left' | 'right') => {
   const totalWidth = container.scrollWidth;
   const visibleWidth = container.clientWidth;
 
-  if (totalWidth <= visibleWidth) {
-    // No overflow, go back to timer
+  if (totalWidth - visibleWidth < 16) {
+    // No meaningful overflow, keep the progress indicator hidden
     currentSide = direction === 'right' ? 'right' : 'left';
     startTimer(currentSide);
     return;
@@ -146,11 +146,9 @@ const startScroll = (direction: 'left' | 'right') => {
     currentScroll += step;
     if ((direction === 'right' && currentScroll >= totalWidth - visibleWidth) ||
         (direction === 'left' && currentScroll <= 0)) {
-      // Reached end
       clearInterval(scrollInterval!);
       scrollInterval = null;
       container.scrollLeft = direction === 'right' ? totalWidth - visibleWidth : 0;
-      // Start timer on the other side
       currentSide = direction === 'right' ? 'right' : 'left';
       startTimer(currentSide);
       return;
@@ -158,6 +156,9 @@ const startScroll = (direction: 'left' | 'right') => {
     container.scrollLeft = currentScroll;
   };
 
+  if (scrollInterval) {
+    clearInterval(scrollInterval);
+  }
   scrollInterval = setInterval(scroll, delay);
 };
 
@@ -167,7 +168,7 @@ const stopHorizontalScroll = () => {
     scrollInterval = null;
   }
   if (pauseTimeout) {
-    clearInterval(pauseTimeout);
+    clearTimeout(pauseTimeout);
     pauseTimeout = null;
   }
   showProgress.value = false;
@@ -196,13 +197,17 @@ watch(() => groupedLists.value.length, (newLength, oldLength) => {
     setTimeout(() => {
       // Restart cycle only if scrolling is needed
       if (scrollInterval) clearInterval(scrollInterval);
-      if (pauseTimeout) clearInterval(pauseTimeout);
+      if (pauseTimeout) clearTimeout(pauseTimeout);
       showProgress.value = false;
       if (needsScrolling()) {
         startTimer('left');
       }
     }, 500);
   }
+});
+
+onUnmounted(() => {
+  stopHorizontalScroll();
 });
 </script>
 
