@@ -128,3 +128,19 @@ reset:
 	@echo "Suppression du cache npm..."
 	@npm cache clean --force
 	@echo "Environnement réinitialisé. Tu peux relancer avec 'make run' ou 'make prod'."
+
+services:
+	@echo "=== État des services AbView ==="
+	@echo ""
+	@docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+	@echo ""
+	@echo "=== Liens d'accès ==="
+	@echo "🌐 Frontend (dev)  : http://localhost:5175"
+	@echo "🔧 Backend API     : http://localhost:3333"
+	@echo "📊 Logs API        : http://localhost:3333/logs"
+	@echo "📋 Health check    : http://localhost:3333/health"
+	@echo ""
+	@echo "=== Commandes utiles ==="
+	@echo "make logs          - Suivre tous les logs"
+	@echo "make logs-tail     - Logs en temps réel"
+	@echo "make stop          - Arrêter tous les services"

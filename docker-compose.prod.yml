@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+    frontend:
+        image: ghcr.io/rxdy/abview/frontend:latest
+        ports:
+            - "80:80"
+        environment:
+            - TZ=Europe/Paris
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+
+    backend:
+        image: ghcr.io/rxdy/abview/backend:latest
+        ports:
+            - "3333:3333"
+        environment:
+            - TZ=Europe/Paris
+            - NODE_ENV=production
+            - PORT=3333
+            - HOST=0.0.0.0
+            - LOG_LEVEL=info
+            - APP_KEY=${APP_KEY:-SEYsJ0SsaIxmvq50Y4RFS1ZnTkGaByaq}
+            - DB_HOST=${DB_HOST:-127.0.0.1}
+            - DB_PORT=${DB_PORT:-3306}
+            - DB_USER=${DB_USER:-root}
+            - DB_PASSWORD=${DB_PASSWORD:-root}
+            - DB_DATABASE=${DB_DATABASE:-app}
+            - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+            - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+            - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+            - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN}
+            - GOOGLE_ACCESS_TOKEN=${GOOGLE_ACCESS_TOKEN}
+            - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+        volumes:
+            - ./logs:/app/logs
