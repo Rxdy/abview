@@ -24,7 +24,7 @@ describe('Header', () => {
     })
 
     expect(wrapper.find('img').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Abview')
+    expect(wrapper.text()).toContain('AbView')
   })
 
   it('displays dashboard name from store', () => {
@@ -51,5 +51,6 @@ describe('Header', () => {
     expect(wrapper.find('.header').exists()).toBe(true)
     expect(wrapper.find('.logo').exists()).toBe(true)
     expect(wrapper.find('.center').exists()).toBe(true)
+    expect(wrapper.find('.right').exists()).toBe(true)
   })
 })

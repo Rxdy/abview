@@ -1,13 +1,13 @@
 <template>
   <footer class="footer">
     <div class="left">
-      <span>&copy; {{ currentYear }} Abview. All rights reserved.</span>
+      <span>&copy; {{ currentYear }} Abnd. All rights reserved.</span>
     </div>
     <div class="center">
       <ProgressBar />
     </div>
     <div class="right">
-      <span>v3.1.2</span>
+      <span>v2.6.0</span>
     </div>
   </footer>
 </template>

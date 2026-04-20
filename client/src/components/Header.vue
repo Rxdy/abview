@@ -2,12 +2,14 @@
   <header class="header">
     <div class="logo">
       <img alt="Logo" src="/abview-logo.png" width="40" height="40" />
-      <h1>Abview</h1>
+      <h1>AbView</h1>
     </div>
     <div class="center">
+      <DateTimeModule />
+    </div>
+    <div class="right">
       <h2>{{ dashboardStore.name }}</h2>
     </div>
-    <DateTimeModule />
   </header>
 </template>
 
@@ -47,7 +49,14 @@ const dashboardStore = useDashboardStore();
   justify-content: center;
 }
 
-.center h2 {
+.right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 160px;
+}
+
+.right h2 {
   margin: 0;
   font-size: 1.5rem;
   font-weight: bold;

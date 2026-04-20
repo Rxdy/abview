@@ -18,7 +18,7 @@ describe('Footer', () => {
     })
 
     expect(wrapper.text()).toContain('2026')
-    expect(wrapper.text()).toContain('Abview')
+    expect(wrapper.text()).toContain('Abnd')
   })
 
   it('displays version number', () => {
@@ -26,7 +26,7 @@ describe('Footer', () => {
       stubs: ['ProgressBar']
     })
 
-    expect(wrapper.text()).toContain('v3.1.2')
+    expect(wrapper.text()).toContain('v2.6.0')
   })
 
   it('includes ProgressBar component', () => {
