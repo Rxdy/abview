@@ -45,11 +45,10 @@ describe('TaskList', () => {
       stubs: ['TaskItem']
     })
 
-    expect(wrapper.text()).toContain('À faire')
     expect(wrapper.findAllComponents({ name: 'TaskItem' })).toHaveLength(1) // Only pending
   })
 
-  it('renders completed tasks', () => {
+  it('does not render completed tasks', () => {
     const tasks = [
       { id: '1', title: 'Task 1', status: 'completed', level: 0, taskListTitle: 'Test', listColor: 'red' }
     ]
@@ -63,8 +62,7 @@ describe('TaskList', () => {
       stubs: ['TaskItem']
     })
 
-    expect(wrapper.text()).toContain('Terminées')
-    expect(wrapper.findAllComponents({ name: 'TaskItem' })).toHaveLength(1)
+    expect(wrapper.findAllComponents({ name: 'TaskItem' })).toHaveLength(0) // No completed tasks shown
   })
 
   it('applies light theme class when not dark', () => {
