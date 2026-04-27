@@ -7,7 +7,7 @@
       <ProgressBar />
     </div>
     <div class="right">
-      <span>v2.6.0</span>
+      <span>v2.6.1</span>
     </div>
   </footer>
 </template>
