@@ -147,13 +147,35 @@ export default class StatsService {
   }
 
   private loadWeatherStats(): WeatherYearStats {
+    const currentYear = new Date().getFullYear()
     try {
       const data = fs.readFileSync(this.weatherStatsFile, 'utf8')
-      return JSON.parse(data)
+      const stats = JSON.parse(data)
+
+      // If file is from a previous year, archive it and return a fresh one
+      if (stats.year && stats.year !== currentYear) {
+        const archiveFile = path.join(this.statsDir, `weather-yearly-stats-${stats.year}.json`)
+        if (!fs.existsSync(archiveFile)) {
+          fs.writeFileSync(archiveFile, JSON.stringify(stats, null, 2))
+          console.log(`📦 Données météo de l'année ${stats.year} archivées automatiquement`)
+        }
+        const newStats: WeatherYearStats = {
+          year: currentYear,
+          days: [],
+          averageTemp: 15,
+          rainyDays: 0,
+          sunnyDays: 0,
+          description: 'ensoleillée'
+        }
+        this.saveWeatherStats(newStats)
+        return newStats
+      }
+
+      return stats
     } catch (error) {
       console.error('Error loading weather stats:', error)
       return { 
-        year: new Date().getFullYear(), 
+        year: currentYear, 
         days: [],
         averageTemp: 15,
         rainyDays: 0,
@@ -175,8 +197,25 @@ export default class StatsService {
     const currentYear = new Date().getFullYear()
     const stats = this.loadStats()
 
-    // If it's a new year, reset stats
+    // If it's a new year, archive old data before resetting
     if (stats.year !== currentYear) {
+      const oldYear = stats.year
+      const archiveFile = path.join(this.statsDir, `yearly-stats-${oldYear}.json`)
+
+      // Archive if not already archived
+      if (!fs.existsSync(archiveFile)) {
+        const serializableStats = {
+          ...stats,
+          tasks: stats.tasks.map(task => ({
+            ...task,
+            createdIds: Array.from(task.createdIds),
+            completedIds: Array.from(task.completedIds)
+          }))
+        }
+        fs.writeFileSync(archiveFile, JSON.stringify(serializableStats, null, 2))
+        console.log(`📦 Données de l'année ${oldYear} archivées automatiquement au démarrage`)
+      }
+
       const newStats = { 
         year: currentYear, 
         tasks: [],
