@@ -132,15 +132,37 @@ reset:
 services:
 	@echo "=== État des services AbView ==="
 	@echo ""
-	@docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
-	@echo ""
-	@echo "=== Liens d'accès ==="
-	@echo "🌐 Frontend (dev)  : http://localhost:5175"
-	@echo "🔧 Backend API     : http://localhost:3333"
-	@echo "📊 Logs API        : http://localhost:3333/logs"
-	@echo "📋 Health check    : http://localhost:3333/health"
+	@# Vérifier l'état des services
+	@if docker compose ps --format json | jq -e '.[] | select(.Name == "abview-client-1") | .State' >/dev/null 2>&1; then \
+		CLIENT_STATE=$$(docker compose ps --format json | jq -r '.[] | select(.Name == "abview-client-1") | .State'); \
+		if [ "$$CLIENT_STATE" = "running" ]; then \
+			echo "🌐 Frontend      : RUNNING  → http://localhost:5175"; \
+		else \
+			echo "🌐 Frontend      : STOPPED  → http://localhost:5175 (port indisponible)"; \
+		fi; \
+	else \
+		echo "🌐 Frontend      : STOPPED  → http://localhost:5175 (service non démarré)"; \
+	fi
+	@if docker compose ps --format json | jq -e '.[] | select(.Name == "abview-api-1") | .State' >/dev/null 2>&1; then \
+		API_STATE=$$(docker compose ps --format json | jq -r '.[] | select(.Name == "abview-api-1") | .State'); \
+		if [ "$$API_STATE" = "running" ]; then \
+			echo "🔧 Backend API   : RUNNING  → http://localhost:3333"; \
+			echo "📊 Logs API      : RUNNING  → http://localhost:3333/logs"; \
+			echo "📋 Health check  : RUNNING  → http://localhost:3333/health"; \
+		else \
+			echo "🔧 Backend API   : STOPPED  → http://localhost:3333 (port indisponible)"; \
+			echo "📊 Logs API      : STOPPED  → http://localhost:3333/logs (port indisponible)"; \
+			echo "📋 Health check  : STOPPED  → http://localhost:3333/health (port indisponible)"; \
+		fi; \
+	else \
+		echo "🔧 Backend API   : STOPPED  → http://localhost:3333 (service non démarré)"; \
+		echo "📊 Logs API      : STOPPED  → http://localhost:3333/logs (service non démarré)"; \
+		echo "📋 Health check  : STOPPED  → http://localhost:3333/health (service non démarré)"; \
+	fi
 	@echo ""
 	@echo "=== Commandes utiles ==="
-	@echo "make logs          - Suivre tous les logs"
-	@echo "make logs-tail     - Logs en temps réel"
-	@echo "make stop          - Arrêter tous les services"
+	@echo "make run          - Lancer en mode développement"
+	@echo "make prod         - Lancer en mode production"
+	@echo "make logs         - Suivre tous les logs"
+	@echo "make logs-tail    - Logs en temps réel"
+	@echo "make stop         - Arrêter tous les services"
