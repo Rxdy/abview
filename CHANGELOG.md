@@ -7,7 +7,17 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
-## [v2.6.0] — 2026-04-07
+## [v2.6.1] — 2026-04-27
+
+### Corrigé
+- **Annual Recap** : AnnualRecapWrapper utilise maintenant annualRecapStore correctement
+- **Annual Recap** : EventsSlide corrigé (champs événements + intervalle 15s par mois)
+- **Annual Recap** : WeatherSlide utilise tempMax pour calculer jour le plus froid/chaleureux
+- **Archivage automatique** : Correction critique - archivage maintenant déclenché au changement d'année (pas seulement 31 décembre)
+- **Archivage météo** : Archivage automatique des stats météo au changement d'année
+
+### Modifié
+- Mise à jour PENDING_WORK.md et AUDIT_WRAP_ANNUEL.md pour refléter l'état actuel
 
 ### Ajouté
 - Nouveau logo AbView dans le header et favicon

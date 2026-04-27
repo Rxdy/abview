@@ -2,24 +2,23 @@
 
 ## 📊 Diagnostic d'État Actuel
 
-### Version 2.4 (Annual Recap) — **60% IMPLÉMENTÉE**
-**État** : Frontend complet, Backend incomplète
+### Version 2.4 (Annual Recap) — **95% IMPLÉMENTÉE**
+**État** : Fonctionnelle et production-ready
 
 **Implémenté ✅** :
 - Composants d'affichage pour 5 slides (Celebration, Events, Tasks, Weather, UserStats)
 - Navigation automatique entre les slides
 - Gestion du loading/erreurs UI
 - Store Pinia pour gestion d'état
-- Endpoint API `/recap` déclaré
+- Endpoint API `/recap` opérationnel avec `listPastYearEvents()`
+- Archivage automatique au changement d'année (tâches + météo)
+- AnnualRecapWrapper utilisant annualRecapStore correctement
+- EventsSlide avec navigation mensuelle 15s
+- WeatherSlide utilisant tempMax pour calculs météo
 
 **Manquant ❌** :
-1. **BUG Critique - Méthode manquante backend** : `listPastYearEvents()` appelée par controller mais n'existe pas → `TypeError` au runtime
-2. **Système collection data annuelle absent** : Les données ne sont jamais archivées :
-   - Pas de snapshot des tâches complétées (quotidien/mensuel/annuel)
-   - Pas de sauvegarde des stats météo
-   - Pas de stockage des événements récents
-3. **Archivage automatique non implémenté** : Censé déclencher 31 décembre mais code absent
-4. **Pas de fallback données** : Pas de gestion si données manquent pour certain modules
+1. **Fallback données manquantes** : Pas de gestion si données manquent pour certains modules
+2. **Tests conditions réelles** : Affichage 1er janvier non testé en production
 
 ---
 

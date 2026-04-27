@@ -52,7 +52,7 @@
 ## 🔍 État du Système
 
 - **Fonctionnalité**: ✅ Complète et opérationnelle
-- **Données**: ⚠️ Dépendante de l'API /recap (à vérifier)
+- **Données**: ✅ Archivage automatique au changement d'année
 - **Affichage**: ✅ Logique temporelle correcte
 - **Tests**: ✅ annualRecapStore.spec.ts couvre les calculs
 - **Performance**: ✅ Calculs lazy (computed properties)
@@ -63,11 +63,11 @@
 - [ ] Ajouter fallback si données manquantes pour certains modules
 - [ ] Tester l'affichage en conditions réelles le 1er janvier 2026
 - [ ] Ajouter logs de debug pour diagnostiquer les données manquantes
-- [ ] Implémenter système de sauvegarde automatique des données toute l'année
+- [x] Implémenter système de sauvegarde automatique des données toute l'année
 - [ ] Ajouter vérification d'intégrité des données avant affichage
 
 ## 🎯 Recommandations
 
 1. **Priorité haute**: Tester l'API /recap et ajouter fallbacks
-2. **Priorité moyenne**: Implémenter la collecte automatique des données
+2. **Priorité moyenne**: Vérifier l'intégrité des données archivées
 3. **Priorité basse**: Ajouter métriques supplémentaires (comparaisons N-1, graphiques avancés)
