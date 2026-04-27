@@ -324,15 +324,15 @@ function formatDate(dateString: string): string {
 const coldestTemp = computed(() => {
   if (!props.weatherStats?.days?.length) return Math.round(props.averageTemp - 8)
   const coldest = props.weatherStats.days.reduce((min: Day, day: Day) => 
-    day.tempMin < min.tempMin ? day : min
+    day.tempMax < min.tempMax ? day : min
   )
-  return Math.round(coldest.tempMin)
+  return Math.round(coldest.tempMax)
 })
 
 const coldestDate = computed(() => {
   if (!props.weatherStats?.days?.length) return null
   const coldest = props.weatherStats.days.reduce((min: Day, day: Day) => 
-    day.tempMin < min.tempMin ? day : min
+    day.tempMax < min.tempMax ? day : min
   )
   return coldest.date
 })
@@ -340,7 +340,7 @@ const coldestDate = computed(() => {
 const coldestFeels = computed(() => {
   if (!props.weatherStats?.days?.length) return Math.round(props.averageTemp - 10)
   const coldest = props.weatherStats.days.reduce((min: Day, day: Day) => 
-    day.tempMin < min.tempMin ? day : min
+    day.tempMax < min.tempMax ? day : min
   )
   return Math.round(coldest.feelsLike)
 })

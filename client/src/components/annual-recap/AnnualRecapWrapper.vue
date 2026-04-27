@@ -41,9 +41,7 @@ import {
   WeatherSlide,
   UserStatsSlide
 } from './index'
-import { useCalendarStore } from '../../stores/calendarStore'
-import { useTasksStore } from '../../stores/tasksStore'
-import { useWeatherStore } from '../../stores/weatherStore'
+import { useAnnualRecapStore } from '../../stores/annualRecapStore'
 
 interface Slide {
   component: any
@@ -51,9 +49,7 @@ interface Slide {
   props?: Record<string, any>
 }
 
-const calendarStore = useCalendarStore()
-const tasksStore = useTasksStore()
-const weatherStore = useWeatherStore()
+const annualRecapStore = useAnnualRecapStore()
 
 const slides = ref<Slide[]>([
   {
@@ -63,7 +59,7 @@ const slides = ref<Slide[]>([
   },
   {
     component: EventsSlide,
-    duration: 60, // 60 seconds for other slides
+    duration: 180, // 12 mois × 15 secondes
     props: {}
   },
   {
@@ -97,17 +93,8 @@ const currentSlide = computed(() => {
     return {
       ...slide,
       props: {
-        totalEvents: calendarStore.pastYearEvents?.length || 0,
-        eventsByMonth: (() => {
-          const events = calendarStore.pastYearEvents || []
-          const byMonth: any[] = Array(12).fill(null).map(() => [])
-          events.forEach(event => {
-            const date = new Date(event.start?.dateTime || event.start)
-            const month = date.getMonth()
-            byMonth[month].push(event)
-          })
-          return byMonth
-        })()
+        totalEvents: annualRecapStore.totalEvents,
+        eventsByMonth: annualRecapStore.eventsByMonth
       }
     }
   }
@@ -116,7 +103,9 @@ const currentSlide = computed(() => {
     return {
       ...slide,
       props: {
-        tasksData: tasksStore.tasksData || {}
+        totalTasksCreated: annualRecapStore.totalTasksCreated,
+        totalTasksCompleted: annualRecapStore.totalTasksCompleted,
+        tasksByList: annualRecapStore.tasksByList
       }
     }
   }
@@ -125,7 +114,13 @@ const currentSlide = computed(() => {
     return {
       ...slide,
       props: {
-        weatherData: weatherStore.pastYearWeatherStats || {}
+        pastYear: new Date().getFullYear() - 1,
+        averageTemp: annualRecapStore.averageTemp,
+        sunnyDays: annualRecapStore.sunnyDays,
+        rainyDays: annualRecapStore.rainyDays,
+        weatherDescription: annualRecapStore.weatherDescription,
+        weatherStats: annualRecapStore.weatherStats,
+        isFullscreen: false
       }
     }
   }
@@ -134,7 +129,7 @@ const currentSlide = computed(() => {
     return {
       ...slide,
       props: {
-        userStats: calendarStore.pastYearStats || {}
+        userStats: annualRecapStore.userStats || []
       }
     }
   }
@@ -208,6 +203,8 @@ const stopRecap = () => {
 }
 
 onMounted(() => {
+  // Charger les données du récap avant de démarrer
+  annualRecapStore.fetchPastYearData()
   // Auto-start recap when component mounts
   startRecap()
 })

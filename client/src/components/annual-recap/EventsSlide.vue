@@ -38,8 +38,8 @@
               class="event-item"
               :style="{ animationDelay: `${index * 0.2}s` }"
             >
-              <div class="event-title">{{ event.title }}</div>
-              <div class="event-date">{{ formatDate(event.startTime) }}</div>
+              <div class="event-title">{{ event.summary }}</div>
+              <div class="event-date">{{ formatDate(event.start) }}</div>
               <div v-if="event.location" class="event-location">📍 {{ event.location }}</div>
             </div>
           </div>
@@ -115,7 +115,7 @@ function startAutoSelection() {
       currentAutoMonth.value = 0
     }
     selectMonth(currentAutoMonth.value)
-  }, 5000) // Changer de mois toutes les 5 secondes
+  }, 15000) // Changer de mois toutes les 15 secondes
 }
 
 function stopAutoSelection() {
