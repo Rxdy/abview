@@ -162,18 +162,35 @@ const getEventsForDay = (date: Date) => {
 
   // Get all events for this day + daily events (no date)
   const dayEvents = calendarStore.allEvents.filter(event => {
-    // Handle calendar events (may span multiple days)
-    if (event.start && !event.date) {
-      const getDateFrom = (value: any) => {
-        if (!value) return null;
-        if (typeof value === 'object' && value.dateTime) return new Date(value.dateTime);
-        if (typeof value === 'string' && !value.includes('T')) {
-          const [year, month, day] = value.split('-').map(Number);
-          return new Date(year, month - 1, day, 0, 0, 0, 0);
-        }
-        return new Date(value);
-      };
+    const getDateFrom = (value: any) => {
+      if (!value) return null;
+      if (typeof value === 'object' && value.dateTime) return new Date(value.dateTime);
+      if (typeof value === 'string' && !value.includes('T')) {
+        const [year, month, day] = value.split('-').map(Number);
+        return new Date(year, month - 1, day, 0, 0, 0, 0);
+      }
+      return new Date(value);
+    };
 
+    // Handle events with datetime range (calendar events OR planning events with time like "21:00-05:00")
+    if (event.start && typeof event.start === 'string' && event.start.includes('T')) {
+      const eventStart = getDateFrom(event.start);
+      let eventEnd = event.end ? getDateFrom(event.end) : null;
+
+      if (!eventStart || Number.isNaN(eventStart.getTime())) {
+        return false;
+      }
+
+      if (!eventEnd || Number.isNaN(eventEnd.getTime())) {
+        eventEnd = new Date(eventStart);
+      }
+
+      // Event spans from eventStart to eventEnd - check if it overlaps with this day
+      return eventStart < localDayEnd && eventEnd > localDayStart;
+    }
+
+    // Handle calendar events (may span multiple days, without time)
+    if (event.start && !event.date) {
       const eventStart = getDateFrom(event.start);
       let eventEnd = event.end ? getDateFrom(event.end) : null;
 
@@ -193,9 +210,34 @@ const getEventsForDay = (date: Date) => {
       return eventStart < localDayEnd && eventEnd > localDayStart;
     }
 
-    // Handle planning events (already have date field)
-    if (event.date) {
-      return event.date === dateStr;
+    // Handle planning events (without datetime, only have date field)
+    if (event.date && (!event.start || !event.start.includes('T'))) {
+      // Check if the date matches
+      if (event.date !== dateStr) {
+        return false;
+      }
+      
+      // For same-day events with end time, check if event has already ended
+      // Only filter out if it's TODAY (not future days)
+      if (event.endTime && event.date === dateStr) {
+        const today = new Date();
+        const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        
+        if (event.date === todayStr) {
+          // Check if current time is past the event's end time
+          const [endHour, endMinute] = event.endTime.split(':').map(Number);
+          const now = new Date();
+          const currentMinutes = now.getHours() * 60 + now.getMinutes();
+          const endMinutes = (endHour * 60) + endMinute;
+          
+          // Hide event if current time is past the end time
+          if (currentMinutes > endMinutes) {
+            return false;
+          }
+        }
+      }
+      
+      return true;
     }
     
     // No date = daily event, show on all days

@@ -36,8 +36,10 @@ export const useCalendarStore = defineStore('calendar', {
       
       // Combine and sort by date/time
       const all = [...planningEvents, ...filteredCalendarEvents];
+      const now = new Date(); // Get current time including hours/minutes/seconds
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      
       return all.filter(event => {
         const eventStartStr = event.start || event.date;
         if (!eventStartStr) return false;
@@ -56,7 +58,9 @@ export const useCalendarStore = defineStore('calendar', {
           eventEnd.setDate(eventEnd.getDate() + 1);
         }
 
-        return eventEnd.getTime() >= today.getTime();
+        // Use current time for comparison, not just today's date
+        // This ensures events disappear after their end time on the same day
+        return eventEnd.getTime() > now.getTime();
       }).sort((a, b) => new Date(a.start || a.date).getTime() - new Date(b.start || b.date).getTime());
     },
     pastYearEvents: (state) => {
@@ -216,10 +220,23 @@ function transformHorairesToEvents(horaires: any[]): any[] {
             eventType = poubelleType.toLowerCase();
           }
 
+          // Calculate end date (handle shifts that cross midnight like 21:00-05:00)
+          const [startHour] = start.split(':').map(Number);
+          const [endHour] = end.split(':').map(Number);
+          let endDateStr = dateStr;
+          if (endHour < startHour) {
+            // Shift crosses midnight, so end time is next day
+            const endDate = new Date(date);
+            endDate.setDate(endDate.getDate() + 1);
+            endDateStr = endDate.getFullYear() + '-' + String(endDate.getMonth() + 1).padStart(2, '0') + '-' + String(endDate.getDate()).padStart(2, '0');
+          }
+
           events.push({
             id: `planning-${person.name}-${dateStr}-${hour}`,
             title: eventTitle,
             date: dateStr,
+            start: `${dateStr}T${start}:00`,
+            end: `${endDateStr}T${end}:00`,
             time: start,
             startTime: start,
             endTime: end,
@@ -267,10 +284,23 @@ function transformHorairesToEvents(horaires: any[]): any[] {
             let eventTitle = `${person.name} - ${currentShift.shift}`;
             let eventType = "work"; // Force blue for Luis and Caroline
             
+            // Calculate end date (handle shifts that cross midnight like 21:00-05:00)
+            const [startHour] = start.split(':').map(Number);
+            const [endHour] = end.split(':').map(Number);
+            let endDateStr = dateStr;
+            if (endHour < startHour) {
+              // Shift crosses midnight, so end time is next day
+              const endDate = new Date(date);
+              endDate.setDate(endDate.getDate() + 1);
+              endDateStr = endDate.getFullYear() + '-' + String(endDate.getMonth() + 1).padStart(2, '0') + '-' + String(endDate.getDate()).padStart(2, '0');
+            }
+            
             events.push({
               id: `shift-${person.name}-${dateStr}-${hour}`,
               title: eventTitle,
               date: dateStr,
+              start: `${dateStr}T${start}:00`,
+              end: `${endDateStr}T${end}:00`,
               time: start,
               startTime: start,
               endTime: end,
