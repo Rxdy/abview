@@ -473,7 +473,14 @@ setInterval(() => {
 
 .events {
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
+  flex: 1;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.events::-webkit-scrollbar {
+  display: none;
 }
 
 .event {
