@@ -7,6 +7,16 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [v2.6.2] — 2026-05-05
+
+### Corrigé
+- **Calendrier** : Événements à heure fixe (Caroline, Luis, Rudy) disparaissent maintenant à l'heure de fin exacte, pas à minuit du jour suivant
+- **Calendrier** : Support des shifts qui traversent minuit (ex: Luis 21h00-05h00) - affichés correctement les deux jours
+- **Calendrier** : Filtre temporel stricte (>) utilisé à la place de (>=) pour éviter d'afficher les événements passés
+- **Calendrier** : Ajout du filtrage même-jour basé sur l'heure actuelle pour plus de robustesse
+
+---
+
 ## [v2.6.1] — 2026-04-27
 
 ### Corrigé
