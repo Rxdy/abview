@@ -14,6 +14,16 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 - **Calendrier** : Support des shifts qui traversent minuit (ex: Luis 21h00-05h00) - affichés correctement les deux jours
 - **Calendrier** : Filtre temporel stricte (>) utilisé à la place de (>=) pour éviter d'afficher les événements passés
 - **Calendrier** : Ajout du filtrage même-jour basé sur l'heure actuelle pour plus de robustesse
+- **Calendrier** : Défilement automatique fluide avec pauses naturelles en haut/bas et pas de saut brusque
+
+### Ajouté
+- **Interface** : Scroll vertical pour les colonnes calendrier quand trop d'événements (comme avec les tâches)
+- **Tests** : 30 tests de couverture robuste pour les événements passés, shifts minuit-travers, et auto-scroll
+- **Robustesse** : Appels à `equalizeEventHeights()` et `initAutoScroll()` dès le chargement + sur changement d'événements
+
+### Modifié
+- Délai de scroll augmenté de 30ms à 50ms pour animation plus douce
+- Durée des pauses de scroll réduite de 2s à 1.5s pour meilleure fluidité
 
 ---
 
