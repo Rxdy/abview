@@ -185,7 +185,13 @@ const getEventsForDay = (date: Date) => {
         eventEnd = new Date(eventStart);
       }
 
-      // Event spans from eventStart to eventEnd - check if it overlaps with this day
+      // Planning events with time should only show on their start date
+      // (shifts like 21:00-05:00 only show on day of start, not next day)
+      if (event.date && event.isPlanning) {
+        return event.date === dateStr;
+      }
+
+      // Calendar events span from eventStart to eventEnd - check if it overlaps with this day
       return eventStart < localDayEnd && eventEnd > localDayStart;
     }
 
