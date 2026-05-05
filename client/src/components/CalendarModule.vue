@@ -93,7 +93,7 @@ onMounted(() => {
   setTimeout(() => {
     equalizeEventHeights();
     initAutoScroll();
-  }, 1000);
+  }, 500);
 });
 
 onUnmounted(() => {
@@ -109,7 +109,7 @@ watch(() => calendarStore.allEvents, (newEvents) => {
     // // console.log('Re-initializing auto-scroll after events change');
     equalizeEventHeights();
     initAutoScroll();
-  }, 500);
+  }, 300);
 }, { deep: true });
 
 const weekDays = computed(() => {
@@ -450,7 +450,7 @@ setInterval(() => {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   gap: 0.25rem;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .day-column {
@@ -460,6 +460,8 @@ setInterval(() => {
   border-radius: 6px;
   padding: 0.25rem;
   padding-bottom: 0.5rem;
+  min-height: 0;
+  height: 100%;
 }
 
 .day-header {

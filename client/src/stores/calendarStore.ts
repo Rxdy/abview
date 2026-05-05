@@ -281,7 +281,7 @@ function transformHorairesToEvents(horaires: any[]): any[] {
           
           dayExceptions?.forEach((hour: string) => {
             const [start, end] = hour.split("-");
-            let eventTitle = `${person.name} - ${currentShift.shift}`;
+            let eventTitle = person.name;
             let eventType = "work"; // Force blue for Luis and Caroline
             
             // Calculate end date (handle shifts that cross midnight like 21:00-05:00)

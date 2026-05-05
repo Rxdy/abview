@@ -50,7 +50,7 @@ export function useAutoScroll(dayColumns: any) {
                     return;
                 }
                 
-                const container = col.querySelector?.(".events") || col.$el?.querySelector?.(".events");
+                const container = col?.querySelector(".events");
                 // console.log(`Column ${index} container:`, container);
                 
                 if (container) {
@@ -62,33 +62,33 @@ export function useAutoScroll(dayColumns: any) {
                     // });
                     
                     if (container.scrollHeight > container.clientHeight) {
-                        let direction = 1;
+                        let direction = 1; // 1 for down, -1 for up
                         let scrollPos = 0;
                         const step = 1;
-                        const delay = 30;
+                        const delay = 50; // Augmented from 30 for smoother scroll
                         let pause = false;
+                        const pauseDuration = 1500; // Duration de la pause en bas/haut
+                        
                         const intervalId = setInterval(() => {
                             if (!pause) {
                                 scrollPos += step * direction;
                                 container.scrollTop = scrollPos;
                                 
+                                // Vérifier si on a atteint le bas
                                 if (scrollPos >= container.scrollHeight - container.clientHeight) {
-                                    // console.log(`Column ${index}: REACHED BOTTOM, reversing`);
-                                    direction = -1;
                                     pause = true;
                                     setTimeout(() => { 
-                                        // console.log(`Column ${index}: RESUMING after bottom pause`);
+                                        direction = -1; // Commencer la montée
                                         pause = false; 
-                                    }, 2000);
+                                    }, pauseDuration);
                                 }
-                                if (scrollPos <= 0) {
-                                    // console.log(`Column ${index}: REACHED TOP, reversing`);
-                                    direction = 1;
+                                // Vérifier si on a atteint le haut
+                                else if (scrollPos <= 0) {
                                     pause = true;
                                     setTimeout(() => { 
-                                        // console.log(`Column ${index}: RESUMING after top pause`);
+                                        direction = 1; // Commencer la descente
                                         pause = false; 
-                                    }, 2000);
+                                    }, pauseDuration);
                                 }
                             }
                         }, delay);
