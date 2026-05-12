@@ -5,7 +5,6 @@ import Footer from './components/Footer.vue';
 import AnnualRecapWrapper from './components/AnnualRecapWrapper.vue';
 import BirthdayEffect from './components/BirthdayEffect.vue';
 import ScreensaverModule from './components/ScreensaverModule.vue';
-import PhotoSetupWidget from './components/PhotoSetupWidget.vue';
 import { useThemeStore } from './stores/themeStore';
 import { useWeatherStore } from './stores/weatherStore';
 import { onMounted, ref } from 'vue';
@@ -17,12 +16,6 @@ const showModules = ref(true);
 const toggleModuleVisibility = () => {
   showModules.value = !showModules.value;
   console.log(`📡 Affichage modules ${showModules.value ? 'activé' : 'désactivé'} par Ctrl+P`);
-};
-
-const onPhotosConfirmed = () => {
-  // Lancer le screensaver avec les nouvelles photos
-  showModules.value = false;
-  console.log('📸 Photos confirmées – lancement du screensaver');
 };
 
 onMounted(() => {
@@ -132,7 +125,6 @@ onMounted(() => {
       <Footer />
       <AnnualRecapWrapper />
       <BirthdayEffect />
-      <PhotoSetupWidget @photos-confirmed="onPhotosConfirmed" />
     </template>
     <ScreensaverModule v-else />
   </div>
