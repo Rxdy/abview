@@ -167,15 +167,15 @@ onUnmounted(stopPolling);
 }
 
 .qr-box {
-  width: 100px;
-  height: 100px;
+  width: 70px;
+  height: 70px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: #fff;
-  border-radius: 8px;
-  padding: 4px;
+  border-radius: 6px;
+  padding: 3px;
   position: relative;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
@@ -183,35 +183,24 @@ onUnmounted(stopPolling);
 .qr-box.error {
   background: rgba(255, 107, 107, 0.1);
   color: #ff6b6b;
-  font-size: 2rem;
+  font-size: 1.5rem;
 }
 
 .qr-image {
   width: 100%;
   height: 100%;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .status {
   position: absolute;
-  bottom: -8px;
-  font-size: 1.2rem;
-  animation: bounce 1s ease-in-out infinite;
-}
-
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
+  bottom: -6px;
+  font-size: 0.9rem;
 }
 
 .spinner {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border: 2px solid rgba(102, 126, 234, 0.2);
   border-top-color: #667eea;
   border-radius: 50%;
