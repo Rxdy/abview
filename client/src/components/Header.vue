@@ -8,26 +8,17 @@
       <DateTimeModule />
     </div>
     <div class="right">
-      <!-- QR Code Button -->
-      <div class="qr-button-container">
-        <button @click="toggleQRWidget" class="qr-button" title="Ajouter/Changer photos">
-          📸
-        </button>
-        
-        <!-- QR Code Popup Widget -->
-        <div v-if="showQRWidget" class="qr-popup">
-          <button class="qr-close" @click="toggleQRWidget">✕</button>
-          
-          <div v-if="loading" class="qr-content">
-            <div class="spinner"></div>
-          </div>
-          <div v-else-if="error" class="qr-content error">
-            <p>❌ {{ error }}</p>
-          </div>
-          <div v-else class="qr-content">
-            <img :src="qrDataUrl" alt="QR" class="qr-image" />
-            <div class="status">⏳</div>
-          </div>
+      <!-- QR Code Always Visible -->
+      <div class="qr-container">
+        <div v-if="loading" class="qr-box">
+          <div class="spinner"></div>
+        </div>
+        <div v-else-if="error" class="qr-box error">
+          <p>⚠️</p>
+        </div>
+        <div v-else class="qr-box">
+          <img :src="qrDataUrl" alt="QR" class="qr-image" />
+          <div class="status">📱</div>
         </div>
       </div>
       
@@ -46,8 +37,7 @@ const dashboardStore = useDashboardStore();
 
 const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3333' : '');
 
-const showQRWidget = ref(false);
-const loading = ref(false);
+const loading = ref(true);
 const error = ref('');
 const pickerUri = ref('');
 const sessionId = ref('');
@@ -65,7 +55,7 @@ async function createSession() {
     pickerUri.value = data.pickerUri;
 
     qrDataUrl.value = await QRCode.toDataURL(pickerUri.value, {
-      width: 120,
+      width: 100,
       margin: 1,
       color: { dark: '#000000', light: '#ffffff' },
     });
@@ -106,21 +96,16 @@ async function confirmSession() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId: sessionId.value }),
     });
-    showQRWidget.value = false;
+    // Refresh QR code for next photos
+    await createSession();
   } catch (e: any) {
     error.value = 'Erreur: ' + e.message;
   }
 }
 
-function toggleQRWidget() {
-  if (showQRWidget.value) {
-    stopPolling();
-    showQRWidget.value = false;
-  } else {
-    showQRWidget.value = true;
-    createSession();
-  }
-}
+onMounted(() => {
+  createSession();
+});
 
 onUnmounted(stopPolling);
 </script>
@@ -160,7 +145,7 @@ onUnmounted(stopPolling);
   align-items: center;
   justify-content: flex-end;
   gap: 1rem;
-  min-width: 200px;
+  min-width: 220px;
 }
 
 .right h2 {
@@ -174,104 +159,60 @@ onUnmounted(stopPolling);
   margin: 0;
 }
 
-/* QR Button */
-.qr-button-container {
-  position: relative;
-}
-
-.qr-button {
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  padding: 0.3rem 0.6rem;
-  font-size: 1rem;
-  cursor: pointer;
-  color: inherit;
-  transition: all 0.2s;
+/* QR Code Container - Always Visible */
+.qr-container {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.qr-button:hover {
-  background: rgba(102, 126, 234, 0.1);
-  border-color: rgba(102, 126, 234, 0.5);
-}
-
-/* QR Popup */
-.qr-popup {
-  position: absolute;
-  top: 50px;
-  right: 0;
-  background: #12122a;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 1rem;
-  z-index: 1000;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
-}
-
-.qr-close {
-  position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.9rem;
-  cursor: pointer;
-  padding: 0.2rem 0.4rem;
-  line-height: 1;
-  transition: color 0.2s;
-}
-
-.qr-close:hover {
-  color: #fff;
-}
-
-.qr-content {
+.qr-box {
+  width: 100px;
+  height: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  min-width: 140px;
+  justify-content: center;
+  background: #fff;
+  border-radius: 8px;
+  padding: 4px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.qr-content.error {
+.qr-box.error {
+  background: rgba(255, 107, 107, 0.1);
   color: #ff6b6b;
-  font-size: 0.75rem;
-  text-align: center;
+  font-size: 2rem;
 }
 
 .qr-image {
-  width: 120px;
-  height: 120px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
 }
 
 .status {
-  font-size: 0.8rem;
-  animation: pulse 1.4s ease-in-out infinite;
+  position: absolute;
+  bottom: -8px;
+  font-size: 1.2rem;
+  animation: bounce 1s ease-in-out infinite;
 }
 
-@keyframes pulse {
+@keyframes bounce {
   0%,
   100% {
-    opacity: 0.4;
-    transform: scale(0.95);
+    transform: translateY(0);
   }
   50% {
-    opacity: 1;
-    transform: scale(1);
+    transform: translateY(-4px);
   }
 }
 
 .spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(102, 126, 234, 0.2);
   border-top-color: #667eea;
   border-radius: 50%;
   animation: spin 0.9s linear infinite;
