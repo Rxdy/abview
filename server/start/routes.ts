@@ -146,17 +146,17 @@ router.get('/photos/:id/metadata', async ({ params, response }) => {
     const token = (await oauth2Client.getAccessToken()).token
     if (!token) return response.status(500).send('Token invalide')
 
-    const sessionId = process.env.GOOGLE_PICKER_SESSION_ID
+    // Utiliser la Google Photos Library API
     const itemsRes = await fetch(
-      `https://photospicker.googleapis.com/v1/mediaItems?sessionId=${sessionId}&pageSize=100`,
+      'https://photoslibrary.googleapis.com/v1/mediaItems?pageSize=100',
       { headers: { Authorization: `Bearer ${token}` } }
     )
-    if (!itemsRes.ok) return response.status(502).send('Picker API error')
+    if (!itemsRes.ok) return response.status(502).send('Library API error')
     const data = (await itemsRes.json()) as any
     const item = (data.mediaItems || []).find((m: any) => m.id === id)
-    if (!item?.mediaFile?.baseUrl) return response.status(404).send('Photo non trouvée')
+    if (!item?.baseUrl) return response.status(404).send('Photo non trouvée')
 
-    const imageUrl = item.mediaFile.baseUrl + '=w1920-h1080'
+    const imageUrl = item.baseUrl + '=w1920-h1080'
     const imgRes = await fetch(imageUrl, { headers: { Authorization: `Bearer ${token}` } })
     if (!imgRes.ok) return response.status(imgRes.status).send('Erreur image')
     
