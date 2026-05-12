@@ -4,15 +4,30 @@ import Header from './components/Header.vue';
 import Footer from './components/Footer.vue';
 import AnnualRecapWrapper from './components/AnnualRecapWrapper.vue';
 import BirthdayEffect from './components/BirthdayEffect.vue';
+import ScreensaverModule from './components/ScreensaverModule.vue';
 import { useThemeStore } from './stores/themeStore';
 import { useWeatherStore } from './stores/weatherStore';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const themeStore = useThemeStore();
 const weatherStore = useWeatherStore();
+const showModules = ref(true);
+
+const toggleModuleVisibility = () => {
+  showModules.value = !showModules.value;
+  console.log(`📡 Affichage modules ${showModules.value ? 'activé' : 'désactivé'} par Ctrl+P`);
+};
 
 onMounted(() => {
   weatherStore.fetchWeather();
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'p' && e.ctrlKey) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      toggleModuleVisibility();
+    }
+  }, { capture: true });
   
   if (import.meta.env.DEV) {
     // DEBUG: Raccourci clavier pour logs
@@ -102,13 +117,16 @@ onMounted(() => {
 
 <template>
   <div class="app" :class="{ 'light-theme': !themeStore.isDark }">
-    <Header />
-    <main class="content">
-      <RouterView />
-    </main>
-    <Footer />
-    <AnnualRecapWrapper />
-    <BirthdayEffect />
+    <template v-if="showModules">
+      <Header />
+      <main class="content">
+        <RouterView />
+      </main>
+      <Footer />
+      <AnnualRecapWrapper />
+      <BirthdayEffect />
+    </template>
+    <ScreensaverModule v-else />
   </div>
 </template>
 
@@ -127,5 +145,7 @@ onMounted(() => {
   overflow: hidden;
   padding-bottom: 0.5rem;
   box-sizing: border-box;
+  transition: opacity 0.3s ease, filter 0.3s ease;
 }
+
 </style>
