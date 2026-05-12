@@ -5,6 +5,7 @@ import { execSync } from 'child_process'
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar.readonly',
   'https://www.googleapis.com/auth/tasks.readonly',
+  'https://www.googleapis.com/auth/photospicker.mediaitems.readonly',
 ]
 
 async function main() {
@@ -41,6 +42,13 @@ async function main() {
 
   try {
     const { tokens } = await oAuth2Client.getToken(code)
+
+    // Afficher les scopes du token
+    console.log('\n=== TOKEN OBTENU ===')
+    console.log('Scopes inclus:', tokens.scope || 'AUCUN!')
+    console.log('Type:', tokens.token_type)
+    console.log('Expiration:', tokens.expiry_date ? new Date(tokens.expiry_date).toLocaleString() : 'N/A')
+    console.log('===========================\n')
 
     if (tokens.refresh_token) {
       try {

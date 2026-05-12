@@ -1,5 +1,10 @@
 **/node_modules/
 
+# Local environment and secret files
+.env
+doppler.json
+run-with-doppler.sh
+
 token.json
 
 # Generated recap files
