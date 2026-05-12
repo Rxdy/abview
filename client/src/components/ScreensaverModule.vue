@@ -15,6 +15,7 @@
 
     <!-- Métadonnées — bas gauche (date uniquement) -->
     <div class="screensaver__meta">
+      <span v-if="currentPhoto.title" class="screensaver__meta-title">{{ currentPhoto.title }}</span>
       <span v-if="currentPhoto.createdAt" class="screensaver__meta-date">{{ formatDate(currentPhoto.createdAt) }}</span>
     </div>
 
@@ -174,11 +175,17 @@ onUnmounted(() => {
   font-style: italic;
 }
 
+.screensaver__meta-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
 .screensaver__meta-date {
-  font-size: 0.78rem;
-  opacity: 0.55;
+  font-size: 1.2rem;
+  opacity: 0.85;
   font-style: italic;
-  margin-top: 0.1rem;
+  margin-top: 0.15rem;
 }
 
 /* Bas droite — horloge */

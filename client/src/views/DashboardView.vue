@@ -5,7 +5,10 @@
     </div>
     <div class="bottom-row">
       <div class="weather-container">
-        <WeatherWithQRToggle key="weather-qr" class="fade-in-2" />
+        <Transition name="module-fade" mode="out-in">
+          <WeatherModule v-if="activeModule === 'weather'" key="weather" :progress="progress" />
+          <QRModule v-else-if="activeModule === 'qr'" key="qr" :progress="progress" />
+        </Transition>
       </div>
       <div class="tasks-container">
         <TasksModule key="tasks" class="fade-in-3" />
@@ -21,18 +24,20 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import WeatherWithQRToggle from '../components/WeatherWithQRToggle.vue';
+import WeatherModule from '../components/WeatherModule.vue';
+import QRModule from '../components/QRModule.vue';
 import CalendarModule from '../components/CalendarModule.vue';
 import TasksModule from '../components/TasksModule.vue';
 import NotificationModal from '../components/NotificationModal.vue';
 import { useNotificationsStore } from '../stores/notificationsStore';
+import { useModuleRotation } from '../composables/useModuleRotation';
 
 const notificationsStore = useNotificationsStore();
 
-onMounted(() => {
-  // Initialization if needed
-});
+const { activeKey: activeModule, progress } = useModuleRotation([
+  { key: 'weather', duration: 25_000 },
+  { key: 'qr',      duration: 5_000 },
+]);
 </script>
 
 <style scoped>
@@ -78,5 +83,19 @@ onMounted(() => {
 .tasks-container > * {
   height: 100%;
   width: 100%;
+}
+
+/* Module rotation transition */
+.module-fade-enter-active,
+.module-fade-leave-active {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.module-fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.module-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 </style>

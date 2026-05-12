@@ -94,6 +94,9 @@
         </div>
       </div>
     </div>
+    <div class="module-progress-bar">
+      <div class="module-progress-fill" :style="{ width: ($props.progress ?? 100) + '%' }"></div>
+    </div>
   </div>
 </template>
 
@@ -119,6 +122,8 @@ import MoonIcon from './icons/MoonIcon.vue';
 const weatherStore = useWeatherStore();
 const languageStore = useLanguageStore();
 const themeStore = useThemeStore();
+
+defineProps<{ progress?: number }>();
 
 const emit = defineEmits(['sun-times']);
 
@@ -651,5 +656,22 @@ const getWeatherIconClass = (conditions: string) => {
 .skeleton-forecast-text {
   background: linear-gradient(90deg, var(--color-border) 25%, rgba(255,255,255,0.1) 50%, var(--color-border) 75%);
   background-size: 200px 100%;
+}
+
+.module-progress-bar {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+.module-progress-fill {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 2px;
+  transition: width 0.1s linear;
 }
 </style>
