@@ -166,23 +166,23 @@ onUnmounted(stopPolling);
 }
 
 .qr-box {
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: #fff;
-  border-radius: 4px;
-  padding: 2px;
+  border-radius: 3px;
+  padding: 1px;
   position: relative;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .qr-box.error {
   background: rgba(255, 107, 107, 0.1);
   color: #ff6b6b;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .qr-image {
