@@ -18,7 +18,6 @@
         </div>
         <div v-else class="qr-box">
           <img :src="qrDataUrl" alt="QR" class="qr-image" />
-          <div class="status">📱</div>
         </div>
       </div>
       
@@ -144,8 +143,8 @@ onUnmounted(stopPolling);
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 1rem;
-  min-width: 220px;
+  gap: 0.5rem;
+  min-width: 200px;
 }
 
 .right h2 {
@@ -167,35 +166,29 @@ onUnmounted(stopPolling);
 }
 
 .qr-box {
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: #fff;
-  border-radius: 6px;
-  padding: 3px;
+  border-radius: 4px;
+  padding: 2px;
   position: relative;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .qr-box.error {
   background: rgba(255, 107, 107, 0.1);
   color: #ff6b6b;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 .qr-image {
   width: 100%;
   height: 100%;
-  border-radius: 3px;
-}
-
-.status {
-  position: absolute;
-  bottom: -6px;
-  font-size: 0.9rem;
+  border-radius: 2px;
 }
 
 .spinner {
