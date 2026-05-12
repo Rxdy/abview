@@ -50,6 +50,7 @@ router.get('/horaires', horairesController.getHoraires.bind(horairesController))
 router.get('/recap', googleDataController.getRecapData.bind(googleDataController))
 router.get('/photos', googleDataController.getPhotos.bind(googleDataController))
 router.post('/photos/session', googleDataController.createPickerSession.bind(googleDataController))
+router.post('/photos/session/confirm', googleDataController.confirmPickerSession.bind(googleDataController))
 router.get('/photos/session/:sessionId', googleDataController.getPickerSessionStatus.bind(googleDataController))
 
 // Proxy pour servir les images Google Photos (avec conversion HEIC)
@@ -62,6 +63,7 @@ router.get('/photos/proxy', async ({ request, response }) => {
     const { google } = await import('googleapis')
     const sharp = await import('sharp')
     const heic = await import('heic-convert')
+    const { getPickerSessionId } = await import('#services/configStore')
     
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID!,
@@ -75,7 +77,7 @@ router.get('/photos/proxy', async ({ request, response }) => {
     const token = (await oauth2Client.getAccessToken()).token
     if (!token) return response.status(500).send('Token invalide')
 
-    const sessionId = process.env.GOOGLE_PICKER_SESSION_ID
+    const sessionId = getPickerSessionId()
     const itemsRes = await fetch(
       `https://photospicker.googleapis.com/v1/mediaItems?sessionId=${sessionId}&pageSize=100`,
       { headers: { Authorization: `Bearer ${token}` } }

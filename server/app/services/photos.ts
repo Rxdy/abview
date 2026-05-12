@@ -1,4 +1,5 @@
 import { google } from 'googleapis'
+import { getPickerSessionId, savePickerSessionId } from './configStore.js'
 
 export interface Photo {
   id: string
@@ -85,8 +86,19 @@ export default class GooglePhotosService {
   /**
    * Récupère les photos depuis une session Picker (après que l'utilisateur a sélectionné).
    */
+  /**
+   * Sauvegarde une nouvelle session ID et invalide le cache.
+   * Appelé après que l'utilisateur a sélectionné ses photos via QR code.
+   */
+  setPickerSessionId(sessionId: string): void {
+    savePickerSessionId(sessionId)
+    this.cachedPhotos = []
+    this.lastRefresh = 0
+    console.log('🔄 Cache photos invalidé, nouvelle session:', sessionId)
+  }
+
   private async fetchPhotos(): Promise<Photo[]> {
-    const sessionId = process.env.GOOGLE_PICKER_SESSION_ID
+    const sessionId = getPickerSessionId()
     if (!sessionId) {
       console.warn('⚠️ Aucune session Picker configurée. POST /photos/session pour créer une session.')
       return []
@@ -136,6 +148,8 @@ export default class GooglePhotosService {
 
   async getPhotos(): Promise<Photo[]> {
     const now = Date.now()
+    // Vérifier si on a une session avant de tenter
+    if (!getPickerSessionId()) return []
     if (now - this.lastRefresh > this.refreshInterval || this.cachedPhotos.length === 0) {
       try {
         this.cachedPhotos = await this.fetchPhotos()

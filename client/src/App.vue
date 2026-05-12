@@ -5,6 +5,7 @@ import Footer from './components/Footer.vue';
 import AnnualRecapWrapper from './components/AnnualRecapWrapper.vue';
 import BirthdayEffect from './components/BirthdayEffect.vue';
 import ScreensaverModule from './components/ScreensaverModule.vue';
+import PhotoSetupModal from './components/PhotoSetupModal.vue';
 import { useThemeStore } from './stores/themeStore';
 import { useWeatherStore } from './stores/weatherStore';
 import { onMounted, ref } from 'vue';
@@ -12,20 +13,35 @@ import { onMounted, ref } from 'vue';
 const themeStore = useThemeStore();
 const weatherStore = useWeatherStore();
 const showModules = ref(true);
+const showPhotoSetup = ref(false);
 
 const toggleModuleVisibility = () => {
   showModules.value = !showModules.value;
   console.log(`📡 Affichage modules ${showModules.value ? 'activé' : 'désactivé'} par Ctrl+P`);
 };
 
+const onPhotosConfirmed = () => {
+  showPhotoSetup.value = false;
+  // Lancer le screensaver avec les nouvelles photos
+  showModules.value = false;
+  console.log('📸 Photos confirmées – lancement du screensaver');
+};
+
 onMounted(() => {
   weatherStore.fetchWeather();
   
   document.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 'p' && e.ctrlKey) {
+    if (e.key.toLowerCase() === 'p' && e.ctrlKey && !e.shiftKey) {
       e.preventDefault();
       e.stopImmediatePropagation();
       toggleModuleVisibility();
+    }
+    // Ctrl+Shift+P → ouvre le setup QR code pour choisir des photos
+    if (e.key.toLowerCase() === 'p' && e.ctrlKey && e.shiftKey) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      showPhotoSetup.value = true;
+      console.log('📸 Photo Setup ouvert par Ctrl+Shift+P');
     }
   }, { capture: true });
   
@@ -127,6 +143,11 @@ onMounted(() => {
       <BirthdayEffect />
     </template>
     <ScreensaverModule v-else />
+    <PhotoSetupModal
+      v-if="showPhotoSetup"
+      @close="showPhotoSetup = false"
+      @confirmed="onPhotosConfirmed"
+    />
   </div>
 </template>
 

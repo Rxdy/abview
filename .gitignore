@@ -12,3 +12,6 @@ server/app/database/recap/*.json
 
 # Log files
 logs/*.log
+
+# Photo session config (generated at runtime, not in git)
+server/storage/config.json

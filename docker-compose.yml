@@ -5,6 +5,7 @@ services:
         volumes:
             - ./server:/app
             - ./logs:/app/logs
+            - ./server/storage:/app/storage
         ports:
             - "3333:3333"
         environment:

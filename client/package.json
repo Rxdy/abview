@@ -18,12 +18,14 @@
   "dependencies": {
     "jsdom": "^28.1.0",
     "pinia": "^3.0.4",
+    "qrcode": "^1.5.4",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.3",
     "@types/node": "^24.10.1",
+    "@types/qrcode": "^1.5.6",
     "@vitejs/plugin-vue": "^6.0.2",
     "@vitest/coverage-v8": "^4.0.18",
     "@vue/test-utils": "^2.4.6",

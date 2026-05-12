@@ -170,6 +170,20 @@ export default class GoogleDataController {
     }
   }
 
+  public async confirmPickerSession({ request, response }: HttpContext) {
+    try {
+      const { sessionId } = request.only(['sessionId'])
+      if (!sessionId) return response.status(400).json({ error: 'sessionId requis' })
+
+      const photosService = getPhotosService()
+      photosService.setPickerSessionId(sessionId)
+      return response.json({ success: true, sessionId })
+    } catch (error: any) {
+      console.error('Error confirming picker session:', error)
+      return response.status(500).json({ error: error.message })
+    }
+  }
+
   public async getRecapData({ response }: HttpContext) {
     try {
       const statsService = getStatsService()
