@@ -56,6 +56,7 @@ async function createSession() {
     qrDataUrl.value = await QRCode.toDataURL(pickerUri.value, {
       width: 100,
       margin: 1,
+      errorCorrectionLevel: 'L',
       color: { dark: '#000000', light: '#ffffff' },
     });
 
@@ -166,8 +167,8 @@ onUnmounted(stopPolling);
 }
 
 .qr-box {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
