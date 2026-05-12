@@ -5,7 +5,7 @@
     </div>
     <div class="bottom-row">
       <div class="weather-container">
-        <WeatherModule key="weather" class="fade-in-2" />
+        <WeatherWithQRToggle key="weather-qr" class="fade-in-2" />
       </div>
       <div class="tasks-container">
         <TasksModule key="tasks" class="fade-in-3" />
@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import WeatherModule from '../components/WeatherModule.vue';
+import WeatherWithQRToggle from '../components/WeatherWithQRToggle.vue';
 import CalendarModule from '../components/CalendarModule.vue';
 import TasksModule from '../components/TasksModule.vue';
 import NotificationModal from '../components/NotificationModal.vue';
