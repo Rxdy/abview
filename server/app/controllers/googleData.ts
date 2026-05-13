@@ -2,14 +2,13 @@ import type { HttpContext } from '@adonisjs/core/http'
 import GoogleCalendarService from '#services/calendar'
 import GoogleTasksService from '#services/tasks'
 import StatsService from '#services/stats'
-import GooglePhotosService from '#services/photos'
+import { photosService } from '#services/photos'
 import { globalLastRefresh } from '#start/routes'
 
 // Instances singleton pour éviter les dépendances circulaires
 let calendarServiceInstance: GoogleCalendarService | null = null
 let tasksServiceInstance: GoogleTasksService | null = null
 let statsServiceInstance: StatsService | null = null
-let photosServiceInstance: GooglePhotosService | null = null
 
 function getCalendarService(): GoogleCalendarService {
   if (!calendarServiceInstance) {
@@ -30,13 +29,6 @@ function getStatsService(): StatsService {
     statsServiceInstance = new StatsService()
   }
   return statsServiceInstance
-}
-
-function getPhotosService(): GooglePhotosService {
-  if (!photosServiceInstance) {
-    photosServiceInstance = new GooglePhotosService()
-  }
-  return photosServiceInstance
 }
 
 export default class GoogleDataController {
@@ -136,7 +128,6 @@ export default class GoogleDataController {
 
   public async getPhotos({ response }: HttpContext) {
     try {
-      const photosService = getPhotosService()
       const photos = await photosService.getPhotos()
       return response.json({ photos })
     } catch (error) {
@@ -147,7 +138,6 @@ export default class GoogleDataController {
 
   public async createPickerSession({ response }: HttpContext) {
     try {
-      const photosService = getPhotosService()
       const session = await photosService.createPickerSession()
       return response.json({
         sessionId: session.id,
@@ -162,7 +152,6 @@ export default class GoogleDataController {
 
   public async getPickerSessionStatus({ params, response }: HttpContext) {
     try {
-      const photosService = getPhotosService()
       const session = await photosService.getPickerSession(params.sessionId)
       return response.json(session)
     } catch (error: any) {
@@ -175,7 +164,6 @@ export default class GoogleDataController {
       const { sessionId } = request.only(['sessionId'])
       if (!sessionId) return response.status(400).json({ error: 'sessionId requis' })
 
-      const photosService = getPhotosService()
       photosService.setPickerSessionId(sessionId)
       return response.json({ success: true, sessionId })
     } catch (error: any) {

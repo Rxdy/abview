@@ -102,16 +102,22 @@ const loadPhotos = async () => {
   }
 };
 
+const onPhotosConfirmed = async () => {
+  await loadPhotos();
+};
+
 onMounted(() => {
   updateDateTime();
   clockInterval = setInterval(updateDateTime, 1000);
   carouselInterval = setInterval(nextPhoto, 10000);
   loadPhotos();
+  window.addEventListener('abview-photos-confirmed', onPhotosConfirmed);
 });
 
 onUnmounted(() => {
   clearInterval(clockInterval);
   clearInterval(carouselInterval);
+  window.removeEventListener('abview-photos-confirmed', onPhotosConfirmed);
 });
 </script>
 

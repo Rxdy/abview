@@ -24,8 +24,8 @@ export default class GoogleCalendarService {
 
     // Injecter le token depuis Doppler ou fichier sécurisé si nécessaire
     oauth2Client.setCredentials({
-      access_token: process.env.GOOGLE_ACCESS_TOKEN,
       refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+      expiry_date: 0,
     })
 
     return oauth2Client

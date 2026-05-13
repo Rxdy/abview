@@ -35,22 +35,84 @@ const props = defineProps<{ progress?: number }>();
 
 const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3333' : '');
 
+// --- État module-level : survit aux rotations du composant ---
+let _sessionId = '';
+let _qrDataUrl = '';
+let _pollInterval: ReturnType<typeof setInterval> | null = null;
+let _onSuccessCallback: (() => void) | null = null;
+
+async function _doConfirm(sessionId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/photos/session/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    });
+    if (res.ok) {
+      window.dispatchEvent(new CustomEvent('abview-photos-confirmed'));
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+function _startGlobalPolling(sessionId: string, onSuccess: () => void) {
+  _sessionId = sessionId;
+  _onSuccessCallback = onSuccess;
+  if (_pollInterval) clearInterval(_pollInterval);
+  _pollInterval = setInterval(async () => {
+    if (!_sessionId) return;
+    try {
+      const res = await fetch(`${API_BASE}/photos/session/${_sessionId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.mediaItemsSet) {
+        clearInterval(_pollInterval!);
+        _pollInterval = null;
+        const ok = await _doConfirm(_sessionId);
+        _sessionId = '';
+        if (ok && _onSuccessCallback) _onSuccessCallback();
+      }
+    } catch {}
+  }, 2000);
+}
+
+function _stopGlobalPolling() {
+  if (_pollInterval) { clearInterval(_pollInterval); _pollInterval = null; }
+  _sessionId = '';
+  _qrDataUrl = '';
+}
+// --- Fin état module-level ---
+
 const loading = ref(true);
 const error = ref('');
 const qrDataUrl = ref('');
+const success = ref(false);
+const successTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
 async function loadQR() {
   loading.value = true;
   error.value = '';
+  success.value = false;
+  _stopGlobalPolling();
   try {
     const res = await fetch(`${API_BASE}/photos/session`, { method: 'POST' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    qrDataUrl.value = await QRCode.toDataURL(data.pickerUri, {
+    _qrDataUrl = await QRCode.toDataURL(data.pickerUri, {
       width: 260,
       margin: 2,
       errorCorrectionLevel: 'L',
       color: { dark: '#000000', light: '#ffffff' },
+    });
+    qrDataUrl.value = _qrDataUrl;
+    _startGlobalPolling(data.sessionId, () => {
+      success.value = true;
+      if (successTimer.value) clearTimeout(successTimer.value);
+      successTimer.value = setTimeout(() => {
+        success.value = false;
+        loadQR();
+      }, 6000);
     });
   } catch (e: any) {
     error.value = e.message;
@@ -59,7 +121,29 @@ async function loadQR() {
   }
 }
 
-onMounted(loadQR);
+onMounted(() => {
+  if (_sessionId && _qrDataUrl) {
+    // Session en cours : restaurer le QR sans recréer une nouvelle session
+    qrDataUrl.value = _qrDataUrl;
+    loading.value = false;
+    // Ré-enregistrer le callback pour ce montage
+    _onSuccessCallback = () => {
+      success.value = true;
+      if (successTimer.value) clearTimeout(successTimer.value);
+      successTimer.value = setTimeout(() => {
+        success.value = false;
+        loadQR();
+      }, 6000);
+    };
+  } else {
+    loadQR();
+  }
+});
+
+onUnmounted(() => {
+  // Ne PAS arrêter le polling — il doit survivre à la rotation
+  if (successTimer.value) { clearTimeout(successTimer.value); successTimer.value = null; }
+});
 </script>
 
 <style scoped>

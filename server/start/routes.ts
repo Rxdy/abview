@@ -3,6 +3,7 @@ import WeatherController from '#controllers/weather'
 import GoogleDataController from '#controllers/googleData'
 import HorairesController from '#controllers/horaires'
 import LogsController from '#controllers/logs'
+import { photosService } from '#services/photos'
 
 const googleDataController = new GoogleDataController()
 const horairesController = new HorairesController()
@@ -60,45 +61,27 @@ router.get('/photos/proxy', async ({ request, response }) => {
     return response.status(400).send('ID invalide')
   }
   try {
-    const { google } = await import('googleapis')
     const sharp = await import('sharp')
     const heic = await import('heic-convert')
-    const { getPickerSessionId } = await import('#services/configStore')
-    
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID!,
-      process.env.GOOGLE_CLIENT_SECRET!,
-      process.env.GOOGLE_REDIRECT_URI!
-    )
-    oauth2Client.setCredentials({
-      access_token: process.env.GOOGLE_ACCESS_TOKEN,
-      refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-    })
-    const token = (await oauth2Client.getAccessToken()).token
-    if (!token) return response.status(500).send('Token invalide')
 
-    const sessionId = getPickerSessionId()
-    const itemsRes = await fetch(
-      `https://photospicker.googleapis.com/v1/mediaItems?sessionId=${sessionId}&pageSize=100`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-    if (!itemsRes.ok) return response.status(502).send('Picker API error')
-    const data = (await itemsRes.json()) as any
-    const item = (data.mediaItems || []).find((m: any) => m.id === id)
-    if (!item?.mediaFile?.baseUrl) return response.status(404).send('Photo non trouvée')
+    // Utiliser le cache du service plutôt que de re-fetch l'API Picker à chaque image
+    const photos = await photosService.getPhotos()
+    const photo = photos.find((p) => p.id === id)
+    if (!photo?.baseUrl) {
+      return response.status(404).send('Photo non trouvée')
+    }
 
-    const imageUrl = item.mediaFile.baseUrl + '=w1920-h1080'
-    const imgRes = await fetch(imageUrl, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const imageUrl = photo.baseUrl + '=w1920-h1080'
+    // Les baseUrls Google sont des URLs signées — pas besoin d'Authorization header
+    const imgRes = await fetch(imageUrl)
     if (!imgRes.ok) {
       console.log('Google image error:', imgRes.status, imageUrl.substring(0, 80))
       return response.status(imgRes.status).send('Erreur image')
     }
-    
+
     let buffer = await imgRes.arrayBuffer()
     let contentType = imgRes.headers.get('content-type') || 'image/jpeg'
-    
+
     // Convertir HEIC en JPEG si nécessaire
     if (contentType === 'image/heic' || contentType === 'image/heif') {
       try {
@@ -116,9 +99,9 @@ router.get('/photos/proxy', async ({ request, response }) => {
         contentType = 'image/jpeg'
       }
     }
-    
+
     response.header('Content-Type', contentType)
-    response.header('Cache-Control', 'public, max-age=60')
+    response.header('Cache-Control', 'public, max-age=3600')
     response.header('Access-Control-Allow-Origin', '*')
     return response.send(Buffer.from(buffer))
   } catch (e) {
@@ -142,8 +125,8 @@ router.get('/photos/:id/metadata', async ({ params, response }) => {
       process.env.GOOGLE_REDIRECT_URI!
     )
     oauth2Client.setCredentials({
-      access_token: process.env.GOOGLE_ACCESS_TOKEN,
       refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+      expiry_date: 0,
     })
     const token = (await oauth2Client.getAccessToken()).token
     if (!token) return response.status(500).send('Token invalide')

@@ -4,6 +4,7 @@ import { getPickerSessionId, savePickerSessionId } from './configStore.js'
 export interface Photo {
   id: string
   url: string
+  baseUrl: string
   title: string
   description: string
   location: string
@@ -30,8 +31,8 @@ export default class GooglePhotosService {
       process.env.GOOGLE_REDIRECT_URI!
     )
     oauth2Client.setCredentials({
-      access_token: process.env.GOOGLE_ACCESS_TOKEN,
       refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+      expiry_date: 0,
     })
     const token = (await oauth2Client.getAccessToken()).token
     if (!token) throw new Error('Impossible d\'obtenir un access token Google')
@@ -125,6 +126,7 @@ export default class GooglePhotosService {
       .map((item: any) => ({
         id: item.id,
         url: `/photos/proxy?id=${encodeURIComponent(item.id)}`,
+        baseUrl: item.mediaFile?.baseUrl || '',
         title: item.mediaFile?.filename || 'Photo',
         description: '',
         location: '',
@@ -162,3 +164,5 @@ export default class GooglePhotosService {
     return this.cachedPhotos
   }
 }
+// Singleton partagé entre routes.ts et googleData.ts
+export const photosService = new GooglePhotosService()

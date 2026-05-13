@@ -76,8 +76,8 @@ export default class GoogleTasksService {
     const oauth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uri)
 
     oauth2Client.setCredentials({
-      access_token: process.env.GOOGLE_ACCESS_TOKEN,
       refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+      expiry_date: 0,
     })
 
     return oauth2Client

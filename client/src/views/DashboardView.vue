@@ -36,7 +36,7 @@ const notificationsStore = useNotificationsStore();
 
 const { activeKey: activeModule, progress } = useModuleRotation([
   { key: 'weather', duration: 25_000 },
-  { key: 'qr',      duration: 5_000 },
+  { key: 'qr',      duration: 90_000 },
 ]);
 </script>
 

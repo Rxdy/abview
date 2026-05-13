@@ -30,7 +30,8 @@ function writeConfig(config: Config): void {
  * 2. Le fichier storage/config.json (sauvegardé via QR code setup)
  */
 export function getPickerSessionId(): string | undefined {
-  return process.env.GOOGLE_PICKER_SESSION_ID || readConfig().pickerSessionId
+  const config = readConfig()
+  return config.pickerSessionId || process.env.GOOGLE_PICKER_SESSION_ID
 }
 
 /**
