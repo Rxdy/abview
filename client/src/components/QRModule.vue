@@ -29,20 +29,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
+import QRCodeLib from 'qrcode';
 
-let QRCode: any;
-
-// Try to dynamically import QRCode with better error handling
-const initQRCode = async () => {
-  try {
-    const module = await import('qrcode');
-    QRCode = module.default || module;
-    console.log('✅ QRCode module loaded successfully', QRCode);
-  } catch (err) {
-    console.error('❌ Failed to load QRCode module:', err);
-    throw new Error(`QRCode module failed to load: ${err instanceof Error ? err.message : String(err)}`);
-  }
-};
+let QRCode = QRCodeLib;
+console.log('✅ QRCode module imported at module load:', !!QRCode);
 
 const props = defineProps<{ progress?: number }>();
 
@@ -109,9 +99,8 @@ async function loadQR() {
   success.value = false;
   _stopGlobalPolling();
   try {
-    // Ensure QRCode is loaded
-    if (!QRCode) {
-      await initQRCode();
+    if (!QRCode || !QRCode.toDataURL) {
+      throw new Error('QRCode module not available');
     }
     
     const res = await fetch(`${API_BASE}/photos/session`, { method: 'POST' });
@@ -138,7 +127,7 @@ async function loadQR() {
     console.error('🔴 QRModule error:', {
       message: errorMsg,
       error: e,
-      qrCodeLoaded: !!QRCode,
+      qrCodeAvailable: !!QRCode,
       apiBase: API_BASE
     });
   } finally {
@@ -147,31 +136,22 @@ async function loadQR() {
 }
 
 onMounted(() => {
-  // Initialize QRCode module first
-  initQRCode()
-    .then(() => {
-      if (_sessionId && _qrDataUrl) {
-        // Session en cours : restaurer le QR sans recréer une nouvelle session
-        qrDataUrl.value = _qrDataUrl;
-        loading.value = false;
-        // Ré-enregistrer le callback pour ce montage
-        _onSuccessCallback = () => {
-          success.value = true;
-          if (successTimer.value) clearTimeout(successTimer.value);
-          successTimer.value = setTimeout(() => {
-            success.value = false;
-            loadQR();
-          }, 6000);
-        };
-      } else {
+  if (_sessionId && _qrDataUrl) {
+    // Session en cours : restaurer le QR sans recréer une nouvelle session
+    qrDataUrl.value = _qrDataUrl;
+    loading.value = false;
+    // Ré-enregistrer le callback pour ce montage
+    _onSuccessCallback = () => {
+      success.value = true;
+      if (successTimer.value) clearTimeout(successTimer.value);
+      successTimer.value = setTimeout(() => {
+        success.value = false;
         loadQR();
-      }
-    })
-    .catch((err) => {
-      error.value = `Failed to initialize QRCode: ${err instanceof Error ? err.message : String(err)}`;
-      loading.value = false;
-      console.error('🔴 QRModule initialization failed:', err);
-    });
+      }, 6000);
+    };
+  } else {
+    loadQR();
+  }
 });
 
 onUnmounted(() => {
