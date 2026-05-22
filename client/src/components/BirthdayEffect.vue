@@ -25,7 +25,7 @@ import { ref, onMounted } from 'vue';
 const isVisible = ref(false);
 let currentBirthdayPerson = '';
 let currentBirthdayDate = ''; // Nouvelle variable pour stocker la date de départ
-let birthdayTimeout: number | null = null;
+let birthdayTimeout: ReturnType<typeof setTimeout> | null = null;
 let isTestMode = false;
 
 // Fonction pour déclencher l'animation

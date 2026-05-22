@@ -41,7 +41,7 @@ const emit = defineEmits<{
 }>();
 
 const secondsLeft = ref(20);
-let interval: number | null = null;
+let interval: ReturnType<typeof setInterval> | null = null;
 const languageStore = useLanguageStore();
 
 onMounted(() => {

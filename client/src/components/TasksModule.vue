@@ -159,7 +159,7 @@ const startScroll = (direction: 'left' | 'right') => {
   if (scrollInterval) {
     clearInterval(scrollInterval);
   }
-  scrollInterval = setInterval(scroll, delay);
+  scrollInterval = window.setInterval(scroll, delay);
 };
 
 const stopHorizontalScroll = () => {

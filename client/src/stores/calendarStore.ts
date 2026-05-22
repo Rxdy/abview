@@ -221,8 +221,12 @@ function transformHorairesToEvents(horaires: any[]): any[] {
           }
 
           // Calculate end date (handle shifts that cross midnight like 21:00-05:00)
-          const [startHour] = start.split(':').map(Number);
-          const [endHour] = end.split(':').map(Number);
+          if (!start || !end) return;
+          const startParts = start.split(':').map(Number);
+          const endParts = end.split(':').map(Number);
+          if (startParts.length < 2 || endParts.length < 2) return;
+          const startHour = startParts[0]!;
+          const endHour = endParts[0]!;
           let endDateStr = dateStr;
           if (endHour < startHour) {
             // Shift crosses midnight, so end time is next day
@@ -285,8 +289,12 @@ function transformHorairesToEvents(horaires: any[]): any[] {
             let eventType = "work"; // Force blue for Luis and Caroline
             
             // Calculate end date (handle shifts that cross midnight like 21:00-05:00)
-            const [startHour] = start.split(':').map(Number);
-            const [endHour] = end.split(':').map(Number);
+            if (!start || !end) return;
+            const startParts = start.split(':').map(Number);
+            const endParts = end.split(':').map(Number);
+            if (startParts.length < 2 || endParts.length < 2) return;
+            const startHour = startParts[0]!;
+            const endHour = endParts[0]!;
             let endDateStr = dateStr;
             if (endHour < startHour) {
               // Shift crosses midnight, so end time is next day

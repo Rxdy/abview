@@ -87,7 +87,7 @@ const store = useAnnualRecapStore()
 const currentSlide = ref(0)
 const currentYear = new Date().getFullYear()
 const pastYear = currentYear // Afficher l'année actuelle (2025) au lieu de l'année passée
-const autoPlayInterval = ref<number | null>(null)
+const autoPlayInterval = ref<ReturnType<typeof window.setInterval> | null>(null)
 
 const isVisible = ref(false)
 const isLoading = computed(() => store.isLoading)
@@ -156,7 +156,7 @@ onUnmounted(() => {
 // Barre de progression du timer
 const progressPercent = ref(0)
 const slideDuration = ref(60) // Durée par défaut : 60 secondes
-const progressInterval = ref<number | null>(null)
+const progressInterval = ref<ReturnType<typeof window.setInterval> | null>(null)
 
 function nextSlide() {
   progressPercent.value = 0

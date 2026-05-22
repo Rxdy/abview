@@ -9,8 +9,8 @@ export const useProgressStore = defineStore('progress', () => {
   const totalTime = 60 * 1000; // 1 minute
   const startTime = ref(Date.now());
   const currentTime = ref(Date.now()); // Pour forcer la réactivité du computed
-  let interval: number | null = null;
-  let refreshInterval: number | null = null; // Timer séparé pour les refreshes
+  let interval: ReturnType<typeof setInterval> | null = null;
+  let refreshInterval: ReturnType<typeof setInterval> | null = null; // Timer séparé pour les refreshes
   let timeOffset = 0; // Pour la synchronisation avec le serveur
   let lastSyncTime = 0;
   let serverStartTime = Date.now(); // État du serveur

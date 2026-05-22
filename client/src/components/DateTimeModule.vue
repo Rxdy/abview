@@ -21,7 +21,7 @@ const updateDateTime = () => {
   currentTime.value = now.toLocaleTimeString('fr-FR');
 };
 
-let interval: number;
+let interval: ReturnType<typeof setInterval>;
 
 onMounted(() => {
   updateDateTime();

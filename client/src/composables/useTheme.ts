@@ -7,7 +7,7 @@ export function useTheme() {
   const themeStore = useThemeStore();
   const currentTime = ref(new Date());
 
-  let interval: number | null = null;
+  let interval: ReturnType<typeof setInterval> | null = null;
 
   onMounted(() => {
     // Update every minute

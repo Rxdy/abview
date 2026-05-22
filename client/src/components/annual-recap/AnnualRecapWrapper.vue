@@ -81,7 +81,7 @@ const slides = ref<Slide[]>([
 
 const currentSlideIndex = ref<number | null>(null)
 const slideStartTime = ref(Date.now())
-const slideTimer = ref<number | null>(null)
+const slideTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 
 const currentSlide = computed(() => {
   if (currentSlideIndex.value === null) return null

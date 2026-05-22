@@ -1,7 +1,7 @@
 import { nextTick } from "vue";
 
 export function useAutoScroll(dayColumns: any) {
-    const scrollIntervals: number[] = [];
+    const scrollIntervals: ReturnType<typeof setInterval>[] = [];
 
     const equalizeEventHeights = () => {
         nextTick(() => {

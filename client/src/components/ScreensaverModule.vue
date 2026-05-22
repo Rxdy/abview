@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, type ComputedRef } from 'vue';
 import { calendarService, type Photo } from '../services/calendarService';
 
 const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3333' : '');
@@ -51,7 +51,7 @@ const currentIndex = ref(0);
 const currentTime = ref('');
 const currentDate = ref('');
 
-const currentPhoto = computed(() => photos.value[currentIndex.value] ?? FALLBACK_PHOTOS[0]);
+const currentPhoto = computed(() => photos.value[currentIndex.value] ?? FALLBACK_PHOTOS[0]) as ComputedRef<Photo>;
 
 const formatDate = (iso: string): string => {
   if (!iso) return '';

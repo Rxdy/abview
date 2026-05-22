@@ -166,7 +166,11 @@ const getEventsForDay = (date: Date) => {
       if (!value) return null;
       if (typeof value === 'object' && value.dateTime) return new Date(value.dateTime);
       if (typeof value === 'string' && !value.includes('T')) {
-        const [year, month, day] = value.split('-').map(Number);
+        const partsStr = value.split('-');
+        const year = partsStr[0] ? Number(partsStr[0]) : NaN;
+        const month = partsStr[1] ? Number(partsStr[1]) : NaN;
+        const day = partsStr[2] ? Number(partsStr[2]) : NaN;
+        if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) return null;
         return new Date(year, month - 1, day, 0, 0, 0, 0);
       }
       return new Date(value);

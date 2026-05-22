@@ -61,9 +61,9 @@ const props = defineProps<Props>()
 
 const selectedMonth = ref<number | null>(null)
 const visibleEventsCount = ref(0)
-const autoSelectInterval = ref<number | null>(null)
+const autoSelectInterval = ref<ReturnType<typeof setInterval> | null>(null)
 const currentAutoMonth = ref(0)
-const eventTimeouts = ref<number[]>([])
+const eventTimeouts = ref<ReturnType<typeof setTimeout>[]>([])
 
 const monthNames = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
