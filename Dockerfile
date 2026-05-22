@@ -27,19 +27,36 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 
-# Backend stage
-FROM node:24-alpine AS backend
+# Backend build stage
+FROM node:24-alpine AS backend-builder
 
 WORKDIR /app
 
 # Copy package files
 COPY server/package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install ALL dependencies (including dev) for compilation
+RUN npm ci
 
 # Copy source code
 COPY server/ .
+
+# Compile TypeScript to JavaScript (output goes to /app/build)
+RUN node ace build
+
+# Backend production stage
+FROM node:24-alpine AS backend
+
+WORKDIR /app
+
+# Copy compiled output from builder
+COPY --from=backend-builder /app/build .
+
+# Copy package files to install production deps
+COPY server/package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production
 
 # Create logs directory
 RUN mkdir -p logs
@@ -47,4 +64,4 @@ RUN mkdir -p logs
 EXPOSE 3333
 
 # Default command for backend
-CMD ["npm", "start"]
+CMD ["node", "bin/server.js"]
