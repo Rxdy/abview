@@ -23,8 +23,8 @@ run:
 	doppler run -p abview -c dev -- docker compose up
 
 prod:
-	@echo "Lancement en mode prod (client + api)..."
-	doppler run -p abview -c dev -- docker compose up -d client api
+	@echo "Lancement en mode prod (frontend + backend)..."
+	doppler run -p abview -c dev -- docker compose -f docker-compose.prod.yml up -d
 
 prod-browser:
 	@echo "Ouverture du frontend client dans Chromium en mode kiosk..."
