@@ -13,6 +13,9 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  ssr: {
+    noExternal: ['qrcode', 'dijkstrajs', 'pngjs', 'yargs']
+  },
   server: {
     proxy: {
       '/api': {
@@ -33,6 +36,11 @@ export default defineConfig({
       compress: {
         drop_console: process.env.NODE_ENV === 'production',
         drop_debugger: process.env.NODE_ENV === 'production'
+      }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: undefined // Ensure all deps are in one chunk
       }
     }
   }
