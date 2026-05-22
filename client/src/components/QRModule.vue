@@ -29,6 +29,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
+// @ts-ignore - qrcode doesn't have TypeScript types
 import QRCodeLib from 'qrcode';
 
 let QRCode = QRCodeLib;
