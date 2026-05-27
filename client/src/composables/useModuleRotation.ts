@@ -19,7 +19,7 @@ export interface ModuleSlot {
 export function useModuleRotation(slots: ModuleSlot[]) {
   if (slots.length === 0) throw new Error('useModuleRotation: slots cannot be empty');
 
-  const activeKey = ref<string>(slots[0].key);
+  const activeKey = ref<string>(slots[0]!.key);
   /** Percentage of time remaining for the current module, from 100 (just started) to 0 (switching). */
   const progress = ref(100);
 

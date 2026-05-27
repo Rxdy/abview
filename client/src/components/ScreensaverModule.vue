@@ -53,7 +53,7 @@ const currentDate = ref('');
 
 const currentPhoto = computed((): Photo => {
   const photo = photos.value[currentIndex.value];
-  return photo || FALLBACK_PHOTOS[0];
+  return photo ?? FALLBACK_PHOTOS[0] as Photo;
 });
 
 const formatDate = (iso: string): string => {
