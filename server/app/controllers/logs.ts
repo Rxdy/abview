@@ -99,7 +99,7 @@ export default class LogsController {
         }
       })
       .filter(file => file !== null)
-      .sort((a, b) => new Date(b!.modified) - new Date(a!.modified))
+      .sort((a, b) => new Date(b!.modified).getTime() - new Date(a!.modified).getTime())
 
     return response.json({
       files,
@@ -145,7 +145,7 @@ export default class LogsController {
         path: path.join(logDir, file),
         date: file.match(/\d{4}-\d{2}-\d{2}/)?.[0]
       }))
-      .filter(f => f.date)
+      .filter((f): f is { name: string; path: string; date: string } => f.date !== undefined)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
     // Garder seulement les 7 plus récents

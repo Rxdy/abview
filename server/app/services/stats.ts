@@ -376,8 +376,8 @@ export default class StatsService {
 
         console.log(`✅ Loaded archived stats for ${pastYear}:`, {
           tasks: stats.tasks?.length || 0,
-          totalCreated: stats.tasks?.reduce((sum, t) => sum + t.created, 0) || 0,
-          totalCompleted: stats.tasks?.reduce((sum, t) => sum + t.completed, 0) || 0
+          totalCreated: stats.tasks?.reduce((sum: number, t: any) => sum + t.created, 0) || 0,
+          totalCompleted: stats.tasks?.reduce((sum: number, t: any) => sum + t.completed, 0) || 0
         })
 
         return stats

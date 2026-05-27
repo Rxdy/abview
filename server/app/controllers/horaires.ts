@@ -4,7 +4,6 @@ import path from 'path'
 import { globalLastRefresh } from '#start/routes'
 
 export default class HorairesController {
-  private lastRefresh: string = new Date().toISOString()
   private cachedHoraires: any = null
   private lastFileCheck: number = 0
   private readonly CACHE_DURATION = 5 * 60 * 1000 // 5 minutes

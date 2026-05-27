@@ -19,8 +19,7 @@ export interface ModuleSlot {
 export function useModuleRotation(slots: ModuleSlot[]) {
   if (slots.length === 0) throw new Error('useModuleRotation: slots cannot be empty');
 
-  const firstSlot = slots[0]!;
-  const activeKey = ref<string>(firstSlot.key);
+  const activeKey = ref<string>(slots[0].key);
   /** Percentage of time remaining for the current module, from 100 (just started) to 0 (switching). */
   const progress = ref(100);
 
@@ -35,17 +34,17 @@ export function useModuleRotation(slots: ModuleSlot[]) {
     if (progressInterval) clearInterval(progressInterval);
     progressInterval = setInterval(() => {
       const elapsed = Date.now() - slotStartTime;
-      const current = slots[currentIndex]!;
-      progress.value = Math.max(0, 100 - (elapsed / current.duration) * 100);
+      const duration = slots[currentIndex].duration;
+      progress.value = Math.max(0, 100 - (elapsed / duration) * 100);
     }, 50);
   }
 
   function scheduleNext() {
-    const current = slots[currentIndex]!;
+    const current = slots[currentIndex];
     startProgress();
     timer = setTimeout(() => {
       currentIndex = (currentIndex + 1) % slots.length;
-      activeKey.value = slots[currentIndex]!.key;
+      activeKey.value = slots[currentIndex].key;
       scheduleNext();
     }, current.duration);
   }

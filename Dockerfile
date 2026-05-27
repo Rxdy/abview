@@ -42,7 +42,7 @@ RUN npm ci
 COPY server/ .
 
 # Compile TypeScript to JavaScript (output goes to /app/build)
-RUN node ace build
+RUN node ace build && ls -la /app/build/bin/ && echo "✓ Backend build successful"
 
 # Backend production stage
 FROM node:24-alpine AS backend
@@ -50,7 +50,7 @@ FROM node:24-alpine AS backend
 WORKDIR /app
 
 # Copy compiled output from builder
-COPY --from=backend-builder /app/build .
+COPY --from=backend-builder /app/build ./
 
 # Copy package files to install production deps
 COPY server/package*.json ./
@@ -60,6 +60,9 @@ RUN npm ci --only=production
 
 # Create logs directory
 RUN mkdir -p logs
+
+# Verify that server.js exists
+RUN ls -la /app/bin/server.js || (echo "ERROR: /app/bin/server.js not found!" && exit 1)
 
 EXPOSE 3333
 

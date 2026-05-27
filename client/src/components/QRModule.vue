@@ -29,11 +29,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-// @ts-ignore - qrcode doesn't have TypeScript types
-import QRCodeLib from 'qrcode';
-
-let QRCode = QRCodeLib;
-console.log('✅ QRCode module imported at module load:', !!QRCode);
+import QRCode from 'qrcode';
 
 const props = defineProps<{ progress?: number }>();
 
@@ -100,10 +96,6 @@ async function loadQR() {
   success.value = false;
   _stopGlobalPolling();
   try {
-    if (!QRCode || !QRCode.toDataURL) {
-      throw new Error('QRCode module not available');
-    }
-    
     const res = await fetch(`${API_BASE}/photos/session`, { method: 'POST' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -123,14 +115,7 @@ async function loadQR() {
       }, 6000);
     });
   } catch (e: any) {
-    const errorMsg = e instanceof Error ? e.message : String(e);
-    error.value = errorMsg;
-    console.error('🔴 QRModule error:', {
-      message: errorMsg,
-      error: e,
-      qrCodeAvailable: !!QRCode,
-      apiBase: API_BASE
-    });
+    error.value = e.message;
   } finally {
     loading.value = false;
   }
