@@ -80,7 +80,7 @@ router.get('/photos/proxy', async ({ request, response }) => {
     }
 
     let arrayBuffer = await imgRes.arrayBuffer()
-    let buffer = Buffer.from(arrayBuffer)
+    let buffer: Buffer = Buffer.from(arrayBuffer as ArrayBuffer)
     let contentType = imgRes.headers.get('content-type') || 'image/jpeg'
 
     // Convertir HEIC en JPEG si nécessaire
@@ -147,7 +147,7 @@ router.get('/photos/:id/metadata', async ({ params, response }) => {
     
     // Extraire métadonnées EXIF AVANT conversion
     let arrayBuffer2 = await imgRes.arrayBuffer()
-    let buffer = Buffer.from(arrayBuffer2)
+    let buffer: Buffer = Buffer.from(arrayBuffer2 as ArrayBuffer)
     let contentType = imgRes.headers.get('content-type') || 'image/jpeg'
     let originalMetadata = await sharp.default(buffer).metadata()
     const exifDateTime = originalMetadata.exif?.DateTime as string | undefined
@@ -160,7 +160,7 @@ router.get('/photos/:id/metadata', async ({ params, response }) => {
           toType: 'image/jpeg',
           quality: 0.9,
         })
-        buffer = Buffer.from(jpegResult)
+        buffer = Buffer.from(jpegResult) as Buffer
         // Réajouter l'EXIF après conversion HEIC → JPEG
         if (exifDateTime) {
           buffer = await sharp.default(buffer)
@@ -168,10 +168,10 @@ router.get('/photos/:id/metadata', async ({ params, response }) => {
               IFD0: { DateTime: exifDateTime },
             })
             .jpeg({ quality: 90 })
-            .toBuffer()
+            .toBuffer() as Buffer
         }
       } catch {
-        buffer = await sharp.default(buffer).jpeg({ quality: 90 }).toBuffer()
+        buffer = await sharp.default(buffer).jpeg({ quality: 90 }).toBuffer() as Buffer
       }
     }
 

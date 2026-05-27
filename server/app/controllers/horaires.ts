@@ -17,7 +17,6 @@ export default class HorairesController {
         const filePath = path.join(process.cwd(), 'app/database/data/horaires.json')
         const data = fs.readFileSync(filePath, 'utf-8')
         this.cachedHoraires = JSON.parse(data)
-        this.lastRefresh = new Date(now).toISOString()
         this.lastFileCheck = now
       }
 
