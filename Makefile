@@ -38,7 +38,7 @@ prod-browser:
 		--check-for-update-interval=31536000 \
 		--disable-session-crashed-bubble \
 		--disable-component-extensions-with-background-pages \
-		http://127.0.0.1:5175 &
+		http://localhost &
 
 get-token:
 	doppler run -p abview -c dev -- npx tsx server/scripts/get_token.ts
