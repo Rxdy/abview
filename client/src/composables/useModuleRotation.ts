@@ -34,17 +34,22 @@ export function useModuleRotation(slots: ModuleSlot[]) {
     if (progressInterval) clearInterval(progressInterval);
     progressInterval = setInterval(() => {
       const elapsed = Date.now() - slotStartTime;
-      const duration = slots[currentIndex].duration;
+      const currentSlot = slots[currentIndex];
+      const duration = currentSlot?.duration || 1000;
       progress.value = Math.max(0, 100 - (elapsed / duration) * 100);
     }, 50);
   }
 
   function scheduleNext() {
     const current = slots[currentIndex];
+    if (!current) return; // Safety check
     startProgress();
     timer = setTimeout(() => {
       currentIndex = (currentIndex + 1) % slots.length;
-      activeKey.value = slots[currentIndex].key;
+      const nextSlot = slots[currentIndex];
+      if (nextSlot) {
+        activeKey.value = nextSlot.key;
+      }
       scheduleNext();
     }, current.duration);
   }
