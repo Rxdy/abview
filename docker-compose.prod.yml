@@ -4,8 +4,6 @@ services:
             context: .
             dockerfile: Dockerfile
             target: frontend
-        ports:
-            - "80:80"
         environment:
             - TZ=Europe/Paris
         restart: unless-stopped
@@ -14,6 +12,14 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.abview.rule=Host(`abview.rxdy.fr`) || Host(`localhost`) || Host(`rp-meliodas`)"
+            - "traefik.http.routers.abview.entrypoints=web"
+            - "traefik.http.services.abview.loadbalancer.server.port=80"
+        networks:
+            - web
+            - default
 
     backend:
         build:
@@ -42,9 +48,14 @@ services:
             - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
         restart: unless-stopped
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
+            test: ["CMD", "curl", "-f", "http://localhost:3333/"]
             interval: 30s
             timeout: 10s
             retries: 3
         volumes:
             - ./logs:/app/logs
+
+networks:
+    web:
+        external: true
+    default: {}
