@@ -46,6 +46,7 @@ RUN node ace build --ignore-ts-errors && ls -la /app/build/bin/ && echo "✓ Bac
 
 # Backend production stage
 FROM node:24-alpine AS backend
+RUN apk add --no-cache curl
 
 WORKDIR /app
 
