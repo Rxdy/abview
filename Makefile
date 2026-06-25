@@ -1,7 +1,7 @@
 # Makefile pour AbView
 # Utilise client comme frontend principal (port 5175)
 
-.PHONY: help run prod prod-browser get-token stop logs logs-api logs-files logs-stats logs-tail logs-clean reset
+.PHONY: help run prod prod-browser get-token stop logs logs-api logs-files logs-stats logs-tail logs-clean reset restart-kiosk
 
 help:
 	@echo "Commandes disponibles (utilise client comme frontend principal):"
@@ -15,8 +15,9 @@ help:
 	@echo "  logs-files  - Lister les fichiers de logs"
 	@echo "  logs-stats  - Statistiques des logs"
 	@echo "  logs-tail   - Suivre les logs en temps réel"
-	@echo "  logs-clean  - Nettoyer les anciens logs"
-	@echo "  reset       - Réinitialisation de l'environnement"
+	@echo "  logs-clean      - Nettoyer les anciens logs"
+	@echo "  reset           - Réinitialisation de l'environnement"
+	@echo "  restart-kiosk   - Redémarrer Chromium sur le Pi (via SSH Tailscale)"
 
 run:
 	@echo "Lancement en mode dev..."
@@ -118,6 +119,16 @@ logs-clean:
 	@echo "Nettoyage des logs de plus de 7 jours..."
 	@find ./logs -name "*.log" -mtime +7 -delete 2>/dev/null || echo "Aucun fichier de logs trouvé"
 	@echo "Logs nettoyés."
+
+restart-kiosk:
+	@echo "Redémarrage de Chromium sur rp-meliodas..."
+	-ssh -i ~/.ssh/id_ed25519_merlin rudya@rp-meliodas \
+		"pkill -f chromium || true; sleep 1; \
+		WAYLAND_DISPLAY=wayland-0 XDG_RUNTIME_DIR=/run/user/1000 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus \
+		setsid chromium-browser --kiosk --app=http://localhost \
+		--disable-session-crashed-bubble --no-first-run \
+		>/tmp/chromium.log 2>&1 &"
+	@echo "Chromium relancé."
 
 reset:
 	@echo "Réinitialisation de l'environnement..."
