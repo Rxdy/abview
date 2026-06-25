@@ -122,12 +122,7 @@ logs-clean:
 
 restart-kiosk:
 	@echo "Redémarrage de Chromium sur rp-meliodas..."
-	-ssh -i ~/.ssh/id_ed25519_merlin rudya@rp-meliodas \
-		"pkill -f chromium || true; sleep 1; \
-		WAYLAND_DISPLAY=wayland-0 XDG_RUNTIME_DIR=/run/user/1000 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus \
-		setsid chromium-browser --kiosk --app=http://localhost \
-		--disable-session-crashed-bubble --no-first-run \
-		>/tmp/chromium.log 2>&1 &"
+	ssh -i ~/.ssh/id_ed25519_merlin rudya@rp-meliodas "bash ~/restart-chromium.sh"
 	@echo "Chromium relancé."
 
 reset:
