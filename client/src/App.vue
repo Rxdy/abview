@@ -7,20 +7,40 @@ import BirthdayEffect from './components/BirthdayEffect.vue';
 import ScreensaverModule from './components/ScreensaverModule.vue';
 import { useThemeStore } from './stores/themeStore';
 import { useWeatherStore } from './stores/weatherStore';
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 
 const themeStore = useThemeStore();
 const weatherStore = useWeatherStore();
 const showModules = ref(true);
 
+// ── Détection d'inactivité ────────────────────────────────────────────────────
+// Délai configurable via VITE_IDLE_TIMEOUT_MS (défaut : 3 minutes)
+const IDLE_TIMEOUT = Number(import.meta.env.VITE_IDLE_TIMEOUT_MS) || 3 * 60 * 1000;
+let idleTimer: ReturnType<typeof setTimeout> | null = null;
+
+const enterScreensaver = () => { showModules.value = false; };
+const wakeUp = () => {
+  if (!showModules.value) showModules.value = true;
+  resetIdleTimer();
+};
+
+const resetIdleTimer = () => {
+  if (idleTimer) clearTimeout(idleTimer);
+  idleTimer = setTimeout(enterScreensaver, IDLE_TIMEOUT);
+};
+
+const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'] as const;
+
 const toggleModuleVisibility = () => {
   showModules.value = !showModules.value;
-  console.log(`📡 Affichage modules ${showModules.value ? 'activé' : 'désactivé'} par Ctrl+P`);
+  if (showModules.value) resetIdleTimer();
 };
 
 onMounted(() => {
   weatherStore.fetchWeather();
-  
+  resetIdleTimer();
+  ACTIVITY_EVENTS.forEach(e => document.addEventListener(e, wakeUp, { passive: true }));
+
   document.addEventListener('keydown', (e) => {
     if (e.key.toLowerCase() === 'p' && e.ctrlKey) {
       e.preventDefault();
@@ -112,6 +132,11 @@ onMounted(() => {
       }
     });
   }
+});
+
+onUnmounted(() => {
+  if (idleTimer) clearTimeout(idleTimer);
+  ACTIVITY_EVENTS.forEach(e => document.removeEventListener(e, wakeUp));
 });
 </script>
 

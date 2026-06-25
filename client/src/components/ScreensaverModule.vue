@@ -30,6 +30,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { calendarService, type Photo } from '../services/calendarService';
+import { abflowService } from '../services/abflowService';
 
 const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3333' : '');
 const resolveUrl = (url: string) => url.startsWith('/') ? `${API_BASE}${url}` : url;
@@ -94,11 +95,17 @@ let carouselInterval: ReturnType<typeof setInterval>;
 
 const loadPhotos = async () => {
   try {
-    const fetched = await calendarService.getPhotos();
+    let fetched: Photo[]
+    if (abflowService.isConfigured()) {
+      // Source principale : AbFlow (via API key)
+      fetched = await abflowService.getPhotos()
+    } else {
+      // Fallback : Google Photos (si session Picker configurée)
+      fetched = await calendarService.getPhotos()
+    }
     if (fetched.length > 0) {
       photos.value = fetched;
       currentIndex.value = 0;
-      // Les dates viennent déjà du Picker API - pas besoin d'enrichissement
     }
   } catch {
     // Garder les photos fallback silencieusement
