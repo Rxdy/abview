@@ -1,33 +1,43 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
-const STORAGE_DIR = join(process.cwd(), 'storage')
-const CONFIG_FILE = join(STORAGE_DIR, 'config.json')
-
 interface Config {
   pickerSessionId?: string
 }
 
+// Calculés à l'appel (pas en constante de module) pour rester corrects si
+// process.cwd() change entre deux appels, notamment en test.
+function getStorageDir(): string {
+  return join(process.cwd(), 'storage')
+}
+
+function getConfigFile(): string {
+  return join(getStorageDir(), 'config.json')
+}
+
 function readConfig(): Config {
   try {
-    if (!existsSync(CONFIG_FILE)) return {}
-    return JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'))
+    const configFile = getConfigFile()
+    if (!existsSync(configFile)) return {}
+    return JSON.parse(readFileSync(configFile, 'utf-8'))
   } catch {
     return {}
   }
 }
 
 function writeConfig(config: Config): void {
-  if (!existsSync(STORAGE_DIR)) {
-    mkdirSync(STORAGE_DIR, { recursive: true })
+  const storageDir = getStorageDir()
+  if (!existsSync(storageDir)) {
+    mkdirSync(storageDir, { recursive: true })
   }
-  writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2))
+  writeFileSync(getConfigFile(), JSON.stringify(config, null, 2))
 }
 
 /**
  * Retourne la session Picker ID depuis:
- * 1. La variable d'env GOOGLE_PICKER_SESSION_ID (priorité)
- * 2. Le fichier storage/config.json (sauvegardé via QR code setup)
+ * 1. Le fichier storage/config.json (sauvegardé via QR code setup) si présent
+ * 2. Sinon la variable d'env GOOGLE_PICKER_SESSION_ID en repli
+ * (une session fraîchement sauvegardée l'emporte sur une env var périmée)
  */
 export function getPickerSessionId(): string | undefined {
   const config = readConfig()
