@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useThemeStore } from '../themeStore'
 
@@ -9,6 +9,6 @@ describe('themeStore', () => {
 
   it('initializes with default theme', () => {
     const store = useThemeStore()
-    expect(store.theme).toBeDefined()
+    expect(store.isDark).toBe(false)
   })
 })
