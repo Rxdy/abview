@@ -1,5 +1,5 @@
 import { google } from 'googleapis'
-import { getPickerSessionId, savePickerSessionId } from './configStore.js'
+import { getPickerSessionId, savePickerSessionId } from './config_store.js'
 
 export interface Photo {
   id: string
@@ -34,8 +34,8 @@ export default class GooglePhotosService {
       refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
       expiry_date: 0,
     })
-    const token = (await oauth2Client.getAccessToken()).token
-    if (!token) throw new Error('Impossible d\'obtenir un access token Google')
+    const { token } = await oauth2Client.getAccessToken()
+    if (!token) throw new Error("Impossible d'obtenir un access token Google")
     return token
   }
 
@@ -48,7 +48,7 @@ export default class GooglePhotosService {
     const res = await fetch('https://photospicker.googleapis.com/v1/sessions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     })
@@ -101,7 +101,9 @@ export default class GooglePhotosService {
   private async fetchPhotos(): Promise<Photo[]> {
     const sessionId = getPickerSessionId()
     if (!sessionId) {
-      console.warn('⚠️ Aucune session Picker configurée. POST /photos/session pour créer une session.')
+      console.warn(
+        '⚠️ Aucune session Picker configurée. POST /photos/session pour créer une session.'
+      )
       return []
     }
 
@@ -122,7 +124,9 @@ export default class GooglePhotosService {
     console.log(`✅ Google Photos Picker: ${items.length} photos récupérées`)
 
     const photos: Photo[] = items
-      .filter((item: any) => item.type === 'PHOTO' || item.mediaFile?.mimeType?.startsWith('image/'))
+      .filter(
+        (item: any) => item.type === 'PHOTO' || item.mediaFile?.mimeType?.startsWith('image/')
+      )
       .map((item: any) => ({
         id: item.id,
         url: `/photos/proxy?id=${encodeURIComponent(item.id)}`,
@@ -131,11 +135,13 @@ export default class GooglePhotosService {
         description: '',
         location: '',
         // N'afficher la date que si Google a de vraies métadonnées EXIF (cameraMake ou photoMetadata)
-        createdAt: (item.mediaFile?.mediaFileMetadata?.cameraMake || item.mediaFile?.mediaFileMetadata?.photoMetadata)
-          ? (item.createTime || '')
-          : '',
-        width: parseInt(item.mediaFile?.mediaFileMetadata?.width || '1920'),
-        height: parseInt(item.mediaFile?.mediaFileMetadata?.height || '1080'),
+        createdAt:
+          item.mediaFile?.mediaFileMetadata?.cameraMake ||
+          item.mediaFile?.mediaFileMetadata?.photoMetadata
+            ? item.createTime || ''
+            : '',
+        width: Number.parseInt(item.mediaFile?.mediaFileMetadata?.width || '1920'),
+        height: Number.parseInt(item.mediaFile?.mediaFileMetadata?.height || '1080'),
       }))
       .filter((p) => p.url !== '')
 

@@ -36,45 +36,49 @@ export default class GoogleDataController {
     const calendarService = getCalendarService()
     const events = await calendarService.listEvents()
     // Déplier les événements all-day multi-jours en un événement par jour
-    const expandedEvents = events.flatMap(event => {
+    const expandedEvents = events.flatMap((event) => {
       // On ne déplie que les événements all-day (date sans T) et vraiment multi-jours
-      const isAllDay = typeof event.start === 'string' && !event.start.includes('T') && typeof event.end === 'string' && !event.end.includes('T');
+      const isAllDay =
+        typeof event.start === 'string' &&
+        !event.start.includes('T') &&
+        typeof event.end === 'string' &&
+        !event.end.includes('T')
       if (isAllDay) {
-        const start = new Date(event.start);
-        const end = new Date(event.end);
+        const start = new Date(event.start)
+        const end = new Date(event.end)
         // Calculer la différence en jours
-        const diffTime = Math.abs(end.getTime() - start.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
+        const diffTime = Math.abs(end.getTime() - start.getTime())
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
         // Ne déplier que si c'est vraiment multi-jours (différence > 1 jour)
         if (diffDays > 1) {
           // Google Calendar: end est exclusif
-          const days = [];
+          const days = []
           for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-            const dateStr = d.toISOString().split('T')[0];
+            const dateStr = d.toISOString().split('T')[0]
             days.push({
               ...event,
               id: `${event.id}_${dateStr}`,
               start: dateStr,
               end: dateStr,
-            });
+            })
           }
-          return days;
+          return days
         }
       }
-      return [event];
-    });
-    
+      return [event]
+    })
+
     // Supprimer les doublons basés sur l'ID
-    const seenIds = new Set<string>();
-    const uniqueEvents = expandedEvents.filter(event => {
+    const seenIds = new Set<string>()
+    const uniqueEvents = expandedEvents.filter((event) => {
       if (seenIds.has(event.id)) {
-        return false;
+        return false
       }
-      seenIds.add(event.id);
-      return true;
-    });
-    
+      seenIds.add(event.id)
+      return true
+    })
+
     return response.json({
       events: uniqueEvents,
       lastRefresh: globalLastRefresh,
@@ -176,7 +180,7 @@ export default class GoogleDataController {
     try {
       const statsService = getStatsService()
       const calendarService = getCalendarService()
-      
+
       // Lire les données archivées de l'année passée
       const pastYearStats = statsService.getPastYearStats()
       const weatherStats = statsService.getPastYearWeatherStats()
@@ -187,7 +191,7 @@ export default class GoogleDataController {
         tasks: pastYearStats, // Données archivées de l'année passée
         weather: weatherStats, // Données archivées de l'année passée
         events: events, // Événements de l'année passée
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
       })
     } catch (error) {
       console.error('Error getting recap data:', error)

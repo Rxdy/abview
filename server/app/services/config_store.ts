@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
-import { join } from 'path'
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
+import { join } from 'node:path'
 
 const STORAGE_DIR = join(process.cwd(), 'storage')
 const CONFIG_FILE = join(STORAGE_DIR, 'config.json')

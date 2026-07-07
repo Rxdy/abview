@@ -33,9 +33,9 @@ export default class GoogleTasksService {
     const currentState: { [listId: string]: { [taskId: string]: Task } } = {}
 
     // Build current state
-    currentLists.forEach(list => {
+    currentLists.forEach((list) => {
       currentState[list.id] = {}
-      list.tasks.forEach(task => {
+      list.tasks.forEach((task) => {
         currentState[list.id][task.id] = { ...task }
       })
     })
@@ -46,20 +46,28 @@ export default class GoogleTasksService {
     }
 
     // Compare with previous state
-    Object.keys(currentState).forEach(listId => {
+    Object.keys(currentState).forEach((listId) => {
       const currentTasks = currentState[listId]
       const previousTasks = this.previousTasksState[listId] || {}
 
-      Object.keys(currentTasks).forEach(taskId => {
+      Object.keys(currentTasks).forEach((taskId) => {
         const currentTask = currentTasks[taskId]
         const previousTask = previousTasks[taskId]
 
         if (!previousTask) {
           // New task created
-          this.statsService.recordTaskCreated(listId, currentLists.find(l => l.id === listId)?.title || 'Unknown', taskId)
+          this.statsService.recordTaskCreated(
+            listId,
+            currentLists.find((l) => l.id === listId)?.title || 'Unknown',
+            taskId
+          )
         } else if (currentTask.status === 'completed' && previousTask.status !== 'completed') {
           // Task completed
-          this.statsService.recordTaskCompleted(listId, currentLists.find(l => l.id === listId)?.title || 'Unknown', taskId)
+          this.statsService.recordTaskCompleted(
+            listId,
+            currentLists.find((l) => l.id === listId)?.title || 'Unknown',
+            taskId
+          )
         }
       })
     })
@@ -69,11 +77,11 @@ export default class GoogleTasksService {
   }
 
   private async getAuthClient() {
-    const client_id = process.env.GOOGLE_CLIENT_ID!
-    const client_secret = process.env.GOOGLE_CLIENT_SECRET!
-    const redirect_uri = process.env.GOOGLE_REDIRECT_URI!
+    const clientId = process.env.GOOGLE_CLIENT_ID!
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET!
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI!
 
-    const oauth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uri)
+    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
 
     oauth2Client.setCredentials({
       refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
@@ -86,67 +94,67 @@ export default class GoogleTasksService {
   private getPostItColor(listTitle: string): string {
     // Couleurs spécifiques par nom de liste
     const colorMap: { [key: string]: string } = {
-      'Luis': '#004C99',      // Bleu FC Porto
-      'Julie': '#ffd1dc',     // Rose
-      'Courses': '#e74c3c',   // Rouge
-      'Caroline': '#f39c12',  // Orange
-      'Rudy': '#1e293b',      // Bleu header/footer
-      'Général': '#9b59b6',   // Violet (complémentaire)
-    };
+      Luis: '#004C99', // Bleu FC Porto
+      Julie: '#ffd1dc', // Rose
+      Courses: '#e74c3c', // Rouge
+      Caroline: '#f39c12', // Orange
+      Rudy: '#1e293b', // Bleu header/footer
+      Général: '#9b59b6', // Violet (complémentaire)
+    }
 
     // Couleurs aléatoires pour les autres listes
     const randomColors = [
-      "#fff9a6",  // Jaune
-      "#ffd1dc",  // Rose
-      "#c3f7d6",  // Vert
-      "#cce0ff",  // Bleu clair
-      "#ffe6b3",  // Orange clair
-    ];
+      '#fff9a6', // Jaune
+      '#ffd1dc', // Rose
+      '#c3f7d6', // Vert
+      '#cce0ff', // Bleu clair
+      '#ffe6b3', // Orange clair
+    ]
 
     // Chercher correspondance (insensible à la casse)
-    const normalizedTitle = listTitle?.trim();
+    const normalizedTitle = listTitle?.trim()
     for (const [name, color] of Object.entries(colorMap)) {
       if (normalizedTitle?.toLowerCase() === name.toLowerCase()) {
-        return color;
+        return color
       }
     }
 
     // Couleur aléatoire pour les listes inconnues
     const hash = listTitle.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    return randomColors[Math.abs(hash) % randomColors.length];
+      a = (a << 5) - a + b.charCodeAt(0)
+      return a & a
+    }, 0)
+    return randomColors[Math.abs(hash) % randomColors.length]
   }
 
   private computeTaskLevel(taskMap: Map<string, Task>): void {
     // Build hierarchy
-    const rootTasks: Task[] = [];
-    const childTasks: Map<string, Task[]> = new Map();
+    const rootTasks: Task[] = []
+    const childTasks: Map<string, Task[]> = new Map()
 
     for (const task of taskMap.values()) {
       if (task.parent) {
         if (!childTasks.has(task.parent)) {
-          childTasks.set(task.parent, []);
+          childTasks.set(task.parent, [])
         }
-        childTasks.get(task.parent)!.push(task);
+        childTasks.get(task.parent)!.push(task)
       } else {
-        rootTasks.push(task);
+        rootTasks.push(task)
       }
     }
 
     // Sort root tasks by position - but since we don't have position in Task, assume order
     // Recursive function to set levels
     const setLevel = (task: Task, level: number) => {
-      task.level = level;
-      const children = childTasks.get(task.id) || [];
+      task.level = level
+      const children = childTasks.get(task.id) || []
       for (const child of children) {
-        setLevel(child, level + 1);
+        setLevel(child, level + 1)
       }
-    };
+    }
 
     for (const rootTask of rootTasks) {
-      setLevel(rootTask, 0);
+      setLevel(rootTask, 0)
     }
   }
 
@@ -229,13 +237,13 @@ export default class GoogleTasksService {
 
     // Find the list for this task
     for (const list of this.cachedLists) {
-      const task = list.tasks.find(t => t.id === taskId)
+      const task = list.tasks.find((t) => t.id === taskId)
       if (task) {
         try {
           await this.tasks.tasks.patch({
             tasklist: list.id,
             task: taskId,
-            requestBody: { status }
+            requestBody: { status },
           })
           // Update cached
           task.status = status
@@ -244,13 +252,13 @@ export default class GoogleTasksService {
           } else {
             task.completed = null
           }
-          
+
           // Invalider le cache pour forcer un refresh immédiat au prochain appel
-          this.lastRefresh = 0;
-          
+          this.lastRefresh = 0
+
           // Mettre à jour le globalLastRefresh pour que la progress bar reflète ce changement
-          updateGlobalLastRefresh();
-          
+          updateGlobalLastRefresh()
+
           return true
         } catch (error) {
           console.error('Error updating task:', error)

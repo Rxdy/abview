@@ -16,11 +16,11 @@ export default class GoogleCalendarService {
   private refreshInterval = 5 * 60 * 1000 // 5 minutes en ms
 
   private async getAuthClient() {
-    const client_id = process.env.GOOGLE_CLIENT_ID!
-    const client_secret = process.env.GOOGLE_CLIENT_SECRET!
-    const redirect_uri = process.env.GOOGLE_REDIRECT_URI!
+    const clientId = process.env.GOOGLE_CLIENT_ID!
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET!
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI!
 
-    const oauth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uri)
+    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
 
     // Injecter le token depuis Doppler ou fichier sécurisé si nécessaire
     oauth2Client.setCredentials({

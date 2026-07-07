@@ -1,6 +1,6 @@
-import { createInterface } from 'readline/promises'
+import { createInterface } from 'node:readline/promises'
 import { google } from 'googleapis'
-import { execSync } from 'child_process'
+import { execSync } from 'node:child_process'
 
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar.readonly',
@@ -9,20 +9,20 @@ const SCOPES = [
 ]
 
 async function main() {
-  const client_id = process.env.GOOGLE_CLIENT_ID
-  const client_secret = process.env.GOOGLE_CLIENT_SECRET
-  const redirect_uri = process.env.GOOGLE_REDIRECT_URI
+  const clientId = process.env.GOOGLE_CLIENT_ID
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI
 
-  console.log('GOOGLE_CLIENT_ID:', client_id)
-  console.log('GOOGLE_CLIENT_SECRET:', client_secret)
-  console.log('GOOGLE_REDIRECT_URI:', redirect_uri)
+  console.log('GOOGLE_CLIENT_ID:', clientId)
+  console.log('GOOGLE_CLIENT_SECRET:', clientSecret)
+  console.log('GOOGLE_REDIRECT_URI:', redirectUri)
 
-  if (!client_id || !client_secret || !redirect_uri) {
+  if (!clientId || !clientSecret || !redirectUri) {
     console.error('Erreur : Une ou plusieurs variables d’environnement manquent.')
     process.exit(1)
   }
 
-  const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uri)
+  const oAuth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
 
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -47,7 +47,10 @@ async function main() {
     console.log('\n=== TOKEN OBTENU ===')
     console.log('Scopes inclus:', tokens.scope || 'AUCUN!')
     console.log('Type:', tokens.token_type)
-    console.log('Expiration:', tokens.expiry_date ? new Date(tokens.expiry_date).toLocaleString() : 'N/A')
+    console.log(
+      'Expiration:',
+      tokens.expiry_date ? new Date(tokens.expiry_date).toLocaleString() : 'N/A'
+    )
     console.log('===========================\n')
 
     if (tokens.refresh_token) {
@@ -66,13 +69,13 @@ async function main() {
           console.log('✅ GOOGLE_ACCESS_TOKEN mis à jour dans Doppler')
         }
       } catch (error) {
-        console.error('Erreur lors de la mise à jour de Doppler:', error.message)
+        console.error('Erreur lors de la mise à jour de Doppler:', (error as Error).message)
       }
     } else {
       console.warn('Aucun refresh_token généré, Doppler non mis à jour.')
     }
   } catch (error) {
-    console.error('Erreur lors de la récupération des jetons:', error.message)
+    console.error('Erreur lors de la récupération des jetons:', (error as Error).message)
     process.exit(1)
   }
 }

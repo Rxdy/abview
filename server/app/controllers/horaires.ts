@@ -1,6 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 import { globalLastRefresh } from '#start/routes'
 
 export default class HorairesController {
@@ -11,9 +11,9 @@ export default class HorairesController {
   public async getHoraires({ response }: HttpContext) {
     try {
       const now = Date.now()
-      
+
       // Si cache expiré ou pas de cache, recharger le fichier
-      if (!this.cachedHoraires || (now - this.lastFileCheck) > this.CACHE_DURATION) {
+      if (!this.cachedHoraires || now - this.lastFileCheck > this.CACHE_DURATION) {
         const filePath = path.join(process.cwd(), 'app/database/data/horaires.json')
         const data = fs.readFileSync(filePath, 'utf-8')
         this.cachedHoraires = JSON.parse(data)

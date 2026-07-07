@@ -10,7 +10,7 @@
  * 4. Sauvegarde le sessionId dans Doppler
  */
 import { google } from 'googleapis'
-import { execSync } from 'child_process'
+import { execSync } from 'node:child_process'
 
 async function getAccessToken(): Promise<string> {
   const oauth2Client = new google.auth.OAuth2(
@@ -22,7 +22,7 @@ async function getAccessToken(): Promise<string> {
     access_token: process.env.GOOGLE_ACCESS_TOKEN,
     refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
   })
-  const token = (await oauth2Client.getAccessToken()).token
+  const { token } = await oauth2Client.getAccessToken()
   if (!token) throw new Error("Impossible d'obtenir un access token")
   return token
 }
@@ -31,7 +31,7 @@ async function createSession(accessToken: string): Promise<{ id: string; pickerU
   const res = await fetch('https://photospicker.googleapis.com/v1/sessions', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
   })
@@ -43,10 +43,7 @@ async function createSession(accessToken: string): Promise<{ id: string; pickerU
   return { id: data.id, pickerUri: data.pickerUri }
 }
 
-async function pollSession(
-  sessionId: string,
-  accessToken: string
-): Promise<boolean> {
+async function pollSession(sessionId: string, accessToken: string): Promise<boolean> {
   const res = await fetch(`https://photospicker.googleapis.com/v1/sessions/${sessionId}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
@@ -99,7 +96,9 @@ async function main() {
     console.log('✅ GOOGLE_PICKER_SESSION_ID sauvegardé dans Doppler')
   } catch (e: any) {
     console.error('❌ Erreur Doppler:', e.message)
-    console.log(`\n⚠️  Ajoutez manuellement dans Doppler:\n   GOOGLE_PICKER_SESSION_ID=${session.id}`)
+    console.log(
+      `\n⚠️  Ajoutez manuellement dans Doppler:\n   GOOGLE_PICKER_SESSION_ID=${session.id}`
+    )
   }
 
   console.log('\n=== Configuration terminée! ===')

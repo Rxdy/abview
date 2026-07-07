@@ -1,5 +1,5 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 export interface UserTaskStats {
   user: string
@@ -98,13 +98,13 @@ export default class StatsService {
       this.saveStats({ year: new Date().getFullYear(), tasks: [], userStats: [], listStats: [] })
     }
     if (!fs.existsSync(this.weatherStatsFile)) {
-      this.saveWeatherStats({ 
-        year: new Date().getFullYear(), 
+      this.saveWeatherStats({
+        year: new Date().getFullYear(),
         days: [],
         averageTemp: 15,
         rainyDays: 0,
         sunnyDays: 0,
-        description: 'ensoleillée'
+        description: 'ensoleillée',
       })
     }
   }
@@ -118,7 +118,7 @@ export default class StatsService {
       parsed.tasks = parsed.tasks.map((task: any) => ({
         ...task,
         createdIds: new Set(task.createdIds || []),
-        completedIds: new Set(task.completedIds || [])
+        completedIds: new Set(task.completedIds || []),
       }))
 
       return parsed
@@ -133,11 +133,11 @@ export default class StatsService {
       // Convert Sets to arrays for JSON serialization
       const serializableStats = {
         ...stats,
-        tasks: stats.tasks.map(task => ({
+        tasks: stats.tasks.map((task) => ({
           ...task,
           createdIds: Array.from(task.createdIds),
-          completedIds: Array.from(task.completedIds)
-        }))
+          completedIds: Array.from(task.completedIds),
+        })),
       }
 
       fs.writeFileSync(this.statsFile, JSON.stringify(serializableStats, null, 2))
@@ -165,7 +165,7 @@ export default class StatsService {
           averageTemp: 15,
           rainyDays: 0,
           sunnyDays: 0,
-          description: 'ensoleillée'
+          description: 'ensoleillée',
         }
         this.saveWeatherStats(newStats)
         return newStats
@@ -174,13 +174,13 @@ export default class StatsService {
       return stats
     } catch (error) {
       console.error('Error loading weather stats:', error)
-      return { 
-        year: currentYear, 
+      return {
+        year: currentYear,
         days: [],
         averageTemp: 15,
         rainyDays: 0,
         sunnyDays: 0,
-        description: 'ensoleillée'
+        description: 'ensoleillée',
       }
     }
   }
@@ -206,21 +206,21 @@ export default class StatsService {
       if (!fs.existsSync(archiveFile)) {
         const serializableStats = {
           ...stats,
-          tasks: stats.tasks.map(task => ({
+          tasks: stats.tasks.map((task) => ({
             ...task,
             createdIds: Array.from(task.createdIds),
-            completedIds: Array.from(task.completedIds)
-          }))
+            completedIds: Array.from(task.completedIds),
+          })),
         }
         fs.writeFileSync(archiveFile, JSON.stringify(serializableStats, null, 2))
         console.log(`📦 Données de l'année ${oldYear} archivées automatiquement au démarrage`)
       }
 
-      const newStats = { 
-        year: currentYear, 
+      const newStats = {
+        year: currentYear,
         tasks: [],
         userStats: [],
-        listStats: []
+        listStats: [],
       }
       this.saveStats(newStats)
       return newStats
@@ -231,7 +231,7 @@ export default class StatsService {
 
   public recordTaskCreated(listId: string, listTitle: string, taskId?: string): void {
     const stats = this.getCurrentYearStats()
-    let taskStat = stats.tasks.find(t => t.listId === listId)
+    let taskStat = stats.tasks.find((t) => t.listId === listId)
 
     if (!taskStat) {
       taskStat = {
@@ -240,7 +240,7 @@ export default class StatsService {
         createdIds: new Set<string>(),
         completedIds: new Set<string>(),
         created: 0,
-        completed: 0
+        completed: 0,
       }
       stats.tasks.push(taskStat)
     }
@@ -255,7 +255,7 @@ export default class StatsService {
 
   public recordTaskCompleted(listId: string, listTitle: string, taskId?: string): void {
     const stats = this.getCurrentYearStats()
-    let taskStat = stats.tasks.find(t => t.listId === listId)
+    let taskStat = stats.tasks.find((t) => t.listId === listId)
 
     if (!taskStat) {
       taskStat = {
@@ -264,7 +264,7 @@ export default class StatsService {
         createdIds: new Set<string>(),
         completedIds: new Set<string>(),
         created: 0,
-        completed: 0
+        completed: 0,
       }
       stats.tasks.push(taskStat)
     }
@@ -286,7 +286,7 @@ export default class StatsService {
     const stats = this.getCurrentYearStats()
 
     // Reset all counters
-    stats.tasks.forEach(taskStat => {
+    stats.tasks.forEach((taskStat) => {
       taskStat.createdIds.clear()
       taskStat.completedIds.clear()
       taskStat.created = 0
@@ -294,9 +294,9 @@ export default class StatsService {
     })
 
     // Count current state from all task lists
-    taskLists.forEach(list => {
+    taskLists.forEach((list) => {
       console.log(`📋 Processing list: ${list.title} (${list.id}) with ${list.tasks.length} tasks`)
-      let taskStat = stats.tasks.find(t => t.listId === list.id)
+      let taskStat = stats.tasks.find((t) => t.listId === list.id)
 
       if (!taskStat) {
         taskStat = {
@@ -305,7 +305,7 @@ export default class StatsService {
           createdIds: new Set<string>(),
           completedIds: new Set<string>(),
           created: 0,
-          completed: 0
+          completed: 0,
         }
         stats.tasks.push(taskStat)
         console.log(`➕ Created new stat entry for list: ${list.title}`)
@@ -334,17 +334,22 @@ export default class StatsService {
       taskStat.created = taskStat.createdIds.size
       taskStat.completed = taskStat.completedIds.size
 
-      console.log(`📊 List ${list.title}: ${createdCount} created, ${completedCount} completed (total: ${taskStat.created}/${taskStat.completed})`)
+      console.log(
+        `📊 List ${list.title}: ${createdCount} created, ${completedCount} completed (total: ${taskStat.created}/${taskStat.completed})`
+      )
     })
 
     this.saveStats(stats)
-    console.log('💾 Stats saved:', stats.tasks.map(t => ({
-      list: t.listTitle,
-      created: t.created,
-      completed: t.completed,
-      createdIdsSize: t.createdIds.size,
-      completedIdsSize: t.completedIds.size
-    })))
+    console.log(
+      '💾 Stats saved:',
+      stats.tasks.map((t) => ({
+        list: t.listTitle,
+        created: t.created,
+        completed: t.completed,
+        createdIdsSize: t.createdIds.size,
+        completedIdsSize: t.completedIds.size,
+      }))
+    )
   }
 
   public getPastYearStats(): YearStats | null {
@@ -366,7 +371,7 @@ export default class StatsService {
           stats.tasks = stats.tasks.map((task: any) => ({
             ...task,
             createdIds: new Set(task.createdIds || []),
-            completedIds: new Set(task.completedIds || [])
+            completedIds: new Set(task.completedIds || []),
           }))
         }
 
@@ -377,7 +382,7 @@ export default class StatsService {
         console.log(`✅ Loaded archived stats for ${pastYear}:`, {
           tasks: stats.tasks?.length || 0,
           totalCreated: stats.tasks?.reduce((sum: number, t: any) => sum + t.created, 0) || 0,
-          totalCompleted: stats.tasks?.reduce((sum: number, t: any) => sum + t.completed, 0) || 0
+          totalCompleted: stats.tasks?.reduce((sum: number, t: any) => sum + t.completed, 0) || 0,
         })
 
         return stats
@@ -388,7 +393,9 @@ export default class StatsService {
     }
 
     // For development/testing: if no archived data exists, return current year data as past year
-    console.log(`📊 No archived data for ${pastYear}, returning current year data as past year data`)
+    console.log(
+      `📊 No archived data for ${pastYear}, returning current year data as past year data`
+    )
     const currentStats = this.getCurrentYearStats()
     currentStats.year = pastYear // Pretend it's past year data
     return currentStats
@@ -399,20 +406,22 @@ export default class StatsService {
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
 
     // Check if we already have data for today
-    const existingDay = stats.days.find(d => d.date === today)
+    const existingDay = stats.days.find((d) => d.date === today)
     if (existingDay) {
       return // Already recorded for today
     }
 
-    const isRainy = weatherDay.description.toLowerCase().includes('rain') || 
-                   weatherDay.description.toLowerCase().includes('pluie') ||
-                   weatherDay.description.toLowerCase().includes('snow') ||
-                   weatherDay.icon.includes('rain') ||
-                   weatherDay.icon.includes('snow')
-    
-    const isSunny = weatherDay.description.toLowerCase().includes('clear') || 
-                   weatherDay.icon.includes('clear') ||
-                   weatherDay.icon === 'clear-day'
+    const isRainy =
+      weatherDay.description.toLowerCase().includes('rain') ||
+      weatherDay.description.toLowerCase().includes('pluie') ||
+      weatherDay.description.toLowerCase().includes('snow') ||
+      weatherDay.icon.includes('rain') ||
+      weatherDay.icon.includes('snow')
+
+    const isSunny =
+      weatherDay.description.toLowerCase().includes('clear') ||
+      weatherDay.icon.includes('clear') ||
+      weatherDay.icon === 'clear-day'
 
     const dayStats: WeatherDayStats = {
       date: today,
@@ -430,15 +439,15 @@ export default class StatsService {
       sunrise: weatherDay.sunrise,
       sunset: weatherDay.sunset,
       isRainy,
-      isSunny
+      isSunny,
     }
 
     stats.days.push(dayStats)
 
     // Recalculate aggregates
     stats.averageTemp = stats.days.reduce((sum, day) => sum + day.temp, 0) / stats.days.length
-    stats.rainyDays = stats.days.filter(d => d.isRainy).length
-    stats.sunnyDays = stats.days.filter(d => d.isSunny).length
+    stats.rainyDays = stats.days.filter((d) => d.isRainy).length
+    stats.sunnyDays = stats.days.filter((d) => d.isSunny).length
 
     // Generate description
     const totalDays = stats.days.length
@@ -476,7 +485,7 @@ export default class StatsService {
           days: stats.days?.length || 0,
           averageTemp: stats.averageTemp,
           rainyDays: stats.rainyDays,
-          sunnyDays: stats.sunnyDays
+          sunnyDays: stats.sunnyDays,
         })
         return stats
       } catch (error) {
@@ -486,7 +495,9 @@ export default class StatsService {
     }
 
     // For development/testing: if no archived data exists, return current year data as past year
-    console.log(`🌤️ No archived weather data for ${pastYear}, returning current year data as past year data`)
+    console.log(
+      `🌤️ No archived weather data for ${pastYear}, returning current year data as past year data`
+    )
     const currentStats = this.loadWeatherStats()
     currentStats.year = pastYear // Pretend it's past year data
     return currentStats
@@ -502,11 +513,11 @@ export default class StatsService {
       // Convert Sets to arrays for JSON serialization
       const serializableStats = {
         ...stats,
-        tasks: stats.tasks.map(task => ({
+        tasks: stats.tasks.map((task) => ({
           ...task,
           createdIds: Array.from(task.createdIds),
-          completedIds: Array.from(task.completedIds)
-        }))
+          completedIds: Array.from(task.completedIds),
+        })),
       }
 
       fs.writeFileSync(archiveFile, JSON.stringify(serializableStats, null, 2))
@@ -514,10 +525,10 @@ export default class StatsService {
       // Reset for new year
       this.saveStats({ year: currentYear + 1, tasks: [], userStats: [], listStats: [] })
     }
-    
+
     // Archive weather data
     this.archiveWeatherCurrentYear()
-    
+
     // Clean old weather data in February
     this.cleanOldWeatherData()
   }
@@ -538,10 +549,10 @@ export default class StatsService {
         averageTemp: 15,
         rainyDays: 0,
         sunnyDays: 0,
-        description: 'ensoleillée'
+        description: 'ensoleillée',
       }
       this.saveWeatherStats(newStats)
-      
+
       console.log(`🌤️ Données météo archivées pour l'année ${currentYear}`)
     }
   }
@@ -569,15 +580,16 @@ export default class StatsService {
       },
       24 * 60 * 60 * 1000
     )
-    
+
     // Vérifier immédiatement au démarrage
     service.checkAndArchiveIfNeeded()
   }
 
   private cleanOldWeatherData(): void {
     const currentMonth = new Date().getMonth() + 1 // getMonth() returns 0-11, we want 1-12
-    
-    if (currentMonth === 2) { // February
+
+    if (currentMonth === 2) {
+      // February
       const stats = this.loadWeatherStats()
       stats.days = [] // Clear all weather data
       stats.averageTemp = 15
@@ -586,16 +598,15 @@ export default class StatsService {
       stats.description = 'ensoleillée'
       this.saveWeatherStats(stats)
       console.log('🧹 Données météo anciennes supprimées (février)')
-    }  }
+    }
+  }
 
   private generateUserStats(tasks: TaskStats[]): UserTaskStats[] {
     const users = ['Rudy', 'Caroline', 'Julie', 'Luis', 'Courses']
     const userStats: UserTaskStats[] = []
 
     for (const user of users) {
-      const userTasks = tasks.filter(task => 
-        task.listTitle.toLowerCase() === user.toLowerCase()
-      )
+      const userTasks = tasks.filter((task) => task.listTitle.toLowerCase() === user.toLowerCase())
 
       const totalCreated = userTasks.reduce((sum, task) => sum + task.created, 0)
       const totalCompleted = userTasks.reduce((sum, task) => sum + task.completed, 0)
@@ -606,12 +617,12 @@ export default class StatsService {
         totalCreated,
         totalCompleted,
         completionRate: Math.round(completionRate * 100) / 100, // Round to 2 decimal places
-        lists: userTasks.map(task => ({
+        lists: userTasks.map((task) => ({
           listId: task.listId,
           listTitle: task.listTitle,
           created: task.created,
-          completed: task.completed
-        }))
+          completed: task.completed,
+        })),
       })
     }
 
@@ -622,7 +633,7 @@ export default class StatsService {
     const listMap = new Map<string, TaskStats[]>()
 
     // Group tasks by list title
-    tasks.forEach(task => {
+    tasks.forEach((task) => {
       const listTitle = task.listTitle
       if (!listMap.has(listTitle)) {
         listMap.set(listTitle, [])
@@ -647,7 +658,7 @@ export default class StatsService {
         totalCreated,
         totalCompleted,
         completionRate: Math.round(completionRate * 100) / 100,
-        userCount
+        userCount,
       })
     }
 

@@ -1,5 +1,5 @@
 import { google } from 'googleapis'
-import { execSync } from 'child_process'
+import { execSync } from 'node:child_process'
 
 async function refreshAccessToken() {
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID
@@ -17,17 +17,16 @@ async function refreshAccessToken() {
 
   try {
     const { token } = await oauth2Client.getAccessToken()
-    if (!token) throw new Error('Impossible d\'obtenir le token')
+    if (!token) throw new Error("Impossible d'obtenir le token")
 
     console.log('✅ Nouveau token obtenu')
     console.log('Token:', token.substring(0, 50) + '...')
 
     // Mettre à jour Doppler
     try {
-      execSync(
-        `doppler secrets set GOOGLE_ACCESS_TOKEN="${token}" --project abview --config dev`,
-        { stdio: 'inherit' }
-      )
+      execSync(`doppler secrets set GOOGLE_ACCESS_TOKEN="${token}" --project abview --config dev`, {
+        stdio: 'inherit',
+      })
       console.log('✅ Token sauvegardé dans Doppler')
     } catch (e) {
       console.error('⚠️ Erreur Doppler (mais token obtenu):', e)
