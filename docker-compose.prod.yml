@@ -7,18 +7,14 @@ services:
         environment:
             - TZ=Europe/Paris
         restart: unless-stopped
+        ports:
+            - "8082:80"
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost"]
             interval: 30s
             timeout: 10s
             retries: 3
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.routers.abview.rule=Host(`abview.rxdy.fr`) || Host(`localhost`) || Host(`rp-meliodas`)"
-            - "traefik.http.routers.abview.entrypoints=web"
-            - "traefik.http.services.abview.loadbalancer.server.port=80"
         networks:
-            - web
             - default
 
     backend:
@@ -56,6 +52,4 @@ services:
             - ./logs:/app/logs
 
 networks:
-    web:
-        external: true
     default: {}
