@@ -9,23 +9,27 @@ Ce fichier définit les règles et bonnes pratiques pour développer sur ce proj
 - **Découpage** : Pour les tâches complexes, découper en sous-tâches validées étape par étape. Éviter les changements massifs sans itération.
 - **Références** : Se référer implicitement à ce fichier pour chaque interaction. Pas besoin de le rappeler à chaque prompt.
 - **Commits et branches** : Utiliser des branches dédiées pour les features (ex. `feature/component-visualizer`). Commits atomiques avec messages descriptifs.
-- **Nommage des branches** : obligatoire, vérifié par le job `branch-naming` sur chaque PR. Préfixes acceptés : `feature/`, `fix/`, `hotfix/`, `chore/`, `ci/`, `docs/`, `refactor/`, `test/` (ex. `feature/component-visualizer`, `fix/horaires-refresh`).
+- **Nommage des branches** : obligatoire, vérifié par le job `branch-naming` (CI) sur toute
+  branche poussée hors `main`/`dev`, ou sur PR. Préfixes acceptés : `feature/`, `fix/`,
+  `hotfix/`, `chore/`, `ci/`, `docs/`, `refactor/`, `test/` (ex. `feature/component-visualizer`).
 - **Workflow git (sans PR, solo dev)** : `main` = production, `dev` = intégration. Les deux sont
-  protégées sur GitHub (CI verte obligatoire sur le commit poussé, pas de force-push/suppression,
-  protection appliquée même à l'admin). La CI tourne désormais sur **chaque push, quelle que soit
-  la branche** (pas seulement main/dev), donc :
+  protégées contre le force-push et la suppression, mais **sans required status check** — un
+  test réel a montré que GitHub n'accepte un required status check pour un push direct que s'il
+  a tourné dans le contexte de la branche cible elle-même (donc via une PR), jamais pour un SHA
+  simplement fast-forwardé depuis une autre branche. Comme le but est de merger sans PR, on a
+  retiré ce blocage : la CI tourne sur **chaque push, quelle que soit la branche**, à titre
+  indicatif — c'est à toi de vérifier que c'est vert avant de merger, rien ne l'impose côté
+  GitHub.
   1. Créer une branche depuis `dev` (`feature/xxx`, `fix/xxx`, …), pousser au fur et à mesure —
-     la CI (lint/tests conditionnels selon client/server modifiés) tourne sur cette branche.
-  2. Une fois verte, fusionner **en fast-forward uniquement** :
-     `git checkout dev && git merge --ff-only feature/xxx && git push`.
-     Le commit poussé sur `dev` est alors exactement celui déjà validé par la CI sur la branche
-     feature (même SHA) → GitHub retrouve les checks déjà passés et accepte le push, sans PR.
-  3. Si `--ff-only` échoue (dev a avancé entre-temps), rebaser la feature sur `dev`
-     (`git rebase dev`), repousser la branche (nouvelle CI), puis refaire le ff-merge.
-  4. Même principe pour `dev` → `main`.
-  5. Un push vers `main` déclenche en plus le build/push des images GHCR modifiées
-     (frontend et/ou backend selon ce qui a changé) → Watchtower redéploie sur le Pi (~5 min).
-  - Une PR reste possible si besoin (revue, historique), mais n'est plus requise pour merger.
+     la CI (lint/tests conditionnels selon client/server modifiés, `ci-gate` en résumé global)
+     tourne sur cette branche.
+  2. Une fois vérifiée verte, fusionner et pousser :
+     `git checkout dev && git merge feature/xxx && git push` (fast-forward si possible, sinon
+     merge commit — les deux passent, aucun n'est bloqué).
+  3. Même principe pour `dev` → `main`. Un push vers `main` déclenche en plus le build/push des
+     images GHCR modifiées (frontend et/ou backend selon ce qui a changé) → Watchtower redéploie
+     sur le Pi (~5 min).
+  - Une PR reste possible si besoin (revue, historique) mais n'est jamais requise.
 
 ## Qualité et Tests
 
