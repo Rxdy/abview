@@ -3,6 +3,12 @@ name: CI/CD
 on:
     push:
     pull_request:
+    workflow_dispatch:
+        inputs:
+            force_build:
+                description: "Forcer le build/push des deux images même sans changement détecté"
+                type: boolean
+                default: true
 
 concurrency:
     group: ci-${{ github.ref }}
@@ -173,7 +179,7 @@ jobs:
         needs: [changes, test-client, lint-server, test-server]
         if: |
             always() &&
-            github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+            ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') &&
             needs.changes.result == 'success' &&
             !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
         runs-on: ubuntu-latest
@@ -187,7 +193,9 @@ jobs:
             - name: Doit-on builder cette cible ?
               id: should
               run: |
-                  if [[ "${{ matrix.target }}" == "frontend" && ( "${{ needs.changes.outputs.client }}" == "true" || "${{ needs.changes.outputs.docker }}" == "true" ) ]]; then
+                  if [[ "${{ github.event_name == 'workflow_dispatch' && inputs.force_build }}" == "true" ]]; then
+                      echo "build=true" >> "$GITHUB_OUTPUT"
+                  elif [[ "${{ matrix.target }}" == "frontend" && ( "${{ needs.changes.outputs.client }}" == "true" || "${{ needs.changes.outputs.docker }}" == "true" ) ]]; then
                       echo "build=true" >> "$GITHUB_OUTPUT"
                   elif [[ "${{ matrix.target }}" == "backend" && ( "${{ needs.changes.outputs.server }}" == "true" || "${{ needs.changes.outputs.docker }}" == "true" ) ]]; then
                       echo "build=true" >> "$GITHUB_OUTPUT"
