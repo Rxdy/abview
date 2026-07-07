@@ -9,6 +9,7 @@ Ce fichier définit les règles et bonnes pratiques pour développer sur ce proj
 - **Découpage** : Pour les tâches complexes, découper en sous-tâches validées étape par étape. Éviter les changements massifs sans itération.
 - **Références** : Se référer implicitement à ce fichier pour chaque interaction. Pas besoin de le rappeler à chaque prompt.
 - **Commits et branches** : Utiliser des branches dédiées pour les features (ex. `feature/component-visualizer`). Commits atomiques avec messages descriptifs.
+- **Workflow git** : `main` = production (protégée, PR + CI verte requises), `dev` = intégration (protégée aussi). Une feature part de `dev` → PR vers `dev` (CI : lint + typecheck + tests) → merge → PR `dev` → `main` (CI : lint + typecheck + tests + build/push images GHCR) → merge → Watchtower détecte les nouvelles images sur le Pi et redéploie automatiquement (~5 min).
 
 ## Qualité et Tests
 
