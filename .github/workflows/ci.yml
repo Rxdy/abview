@@ -2,7 +2,6 @@ name: CI/CD
 
 on:
     push:
-        branches: [main, dev]
     pull_request:
 
 concurrency:
@@ -14,9 +13,51 @@ permissions:
     packages: write
 
 jobs:
+    # ────────────────────── Phase 0 : détection + garde-fous ──────────────────────
+    changes:
+        name: Détection des fichiers modifiés
+        runs-on: ubuntu-latest
+        outputs:
+            client: ${{ steps.filter.outputs.client }}
+            server: ${{ steps.filter.outputs.server }}
+            docker: ${{ steps.filter.outputs.docker }}
+        steps:
+            - uses: actions/checkout@v4
+            - uses: dorny/paths-filter@v3
+              id: filter
+              with:
+                  filters: |
+                      client:
+                        - 'client/**'
+                      server:
+                        - 'server/**'
+                      docker:
+                        - 'Dockerfile'
+                        - 'docker-compose*.yml'
+                        - 'nginx.conf'
+
+    branch-naming:
+        name: Convention de nommage de branche
+        # main/dev n'ont pas à suivre la convention (ce sont les branches d'intégration/prod
+        # elles-mêmes) ; toutes les autres branches poussées, ou les PR, sont vérifiées.
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev')
+        runs-on: ubuntu-latest
+        steps:
+            - name: Vérifie le nom de la branche
+              env:
+                  BRANCH: ${{ github.head_ref || github.ref_name }}
+              run: |
+                  if [[ ! "$BRANCH" =~ ^(feature|fix|hotfix|chore|ci|docs|refactor|test)/.+ ]]; then
+                      echo "::error::Nom de branche invalide: '$BRANCH'. Attendu: feature/*, fix/*, hotfix/*, chore/*, ci/*, docs/*, refactor/*, test/*"
+                      exit 1
+                  fi
+                  echo "Branche '$BRANCH' valide."
+
     # ────────────────────────── Phase 1 : LINT ──────────────────────────
     lint-client:
         name: Lint + typecheck client (vue-tsc)
+        needs: changes
+        if: needs.changes.outputs.client == 'true'
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -32,6 +73,8 @@ jobs:
 
     lint-server:
         name: Lint + typecheck server (eslint)
+        needs: changes
+        if: needs.changes.outputs.server == 'true'
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -50,7 +93,8 @@ jobs:
     # ────────────────────────── Phase 2 : TESTS ─────────────────────────
     test-client:
         name: Tests client (vitest)
-        needs: lint-client
+        needs: [changes, lint-client]
+        if: needs.changes.outputs.client == 'true'
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -64,11 +108,74 @@ jobs:
             - run: npm test -- --run
               working-directory: client
 
+    test-server:
+        name: Tests serveur (ace test)
+        needs: [changes, lint-server]
+        if: needs.changes.outputs.server == 'true'
+        runs-on: ubuntu-latest
+        services:
+            mysql:
+                image: mysql:8
+                env:
+                    MYSQL_ROOT_PASSWORD: root
+                    MYSQL_DATABASE: app_test
+                ports:
+                    - 3306:3306
+                options: >-
+                    --health-cmd="mysqladmin ping"
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=5
+        env:
+            NODE_ENV: test
+            PORT: 3333
+            HOST: 0.0.0.0
+            LOG_LEVEL: silent
+            APP_KEY: ci-test-key-not-for-production-0000000000
+            DB_HOST: 127.0.0.1
+            DB_PORT: 3306
+            DB_USER: root
+            DB_PASSWORD: root
+            DB_DATABASE: app_test
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
+                  cache-dependency-path: server/package-lock.json
+            - run: npm ci
+              working-directory: server
+            - run: npm test
+              working-directory: server
+
+    # ────────────────── Garde-fou : check unique requis par la branch protection ──────────────
+    # GitHub ne compte pas un job "skipped" comme satisfaisant un required status check sur un
+    # push direct (fast-forward) qui ne redéclenche pas ces jobs. On agrège donc tout dans un
+    # seul job qui, lui, tourne toujours (if: always()) et devient l'unique required check.
+    ci-gate:
+        name: CI gate
+        if: always()
+        needs: [branch-naming, lint-client, lint-server, test-client, test-server]
+        runs-on: ubuntu-latest
+        steps:
+            - name: Vérifie qu'aucun job requis n'a échoué
+              run: |
+                  if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" || "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+                      echo "::error::Au moins un job requis a échoué ou a été annulé."
+                      exit 1
+                  fi
+                  echo "OK : tous les jobs requis ont réussi ou ont été légitimement ignorés."
+
     # ─────────────────── Phase 3 : BUILD & PUSH (arm64 → GHCR) ───────────
     build-push:
         name: Build & push ${{ matrix.target }}
-        needs: [test-client, lint-server]
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        needs: [changes, test-client, lint-server, test-server]
+        if: |
+            always() &&
+            github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+            needs.changes.result == 'success' &&
+            !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
         runs-on: ubuntu-latest
         strategy:
             fail-fast: false
@@ -77,15 +184,30 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            - name: Doit-on builder cette cible ?
+              id: should
+              run: |
+                  if [[ "${{ matrix.target }}" == "frontend" && ( "${{ needs.changes.outputs.client }}" == "true" || "${{ needs.changes.outputs.docker }}" == "true" ) ]]; then
+                      echo "build=true" >> "$GITHUB_OUTPUT"
+                  elif [[ "${{ matrix.target }}" == "backend" && ( "${{ needs.changes.outputs.server }}" == "true" || "${{ needs.changes.outputs.docker }}" == "true" ) ]]; then
+                      echo "build=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "build=false" >> "$GITHUB_OUTPUT"
+                  fi
+
             - name: Nom du propriétaire en minuscules
               id: owner
+              if: steps.should.outputs.build == 'true'
               run: echo "name=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
             - uses: docker/setup-qemu-action@v3
+              if: steps.should.outputs.build == 'true'
             - uses: docker/setup-buildx-action@v3
+              if: steps.should.outputs.build == 'true'
 
             - name: Connexion à GHCR
               uses: docker/login-action@v3
+              if: steps.should.outputs.build == 'true'
               with:
                   registry: ghcr.io
                   username: ${{ github.actor }}
@@ -93,6 +215,7 @@ jobs:
 
             - name: Build & push (linux/arm64 pour le Raspberry Pi)
               uses: docker/build-push-action@v6
+              if: steps.should.outputs.build == 'true'
               with:
                   context: .
                   target: ${{ matrix.target }}
