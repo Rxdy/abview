@@ -7,7 +7,6 @@
       <div class="weather-container">
         <Transition name="module-fade" mode="out-in">
           <WeatherModule v-if="activeModule === 'weather'" key="weather" :progress="progress" />
-          <QRModule v-else-if="activeModule === 'qr'" key="qr" :progress="progress" />
         </Transition>
       </div>
       <div class="tasks-container">
@@ -25,7 +24,6 @@
 
 <script setup lang="ts">
 import WeatherModule from '../components/WeatherModule.vue';
-import QRModule from '../components/QRModule.vue';
 import CalendarModule from '../components/CalendarModule.vue';
 import TasksModule from '../components/TasksModule.vue';
 import NotificationModal from '../components/NotificationModal.vue';

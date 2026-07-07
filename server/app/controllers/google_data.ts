@@ -2,7 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import GoogleCalendarService from '#services/calendar'
 import GoogleTasksService from '#services/tasks'
 import StatsService from '#services/stats'
-import { photosService } from '#services/photos'
 import { globalLastRefresh } from '#start/routes'
 
 // Instances singleton pour éviter les dépendances circulaires
@@ -127,52 +126,6 @@ export default class GoogleDataController {
       return response.json({ success: true })
     } else {
       return response.status(404).json({ error: 'Task not found' })
-    }
-  }
-
-  public async getPhotos({ response }: HttpContext) {
-    try {
-      const photos = await photosService.getPhotos()
-      return response.json({ photos })
-    } catch (error) {
-      console.error('Error getting photos:', error)
-      return response.status(500).json({ error: 'Failed to load photos' })
-    }
-  }
-
-  public async createPickerSession({ response }: HttpContext) {
-    try {
-      const session = await photosService.createPickerSession()
-      return response.json({
-        sessionId: session.id,
-        pickerUri: session.pickerUri,
-        instructions: `1. Visitez le pickerUri pour sélectionner vos photos\n2. Une fois sélectionnées, ajoutez GOOGLE_PICKER_SESSION_ID=${session.id} dans Doppler\n3. Redémarrez les conteneurs Docker`,
-      })
-    } catch (error: any) {
-      console.error('Error creating picker session:', error)
-      return response.status(500).json({ error: error.message })
-    }
-  }
-
-  public async getPickerSessionStatus({ params, response }: HttpContext) {
-    try {
-      const session = await photosService.getPickerSession(params.sessionId)
-      return response.json(session)
-    } catch (error: any) {
-      return response.status(500).json({ error: error.message })
-    }
-  }
-
-  public async confirmPickerSession({ request, response }: HttpContext) {
-    try {
-      const { sessionId } = request.only(['sessionId'])
-      if (!sessionId) return response.status(400).json({ error: 'sessionId requis' })
-
-      photosService.setPickerSessionId(sessionId)
-      return response.json({ success: true, sessionId })
-    } catch (error: any) {
-      console.error('Error confirming picker session:', error)
-      return response.status(500).json({ error: error.message })
     }
   }
 

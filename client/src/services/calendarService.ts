@@ -1,16 +1,5 @@
 import { apiService } from './apiService';
 
-export interface Photo {
-  id: string
-  url: string
-  title: string
-  description: string
-  location: string
-  createdAt: string
-  width: number
-  height: number
-}
-
 export const calendarService = {
   async getHoraires() {
     const res = await apiService.get('/horaires');
@@ -45,9 +34,5 @@ export const calendarService = {
   async getRecapData() {
     const res = await apiService.get('/recap');
     return res || {};
-  },
-  async getPhotos(): Promise<Photo[]> {
-    const res = await apiService.get('/photos');
-    return res.photos || [];
   },
 };

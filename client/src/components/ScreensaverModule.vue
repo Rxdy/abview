@@ -29,32 +29,41 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { calendarService, type Photo } from '../services/calendarService';
-import { abflowService } from '../services/abflowService';
 
-const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3333' : '');
-const resolveUrl = (url: string) => url.startsWith('/') ? `${API_BASE}${url}` : url;
+interface Photo {
+  id: string;
+  url: string;
+  title: string;
+  description: string;
+  location: string;
+  createdAt: string;
+  width: number;
+  height: number;
+}
 
-// Fallback picsum si l'API n'est pas encore disponible
-const FALLBACK_PHOTOS: Photo[] = Array.from({ length: 8 }, (_, i) => ({
-  id: `fallback-${i}`,
+const resolveUrl = (url: string) => url;
+
+// Carrousel picsum — pas de source de photos personnelles configurée
+// (le principe capteur de proximité + carrousel AbFlow reviendra plus tard).
+const PHOTOS: Photo[] = Array.from({ length: 8 }, (_, i) => ({
+  id: `screensaver-${i}`,
   url: `https://picsum.photos/seed/veille${i + 1}/1920/1080`,
-  title: `Photo ${i + 1}`,
-  description: 'Placeholder — Google Photos non connecté',
+  title: '',
+  description: '',
   location: '',
   createdAt: '',
   width: 1920,
   height: 1080,
 }));
 
-const photos = ref<Photo[]>(FALLBACK_PHOTOS);
+const photos = ref<Photo[]>(PHOTOS);
 const currentIndex = ref(0);
 const currentTime = ref('');
 const currentDate = ref('');
 
 const currentPhoto = computed((): Photo => {
   const photo = photos.value[currentIndex.value];
-  return photo ?? FALLBACK_PHOTOS[0] as Photo;
+  return photo ?? PHOTOS[0] as Photo;
 });
 
 const formatDate = (iso: string): string => {
@@ -93,41 +102,15 @@ const nextPhoto = () => {
 let clockInterval: ReturnType<typeof setInterval>;
 let carouselInterval: ReturnType<typeof setInterval>;
 
-const loadPhotos = async () => {
-  try {
-    let fetched: Photo[]
-    if (abflowService.isConfigured()) {
-      // Source principale : AbFlow (via API key)
-      fetched = await abflowService.getPhotos()
-    } else {
-      // Fallback : Google Photos (si session Picker configurée)
-      fetched = await calendarService.getPhotos()
-    }
-    if (fetched.length > 0) {
-      photos.value = fetched;
-      currentIndex.value = 0;
-    }
-  } catch {
-    // Garder les photos fallback silencieusement
-  }
-};
-
-const onPhotosConfirmed = async () => {
-  await loadPhotos();
-};
-
 onMounted(() => {
   updateDateTime();
   clockInterval = setInterval(updateDateTime, 1000);
   carouselInterval = setInterval(nextPhoto, 10000);
-  loadPhotos();
-  window.addEventListener('abview-photos-confirmed', onPhotosConfirmed);
 });
 
 onUnmounted(() => {
   clearInterval(clockInterval);
   clearInterval(carouselInterval);
-  window.removeEventListener('abview-photos-confirmed', onPhotosConfirmed);
 });
 </script>
 

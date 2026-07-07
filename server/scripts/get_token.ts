@@ -5,7 +5,6 @@ import { execSync } from 'node:child_process'
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar.readonly',
   'https://www.googleapis.com/auth/tasks.readonly',
-  'https://www.googleapis.com/auth/photospicker.mediaitems.readonly',
 ]
 
 async function main() {
