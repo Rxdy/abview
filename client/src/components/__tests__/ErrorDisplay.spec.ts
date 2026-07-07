@@ -28,6 +28,11 @@ describe('ErrorDisplay', () => {
     expect(wrapper.find('.indicator-1.active').exists()).toBe(true)
     expect(wrapper.text()).toContain('networkError')
     expect(wrapper.text()).toContain('networkErrorMessage')
+    // Les clés 'network*' vivent sous la section 'errors', pas la section
+    // par défaut 'weather' de languageStore.t() — régression du 2026-07-07
+    // où l'appel sans section faisait retomber sur la clé brute à l'écran.
+    expect(mockLanguageStore.t).toHaveBeenCalledWith('networkError', 'errors')
+    expect(mockLanguageStore.t).toHaveBeenCalledWith('networkErrorMessage', 'errors')
   })
 
   it('renders no-data error correctly', () => {
@@ -40,6 +45,8 @@ describe('ErrorDisplay', () => {
     expect(wrapper.find('.indicator-2.active').exists()).toBe(true)
     expect(wrapper.text()).toContain('noData')
     expect(wrapper.text()).toContain('noDataMessage')
+    expect(mockLanguageStore.t).toHaveBeenCalledWith('noData', 'errors')
+    expect(mockLanguageStore.t).toHaveBeenCalledWith('noDataMessage', 'errors')
   })
 
   it('renders service-unavailable error correctly', () => {
@@ -52,6 +59,8 @@ describe('ErrorDisplay', () => {
     expect(wrapper.find('.indicator-3.active').exists()).toBe(true)
     expect(wrapper.text()).toContain('serviceUnavailable')
     expect(wrapper.text()).toContain('serviceUnavailableMessage')
+    expect(mockLanguageStore.t).toHaveBeenCalledWith('serviceUnavailable', 'errors')
+    expect(mockLanguageStore.t).toHaveBeenCalledWith('serviceUnavailableMessage', 'errors')
   })
 
   it('renders generic error correctly', () => {
@@ -63,6 +72,8 @@ describe('ErrorDisplay', () => {
 
     expect(wrapper.text()).toContain('error')
     expect(wrapper.text()).toContain('genericErrorMessage')
+    expect(mockLanguageStore.t).toHaveBeenCalledWith('error', 'errors')
+    expect(mockLanguageStore.t).toHaveBeenCalledWith('genericErrorMessage', 'errors')
   })
 
   it('displays error visual elements', () => {

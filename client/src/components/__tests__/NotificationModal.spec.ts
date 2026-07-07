@@ -41,6 +41,11 @@ describe('NotificationModal', () => {
     expect(wrapper.text()).toContain('10:00 - 11:00')
     expect(wrapper.text()).toContain('Test description')
     expect(wrapper.text()).toContain('Test location')
+    // Les clés 'reminder'/'eventReminder*' vivent sous la section 'notifications',
+    // pas la section par défaut 'weather' de languageStore.t() — régression du
+    // 2026-07-07 où l'appel sans section faisait retomber sur la clé brute à l'écran.
+    expect(mockLanguageStore.t).toHaveBeenCalledWith('reminder', 'notifications')
+    expect(mockLanguageStore.t).toHaveBeenCalledWith('eventReminder1h', 'notifications')
   })
 
   it('does not render when not visible', () => {

@@ -1,9 +1,9 @@
 <template>
   <div class="notification-modal" v-if="isVisible && event">
     <div class="modal-content">
-      <h2>{{ languageStore.t('reminder') }} : {{ event.title }}</h2>
-      <p v-if="type === '1h'">{{ languageStore.t('eventReminder1h') }}</p>
-      <p v-else-if="type === '30min'">{{ languageStore.t('eventReminder30min') }}</p>
+      <h2>{{ languageStore.t('reminder', 'notifications') }} : {{ event.title }}</h2>
+      <p v-if="type === '1h'">{{ languageStore.t('eventReminder1h', 'notifications') }}</p>
+      <p v-else-if="type === '30min'">{{ languageStore.t('eventReminder30min', 'notifications') }}</p>
       <p>
         Heure : {{ event.startTime
         }}<span v-if="event.endTime"> - {{ event.endTime }}</span>

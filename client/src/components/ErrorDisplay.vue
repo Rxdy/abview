@@ -58,26 +58,26 @@ const icon = computed(() => {
 const title = computed(() => {
   switch (props.type) {
     case 'network':
-      return languageStore.t('networkError');
+      return languageStore.t('networkError', 'errors');
     case 'no-data':
-      return languageStore.t('noData');
+      return languageStore.t('noData', 'errors');
     case 'service-unavailable':
-      return languageStore.t('serviceUnavailable');
+      return languageStore.t('serviceUnavailable', 'errors');
     default:
-      return languageStore.t('error');
+      return languageStore.t('error', 'errors');
   }
 });
 
 const message = computed(() => {
   switch (props.type) {
     case 'network':
-      return languageStore.t('networkErrorMessage');
+      return languageStore.t('networkErrorMessage', 'errors');
     case 'no-data':
-      return languageStore.t('noDataMessage');
+      return languageStore.t('noDataMessage', 'errors');
     case 'service-unavailable':
-      return languageStore.t('serviceUnavailableMessage');
+      return languageStore.t('serviceUnavailableMessage', 'errors');
     default:
-      return languageStore.t('genericErrorMessage');
+      return languageStore.t('genericErrorMessage', 'errors');
   }
 });
 </script>

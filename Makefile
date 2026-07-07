@@ -1,7 +1,7 @@
 # Makefile pour AbView
 # Utilise client comme frontend principal (port 5175)
 
-.PHONY: help run prod prod-browser get-token stop logs logs-api logs-files logs-stats logs-tail logs-clean reset restart-kiosk
+.PHONY: help run prod prod-browser get-token stop logs logs-api logs-files logs-stats logs-tail logs-clean reset restart-kiosk check-remote
 
 help:
 	@echo "Commandes disponibles (utilise client comme frontend principal):"
@@ -18,6 +18,7 @@ help:
 	@echo "  logs-clean      - Nettoyer les anciens logs"
 	@echo "  reset           - Réinitialisation de l'environnement"
 	@echo "  restart-kiosk   - Redémarrer Chromium sur le Pi (via SSH Tailscale)"
+	@echo "  check-remote    - Vérifie un déploiement à distance : docker, healthchecks, screenshot du kiosk (HOST=rp-meliodas par défaut)"
 
 run:
 	@echo "Lancement en mode dev..."
@@ -124,6 +125,9 @@ restart-kiosk:
 	@echo "Redémarrage de Chromium sur rp-meliodas..."
 	ssh -i ~/.ssh/id_ed25519_merlin rudya@rp-meliodas "bash ~/restart-chromium.sh"
 	@echo "Chromium relancé."
+
+check-remote:
+	@HOST=$${HOST:-rp-meliodas}; bash scripts/check-remote.sh "$$HOST"
 
 reset:
 	@echo "Réinitialisation de l'environnement..."
