@@ -191,6 +191,60 @@ test.group('GoogleTasksService', (group) => {
     assert.isFalse(ok)
   })
 
+  test('détecte une tâche passée à completed entre deux refresh (stats)', async ({ assert }) => {
+    const tasksByList: Record<string, any[]> = {
+      'list-1': [{ id: 't1', title: 'Appeler', status: 'needsAction' }],
+    }
+    mockTasksApi({ tasklists: [{ id: 'list-1', title: 'Rudy' }], tasksByList })
+
+    const service = new GoogleTasksService()
+    const completedCalls: any[] = []
+    ;(service as any).statsService = {
+      recordTaskCreated: () => {},
+      recordTaskCompleted: (...args: any[]) => completedCalls.push(args),
+      updateTaskStatsFromCurrentState: () => {},
+    }
+
+    await service.listAllTasks()
+    // La tâche passe à completed côté Google, on force l'expiration du cache
+    tasksByList['list-1'] = [{ id: 't1', title: 'Appeler', status: 'completed' }]
+    ;(service as any).lastRefresh = 0
+    await service.listAllTasks()
+
+    assert.lengthOf(completedCalls, 1)
+    assert.deepEqual(completedCalls[0], ['list-1', 'Rudy', 't1'])
+  })
+
+  test('updateTask initialise le client API même sans fetch préalable', async ({ assert }) => {
+    mockTasksApi({ tasklists: [], tasksByList: {} })
+
+    const service = new GoogleTasksService()
+    const ok = await service.updateTask('t1', 'completed')
+
+    assert.isFalse(ok) // aucune liste en cache, mais l'init du client ne doit pas planter
+  })
+
+  test('updateTask repasse une tâche en needsAction et remet completed à null', async ({
+    assert,
+  }) => {
+    mockTasksApi({
+      tasklists: [{ id: 'list-1', title: 'Rudy' }],
+      tasksByList: {
+        'list-1': [
+          { id: 't1', title: 'Appeler', status: 'completed', completed: '2026-01-01T00:00:00Z' },
+        ],
+      },
+    })
+
+    const service = new GoogleTasksService()
+    const lists = await service.listAllTasks()
+    const ok = await service.updateTask('t1', 'needsAction')
+
+    assert.isTrue(ok)
+    assert.equal(lists[0].tasks[0].status, 'needsAction')
+    assert.isNull(lists[0].tasks[0].completed)
+  })
+
   test('getLastRefresh retourne null avant le premier fetch', ({ assert }) => {
     const service = new GoogleTasksService()
     assert.isNull(service.getLastRefresh())

@@ -121,6 +121,34 @@ test.group('WeatherService', (group) => {
     assert.isNull(result)
   })
 
+  test('startRefresh programme un rafraîchissement toutes les 10 minutes', async ({ assert }) => {
+    const originalSetInterval = global.setInterval
+    let capturedCallback: (() => Promise<void>) | null = null
+    let capturedDelay = 0
+    global.setInterval = ((cb: any, delay: number) => {
+      capturedCallback = cb
+      capturedDelay = delay
+      return 0 as any
+    }) as typeof setInterval
+
+    let callCount = 0
+    axios.get = (async () => {
+      callCount++
+      return { data: fakeApiResponse }
+    }) as typeof axios.get
+
+    try {
+      WeatherService.startRefresh()
+      assert.equal(capturedDelay, 10 * 60 * 1000)
+      assert.isFunction(capturedCallback)
+
+      await capturedCallback!()
+      assert.equal(callCount, 1)
+    } finally {
+      global.setInterval = originalSetInterval
+    }
+  })
+
   test('ne plante pas si forecast est vide (pas de recordWeatherDay)', async ({ assert }) => {
     axios.get = (async () => ({
       data: { ...fakeApiResponse, days: [] },
