@@ -104,3 +104,22 @@ describe('ProgressBar', () => {
     expect(progressBar.attributes('style')).toContain('scaleX(0.75)')
   })
 })
+describe('ProgressBar — cycle de vie', () => {
+  it('démarre la progression au montage et la stoppe au démontage', () => {
+    const wrapper = mount(ProgressBar)
+
+    expect(mockProgressStore.startProgress).toHaveBeenCalled()
+    wrapper.unmount()
+    expect(mockProgressStore.stopProgress).toHaveBeenCalled()
+  })
+
+  it("l'horloge interne avance chaque seconde", () => {
+    vi.useFakeTimers()
+    const wrapper = mount(ProgressBar)
+
+    expect(() => vi.advanceTimersByTime(2000)).not.toThrow()
+
+    wrapper.unmount()
+    vi.useRealTimers()
+  })
+})

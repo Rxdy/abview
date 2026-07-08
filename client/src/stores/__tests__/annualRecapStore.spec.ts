@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useAnnualRecapStore } from '../../stores/annualRecapStore'
+import { calendarService } from '../../services/calendarService'
 
 // Mock the calendar service
 const mockRecapData = {
@@ -146,5 +147,82 @@ describe('useAnnualRecapStore', () => {
     const listStats = store.listStats
     expect(listStats).toHaveLength(1)
     expect(listStats[0].listTitle).toBe('Travail')
+  })
+
+  it('applique les défauts quand le récap est partiel', async () => {
+    vi.mocked(calendarService.getRecapData).mockResolvedValueOnce({ weather: {} } as any)
+
+    const store = useAnnualRecapStore()
+    await store.fetchPastYearData()
+
+    expect(store.pastYearEvents).toEqual([])
+    expect(store.averageTemp).toBe(15)
+    expect(store.rainyDays).toBe(0)
+    expect(store.sunnyDays).toBe(0)
+    expect(store.weatherDescription).toBe('variable')
+    expect(store.weatherDays).toEqual([])
+  })
+
+  it('les getters retournent des valeurs vides sans données chargées', () => {
+    const store = useAnnualRecapStore()
+
+    expect(store.tasksByList).toEqual([])
+    expect(store.userStats).toEqual([])
+    expect(store.listStats).toEqual([])
+    expect(store.topUsersByTasks).toEqual([])
+    expect(store.topListsByTasks).toEqual([])
+    expect(store.weatherStats).toBeNull()
+  })
+
+  it('weatherStats agrège les jours météo', async () => {
+    const store = useAnnualRecapStore()
+    await store.fetchPastYearData()
+
+    const stats = store.weatherStats
+    expect(stats).not.toBeNull()
+    expect(stats!.totalDays).toBe(2)
+    expect(stats!.averageTemp).toBeCloseTo(13.5)
+    expect(stats!.coldestDay.temp).toBe(12)
+    expect(stats!.hottestDay.temp).toBe(15)
+    expect(stats!.rainyDays).toBe(1)
+    expect(stats!.sunnyDays).toBe(1)
+  })
+
+  it('tasksByList départage les égalités par taux de complétion', () => {
+    const store = useAnnualRecapStore()
+    store.pastYearStats = {
+      year: 2025,
+      tasks: [
+        { listId: '1', listTitle: 'A', created: 10, completed: 2 },
+        { listId: '2', listTitle: 'B', created: 10, completed: 9 },
+      ],
+      userStats: [],
+      listStats: [],
+    }
+
+    const sorted = store.tasksByList
+    expect(sorted[0].listTitle).toBe('B') // même created, meilleur taux d'abord
+    expect(sorted[1].listTitle).toBe('A')
+  })
+
+  it('topListsByTasks trie par volume et limite à 5', () => {
+    const store = useAnnualRecapStore()
+    store.pastYearStats = {
+      year: 2025,
+      tasks: [],
+      userStats: [],
+      listStats: [1, 2, 3, 4, 5, 6].map((n) => ({
+        listTitle: `Liste ${n}`,
+        totalTasks: n,
+        totalCreated: n,
+        totalCompleted: 0,
+        completionRate: 0,
+        userCount: 1,
+      })),
+    }
+
+    const top = store.topListsByTasks
+    expect(top).toHaveLength(5)
+    expect(top[0].listTitle).toBe('Liste 6')
   })
 })

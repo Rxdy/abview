@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { useAutoScroll } from '../useAutoScroll'
 import { ref } from 'vue'
 
@@ -43,30 +43,108 @@ describe('useAutoScroll', () => {
   })
 
   describe('Auto-scroll animation behavior', () => {
-    it('should pause at bottom before reversing direction', () => {
+    it('descend, fait une pause en bas, remonte puis fait une pause en haut', async () => {
       vi.useFakeTimers()
-      
-      // Create a mock container with scrollable content
+
+      // Contenu défilable : 10 px d'amplitude (110 - 100)
       const mockContainer = {
-        scrollHeight: 200,
+        scrollHeight: 110,
         clientHeight: 100,
         scrollTop: 0,
-        addEventListener: vi.fn()
+        addEventListener: vi.fn(),
       }
-      
       const mockColumn = {
-        querySelector: vi.fn().mockReturnValue(mockContainer)
+        querySelector: vi.fn().mockReturnValue(mockContainer),
       }
-      
+
       const dayColumns = ref([mockColumn])
       const autoScroll = useAutoScroll(dayColumns)
-      
+
       autoScroll.initAutoScroll()
-      
-      // Simulate scroll to bottom
-      vi.advanceTimersByTime(3000) // Move several seconds forward
-      
-      // Direction should eventually reverse after pause
+      await vi.advanceTimersByTimeAsync(0) // laisse le nextTick s'exécuter
+
+      // Descente : 1 px / 50 ms → bas (10 px) atteint après 500 ms
+      await vi.advanceTimersByTimeAsync(600)
+      expect(mockContainer.scrollTop).toBe(10)
+
+      // Pause en bas (1500 ms) puis remontée complète
+      await vi.advanceTimersByTimeAsync(1500)
+      await vi.advanceTimersByTimeAsync(600)
+      expect(mockContainer.scrollTop).toBe(0)
+
+      // Pause en haut puis redescente
+      await vi.advanceTimersByTimeAsync(1500)
+      await vi.advanceTimersByTimeAsync(100)
+      expect(mockContainer.scrollTop).toBeGreaterThan(0)
+
+      autoScroll.stopAutoScroll()
+      vi.useRealTimers()
+    })
+
+    it('initAutoScroll relancé remplace les intervalles précédents', async () => {
+      vi.useFakeTimers()
+      const mockContainer = {
+        scrollHeight: 110,
+        clientHeight: 100,
+        scrollTop: 0,
+        addEventListener: vi.fn(),
+      }
+      const mockColumn = { querySelector: vi.fn().mockReturnValue(mockContainer) }
+      const dayColumns = ref([mockColumn])
+      const autoScroll = useAutoScroll(dayColumns)
+
+      autoScroll.initAutoScroll()
+      await vi.advanceTimersByTimeAsync(0)
+      autoScroll.initAutoScroll()
+      await vi.advanceTimersByTimeAsync(0)
+
+      // Un seul intervalle actif : 100 ms → 2 px (pas 4)
+      await vi.advanceTimersByTimeAsync(100)
+      expect(mockContainer.scrollTop).toBe(2)
+
+      autoScroll.stopAutoScroll()
+      vi.useRealTimers()
+    })
+
+    it('ignore les colonnes nulles', async () => {
+      vi.useFakeTimers()
+      const dayColumns = ref([null])
+      const autoScroll = useAutoScroll(dayColumns)
+
+      autoScroll.initAutoScroll()
+      await vi.advanceTimersByTimeAsync(0)
+
+      autoScroll.stopAutoScroll()
+      vi.useRealTimers()
+    })
+
+    it('equalizeEventHeights efface les hauteurs en ligne des containers .events', async () => {
+      const container = document.createElement('div')
+      container.className = 'events'
+      container.style.height = '123px'
+      document.body.appendChild(container)
+
+      const autoScroll = useAutoScroll(ref([]))
+      autoScroll.equalizeEventHeights()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(container.style.height).toBe('')
+      container.remove()
+    })
+
+    it('inspecte header/footer/modules présents dans le DOM sans erreur', async () => {
+      vi.useFakeTimers()
+      document.body.innerHTML =
+        '<header></header><footer></footer><div class="module"></div><div class="calendar-zone"></div>'
+
+      const mockColumn = { querySelector: vi.fn().mockReturnValue(null) }
+      const autoScroll = useAutoScroll(ref([mockColumn]))
+
+      autoScroll.initAutoScroll()
+      await vi.advanceTimersByTimeAsync(0)
+
+      autoScroll.stopAutoScroll()
+      document.body.innerHTML = ''
       vi.useRealTimers()
     })
 

@@ -159,3 +159,50 @@ describe('EventsSlide', () => {
     expect(wrapper.find('.stat-number').text()).toBe('0')
   })
 })
+
+describe('EventsSlide — rotation automatique des mois', () => {
+  const eventsByMonth = {
+    0: [{ id: '1', title: 'Event 1', startTime: '2025-01-15', location: 'Paris' }],
+    1: [{ id: '2', title: 'Event 2', startTime: '2025-02-10', location: '' }],
+  }
+
+  it('fait défiler les mois toutes les 15 secondes et reboucle après décembre', async () => {
+    vi.useFakeTimers()
+    const wrapper = mount(EventsSlide, {
+      props: { totalEvents: 2, eventsByMonth },
+    })
+
+    // Janvier sélectionné au départ (après le premier rendu)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(wrapper.find('.month-card.selected .month-name').text()).toContain('Janvier')
+
+    await vi.advanceTimersByTimeAsync(15000)
+    expect(wrapper.find('.month-card.selected .month-name').text()).toContain('Février')
+
+    // 11 sauts de plus : on doit reboucler sur Janvier
+    await vi.advanceTimersByTimeAsync(15000 * 11)
+    expect(wrapper.find('.month-card.selected .month-name').text()).toContain('Janvier')
+
+    wrapper.unmount() // couvre stopAutoSelection
+    vi.useRealTimers()
+  })
+
+  it('révèle les événements du mois un par un (stagger de 200 ms)', async () => {
+    vi.useFakeTimers()
+    const manyEvents = {
+      0: [
+        { id: 'a', title: 'A', startTime: '2025-01-01', location: '' },
+        { id: 'b', title: 'B', startTime: '2025-01-02', location: '' },
+      ],
+    }
+    const wrapper = mount(EventsSlide, {
+      props: { totalEvents: 2, eventsByMonth: manyEvents },
+    })
+
+    await vi.advanceTimersByTimeAsync(500)
+    expect(wrapper.findAll('.event-item').length).toBe(2)
+
+    wrapper.unmount()
+    vi.useRealTimers()
+  })
+})

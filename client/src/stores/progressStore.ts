@@ -11,67 +11,12 @@ export const useProgressStore = defineStore('progress', () => {
   const currentTime = ref(Date.now()); // Pour forcer la réactivité du computed
   let interval: ReturnType<typeof setInterval> | null = null;
   let refreshInterval: ReturnType<typeof setInterval> | null = null; // Timer séparé pour les refreshes
-  let timeOffset = 0; // Pour la synchronisation avec le serveur
-  let lastSyncTime = 0;
-  let serverStartTime = Date.now(); // État du serveur
-  let serverTotalTime = 60 * 1000; // 1 minute par défaut
-  const SYNC_INTERVAL = 30000; // Synchronisation toutes les 30 secondes
 
-  // Calculer le temps restant en millisecondes avec compensation de synchronisation
+  // Calculer le temps restant en millisecondes
   const timeRemaining = computed(() => {
     const elapsed = currentTime.value - startTime.value;
     return Math.max(0, totalTime - elapsed);
   });
-
-  // Synchronisation avec le serveur pour obtenir l'état précis du timer
-  const syncWithServer = async () => {
-    try {
-      const requestStart = Date.now();
-
-      const response = await fetch('http://localhost:3333/progress/sync', {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const requestEnd = Date.now();
-
-      // Calculer l'offset : différence entre l'heure serveur et l'heure locale
-      const serverTime = data.serverTime;
-      const localTime = requestEnd;
-      timeOffset = serverTime - localTime;
-
-      // Calculer le temps écoulé selon le serveur
-      const serverElapsed = serverTime - data.startTime;
-
-      // Ajuster notre timer local pour être synchronisé avec le cycle CLIENT (1 minute)
-      // Le serveur a son propre cycle de 5 minutes pour les APIs externes
-      const newStartTime = Date.now() - (serverElapsed % totalTime); // Garder la continuité du cycle client
-      const newProgress = Math.min(((Date.now() - newStartTime) / totalTime) * 100, 100);
-      
-      // Éviter les sauts brusques : seulement mettre à jour si la différence est significative
-      const progressDiff = Math.abs(newProgress - progress.value);
-      if (progressDiff > 10) { // Seuil plus élevé pour éviter les micro-ajustements
-        startTime.value = newStartTime;
-        progress.value = newProgress;
-      }
-      
-      currentTime.value = Date.now();
-      lastSyncTime = requestEnd;
-
-      console.log(`Sync: offset=${timeOffset}ms, elapsed=${serverElapsed}ms, progress=${progress.value.toFixed(1)}%`);
-
-    } catch (error) {
-      console.warn('Erreur de synchronisation du timer de progression:', error);
-      // En cas d'erreur, continuer avec le timer local
-    }
-  };
 
   const startProgress = async () => {
     if (interval) return; // Already started
