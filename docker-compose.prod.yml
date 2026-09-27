@@ -29,7 +29,7 @@ services:
             - PORT=3333
             - HOST=0.0.0.0
             - LOG_LEVEL=info
-            - APP_KEY=${APP_KEY:-SEYsJ0SsaIxmvq50Y4RFS1ZnTkGaByaq}
+            - APP_KEY=${APP_KEY:?APP_KEY manquant (Doppler, projet abview)}
             - DB_HOST=${DB_HOST:-127.0.0.1}
             - DB_PORT=${DB_PORT:-3306}
             - DB_USER=${DB_USER:-root}
