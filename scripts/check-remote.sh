@@ -39,7 +39,8 @@ REMOTE_PNG="/tmp/kiosk-check.png"
     rm -f $REMOTE_PNG
     export DISPLAY=\"\${DISPLAY:-:0}\"
     if command -v grim >/dev/null 2>&1; then
-        grim $REMOTE_PNG 2>/dev/null && echo 'capturé via grim (Wayland)'
+        # Sans ces variables, grim ne trouve pas la session Wayland du kiosque
+        XDG_RUNTIME_DIR=/run/user/\$(id -u) WAYLAND_DISPLAY=\${WAYLAND_DISPLAY:-wayland-0} grim $REMOTE_PNG 2>/dev/null && echo 'capturé via grim (Wayland)'
     fi
     if [ ! -s $REMOTE_PNG ] && command -v scrot >/dev/null 2>&1; then
         scrot $REMOTE_PNG 2>/dev/null && echo 'capturé via scrot (X11)'
