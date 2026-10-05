@@ -195,6 +195,13 @@ const getEventsForDay = (date: Date) => {
         return event.date === dateStr;
       }
 
+      // Postes de nuit venus de l'agenda (ex. 22:45-07:00) : moins de 24 h et fin le
+      // lendemain. Comme les plannings, ils ne s'affichent que le jour de leur début.
+      const finLeLendemain = eventEnd.toDateString() !== eventStart.toDateString();
+      if (finLeLendemain && eventEnd.getTime() - eventStart.getTime() < 24 * 60 * 60 * 1000) {
+        return eventStart >= localDayStart && eventStart < localDayEnd;
+      }
+
       // Calendar events span from eventStart to eventEnd - check if it overlaps with this day
       return eventStart < localDayEnd && eventEnd > localDayStart;
     }

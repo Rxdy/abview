@@ -34,7 +34,8 @@ const mockAnnualRecapStore: any = {
   topUsersByTasks: [
     { user: 'Rudy', totalCreated: 150, totalCompleted: 140, completionRate: 93.33 },
     { user: 'Caroline', totalCreated: 120, totalCompleted: 110, completionRate: 91.67 }
-  ]
+  ],
+  fetchPastYearData: vi.fn()
 }
 
 vi.mock('../../stores/annualRecapStore', () => ({
@@ -167,7 +168,7 @@ describe('AnnualRecapWrapper', () => {
     mockAnnualRecapStore.error = null
 
     const wrapper = mount(AnnualRecapWrapper)
-    
+
     // Manually show the component
     wrapper.vm.isVisible = true
     await wrapper.vm.$nextTick()
@@ -177,5 +178,166 @@ describe('AnnualRecapWrapper', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.vm.currentSlide).toBe(2)
+  })
+
+  it('le bouton Réessayer relance le chargement', async () => {
+    mockAnnualRecapStore.isLoading = false
+    mockAnnualRecapStore.error = 'Erreur de chargement'
+    mockAnnualRecapStore.fetchPastYearData.mockClear()
+
+    const wrapper = mount(AnnualRecapWrapper)
+    wrapper.vm.isVisible = true
+    await wrapper.vm.$nextTick()
+
+    await wrapper.find('.retry-btn').trigger('click')
+
+    expect(mockAnnualRecapStore.fetchPastYearData).toHaveBeenCalled()
+    mockAnnualRecapStore.error = null
+  })
+
+  describe('affichage automatique du 1er janvier', () => {
+    it("s'affiche le 1er janvier dans la fenêtre 0-2 min et se marque comme vu", () => {
+      const year = new Date().getFullYear()
+      vi.setSystemTime(new Date(year, 0, 1, 10, 1))
+      mockAnnualRecapStore.fetchPastYearData.mockClear()
+
+      const wrapper = mount(AnnualRecapWrapper)
+
+      expect(wrapper.vm.isVisible).toBe(true)
+      expect(mockAnnualRecapStore.fetchPastYearData).toHaveBeenCalled()
+      expect(localStorage.getItem(`annualRecapSeen_${year}_10`)).toBe('true')
+    })
+
+    it("ne s'affiche pas deux fois dans la même heure", () => {
+      const year = new Date().getFullYear()
+      vi.setSystemTime(new Date(year, 0, 1, 10, 1))
+      localStorage.setItem(`annualRecapSeen_${year}_10`, 'true')
+
+      const wrapper = mount(AnnualRecapWrapper)
+
+      expect(wrapper.vm.isVisible).toBe(false)
+    })
+
+    it("ne s'affiche pas hors de la fenêtre de 2 minutes", () => {
+      const year = new Date().getFullYear()
+      vi.setSystemTime(new Date(year, 0, 1, 10, 15))
+
+      const wrapper = mount(AnnualRecapWrapper)
+
+      expect(wrapper.vm.isVisible).toBe(false)
+    })
+
+    it("ne s'affiche pas un jour ordinaire", () => {
+      const year = new Date().getFullYear()
+      vi.setSystemTime(new Date(year, 6, 8, 10, 1))
+
+      const wrapper = mount(AnnualRecapWrapper)
+
+      expect(wrapper.vm.isVisible).toBe(false)
+    })
+  })
+
+  describe('commandes window (console)', () => {
+    it('showAnnualRecap affiche le récap et lance le diaporama', async () => {
+      const wrapper = mount(AnnualRecapWrapper)
+
+      ;(window as any).showAnnualRecap()
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.vm.isVisible).toBe(true)
+      expect(wrapper.find('.progress-container').exists()).toBe(true)
+    })
+
+    it('nextSlide avance manuellement', async () => {
+      const wrapper = mount(AnnualRecapWrapper)
+      ;(window as any).showAnnualRecap()
+      await wrapper.vm.$nextTick()
+
+      ;(window as any).nextSlide()
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.vm.currentSlide).toBe(1)
+    })
+
+    it('stopAutoPlay puis startAutoPlay pilotent le diaporama', async () => {
+      const wrapper = mount(AnnualRecapWrapper)
+      ;(window as any).showAnnualRecap()
+      await wrapper.vm.$nextTick()
+
+      ;(window as any).stopAutoPlay()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.find('.progress-container').exists()).toBe(false)
+
+      ;(window as any).startAutoPlay()
+      await wrapper.vm.$nextTick()
+      expect(wrapper.find('.progress-container').exists()).toBe(true)
+    })
+
+    it('closeRecap émet close', async () => {
+      const wrapper = mount(AnnualRecapWrapper)
+
+      ;(window as any).closeRecap()
+
+      expect(wrapper.emitted('close')).toBeTruthy()
+    })
+
+    it('recapStatus loggue l’état sans erreur', () => {
+      mount(AnnualRecapWrapper)
+      expect(() => (window as any).recapStatus()).not.toThrow()
+    })
+
+    it('nextSlide sur la dernière slide programme la fermeture', async () => {
+      const wrapper = mount(AnnualRecapWrapper)
+      ;(window as any).showAnnualRecap()
+      await wrapper.vm.$nextTick()
+
+      for (let i = 0; i < 5; i++) {
+        ;(window as any).nextSlide()
+      }
+      await wrapper.vm.$nextTick()
+      expect(wrapper.vm.currentSlide).toBe(4)
+
+      ;(window as any).stopAutoPlay()
+      vi.advanceTimersByTime(4000) // le setTimeout de 3 s ferme le récap
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.vm.isVisible).toBe(false)
+    })
+
+    it('startAutoPlay relancé remplace le diaporama en cours', async () => {
+      const wrapper = mount(AnnualRecapWrapper)
+      ;(window as any).showAnnualRecap()
+      await wrapper.vm.$nextTick()
+
+      // Deuxième démarrage sans arrêt préalable : ne doit pas doubler
+      await wrapper.vm.startAutoPlay()
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.find('.progress-container').exists()).toBe(true)
+    })
+  })
+
+  it('se ferme tout seul après la dernière slide', async () => {
+    const year = new Date().getFullYear()
+    const wrapper = mount(AnnualRecapWrapper)
+    ;(window as any).showAnnualRecap()
+    await wrapper.vm.$nextTick()
+
+    // Slide 0 dure 15 s ; l'intervalle avance ensuite les slides 1→4,
+    // puis programme la fermeture 3 s plus tard
+    vi.advanceTimersByTime(15000 * 5 + 4000)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.vm.isVisible).toBe(false)
+    expect(localStorage.getItem(`annualRecapSeen_${year}`)).toBe('true')
+  })
+
+  it('réagit aux changements de fullscreen sans erreur', () => {
+    mount(AnnualRecapWrapper)
+
+    expect(() => {
+      document.dispatchEvent(new Event('fullscreenchange'))
+      window.dispatchEvent(new Event('resize'))
+    }).not.toThrow()
   })
 })

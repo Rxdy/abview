@@ -99,3 +99,21 @@ describe('NotificationModal', () => {
     expect(wrapper.text()).toContain('20s')
   })
 })
+describe('NotificationModal — cycle de vie', () => {
+  it('nettoie le compte à rebours au démontage', () => {
+    vi.useFakeTimers()
+    const wrapper = mount(NotificationModal, {
+      props: {
+        event: { title: 'Test Event', startTime: '10:00' },
+        type: '30min',
+        isVisible: true
+      }
+    })
+
+    wrapper.unmount()
+    // Plus de timer actif : avancer le temps ne doit plus émettre close
+    vi.advanceTimersByTime(30000)
+    expect(wrapper.emitted('close')).toBeFalsy()
+    vi.useRealTimers()
+  })
+})

@@ -24,10 +24,11 @@ export const useThemeStore = defineStore('theme', () => {
     const sunriseParts = sunTimes.value.sunrise.split(':').map(Number);
     const sunsetParts = sunTimes.value.sunset.split(':').map(Number);
     
-    const sunriseHour = sunriseParts[0] || 7;
-    const sunriseMinute = sunriseParts[1] || 0;
-    const sunsetHour = sunsetParts[0] || 17;
-    const sunsetMinute = sunsetParts[1] || 30;
+    // Number.isFinite (et pas ||) : 0 est une valeur valide pour heures/minutes
+    const sunriseHour = Number.isFinite(sunriseParts[0]) ? sunriseParts[0]! : 7;
+    const sunriseMinute = Number.isFinite(sunriseParts[1]) ? sunriseParts[1]! : 0;
+    const sunsetHour = Number.isFinite(sunsetParts[0]) ? sunsetParts[0]! : 17;
+    const sunsetMinute = Number.isFinite(sunsetParts[1]) ? sunsetParts[1]! : 30;
     
     const sunriseTimeInMinutes = sunriseHour * 60 + sunriseMinute;
     const sunsetTimeInMinutes = sunsetHour * 60 + sunsetMinute;

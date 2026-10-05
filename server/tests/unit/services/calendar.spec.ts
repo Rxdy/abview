@@ -99,6 +99,44 @@ test.group('GoogleCalendarService', (group) => {
     assert.equal(callCount, 2)
   })
 
+  test('listEvents gère un événement sans start ni end', async ({ assert }) => {
+    mockCalendarApi(async () => ({ data: { items: [{ id: 'evt-3', summary: 'Sans dates' }] } }))
+
+    const service = new GoogleCalendarService()
+    const events = await service.listEvents()
+
+    assert.equal(events[0].start, '')
+    assert.equal(events[0].end, '')
+  })
+
+  test('listPastYearEvents applique les valeurs par défaut sur les champs manquants', async ({
+    assert,
+  }) => {
+    mockCalendarApi(async () => ({
+      data: {
+        items: [{ id: 'evt-4', start: { date: '2025-06-01' }, end: { date: '2025-06-02' } }],
+      },
+    }))
+
+    const service = new GoogleCalendarService()
+    const events = await service.listPastYearEvents()
+
+    assert.equal(events[0].summary, '')
+    assert.equal(events[0].start, '2025-06-01')
+    assert.equal(events[0].end, '2025-06-02')
+    assert.equal(events[0].description, '')
+    assert.equal(events[0].location, '')
+  })
+
+  test('listPastYearEvents retourne un tableau vide si pas d’items', async ({ assert }) => {
+    mockCalendarApi(async () => ({ data: {} }))
+
+    const service = new GoogleCalendarService()
+    const events = await service.listPastYearEvents()
+
+    assert.deepEqual(events, [])
+  })
+
   test('getLastRefresh retourne null avant le premier fetch', ({ assert }) => {
     const service = new GoogleCalendarService()
     assert.isNull(service.getLastRefresh())
