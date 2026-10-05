@@ -46,7 +46,8 @@ jobs:
         name: Convention de nommage de branche
         # main/dev n'ont pas à suivre la convention (ce sont les branches d'intégration/prod
         # elles-mêmes) ; toutes les autres branches poussées, ou les PR, sont vérifiées.
-        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev')
+        # La PR de mise en prod dev → main part de dev : elle n'est pas vérifiée non plus.
+        if: (github.event_name == 'pull_request' && github.head_ref != 'dev') || (github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev')
         runs-on: ubuntu-latest
         steps:
             - name: Vérifie le nom de la branche
