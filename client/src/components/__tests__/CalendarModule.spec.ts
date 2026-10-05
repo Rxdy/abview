@@ -228,6 +228,54 @@ describe('CalendarModule', () => {
       expect(vm.getEventsForDay(tomorrow).map((e: any) => e.id)).not.toContain('nuit')
     })
 
+    it("un poste de nuit de l'agenda n'apparaît que sur son jour de début, avec ses horaires", () => {
+      const tomorrow = new Date(today)
+      tomorrow.setDate(today.getDate() + 1)
+      const fmt = (d: Date) =>
+        d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+
+      // Forme renvoyée par /calendar pour les postes synchronisés depuis Silae
+      const vm = mountVm([
+        {
+          id: 'night',
+          summary: 'Charlène — NIGHT',
+          start: `${todayStr}T22:45:00`,
+          end: `${fmt(tomorrow)}T07:00:00`,
+          startTime: '22:45',
+          endTime: '07:00',
+        },
+      ])
+
+      const night = vm.getEventsForDay(today).find((e: any) => e.id === 'night')
+      expect(night.startTime).toBe('22:45')
+      expect(night.endTime).toBe('07:00')
+      expect(vm.getEventsForDay(tomorrow).map((e: any) => e.id)).not.toContain('night')
+    })
+
+    it('deux nuits de suite : une seule carte par jour, rien le lendemain de la dernière', () => {
+      const day = (n: number) => {
+        const d = new Date(today)
+        d.setDate(today.getDate() + n)
+        return d
+      }
+      const fmt = (d: Date) =>
+        d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+      const nuit = (n: number) => ({
+        id: `night-${n}`,
+        summary: 'Charlène — NIGHT',
+        start: `${fmt(day(n))}T22:45:00`,
+        end: `${fmt(day(n + 1))}T07:00:00`,
+        startTime: '22:45',
+        endTime: '07:00',
+      })
+
+      const vm = mountVm([nuit(1), nuit(2)])
+
+      expect(vm.getEventsForDay(day(1)).map((e: any) => e.id)).toEqual(['night-1'])
+      expect(vm.getEventsForDay(day(2)).map((e: any) => e.id)).toEqual(['night-2'])
+      expect(vm.getEventsForDay(day(3)).map((e: any) => e.id)).toEqual([]) // repos : aucune carte
+    })
+
     it('un événement calendrier multi-jours apparaît chaque jour couvert', () => {
       const yesterday = new Date(today)
       yesterday.setDate(today.getDate() - 1)
