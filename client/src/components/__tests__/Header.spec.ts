@@ -23,7 +23,7 @@ describe('Header', () => {
       stubs: ['DateTimeModule']
     })
 
-    expect(wrapper.find('.logo-badge').text()).toBe('Ab')
+    expect(wrapper.find('img.logo-img').attributes('src')).toBe('/abview-logo.png')
     expect(wrapper.text()).toContain('AbView')
   })
 

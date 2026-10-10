@@ -1,7 +1,7 @@
 <template>
   <header class="header">
     <div class="logo">
-      <div class="logo-badge" aria-hidden="true">Ab</div>
+      <img class="logo-img" src="/abview-logo.png" alt="" />
       <h1>AbView</h1>
     </div>
     <DateTimeModule />
@@ -33,17 +33,10 @@ const dashboardStore = useDashboardStore();
   gap: calc(10 * var(--px));
 }
 
-.logo-badge {
-  width: calc(36 * var(--px));
-  height: calc(36 * var(--px));
-  border-radius: var(--radius-item);
-  background: var(--c-accent);
-  color: var(--c-on-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-md);
-  font-weight: 800;
+.logo-img {
+  width: calc(44 * var(--px));
+  height: calc(44 * var(--px));
+  object-fit: contain;
 }
 
 .logo h1 {
