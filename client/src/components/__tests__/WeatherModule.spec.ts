@@ -108,7 +108,7 @@ describe('WeatherModule', () => {
 
     expect(wrapper.find('.weather-content').exists()).toBe(true)
     expect(wrapper.find('.current-weather').exists()).toBe(true)
-    expect(wrapper.text()).toContain('25°C')
+    expect(wrapper.find('.temp').text()).toBe('25°')
     expect(wrapper.text()).toContain('06:15') // lever
     expect(wrapper.text()).toContain('21:30') // coucher
   })
@@ -121,7 +121,7 @@ describe('WeatherModule', () => {
     })
 
     const days = wrapper.findAll('.forecast-day')
-    expect(days).toHaveLength(5)
+    expect(days).toHaveLength(4)
     expect(days[0].text()).toContain('Demain')
     expect(days[0].text()).toContain('Pluie') // Rain traduit
     expect(days[1].text()).toContain('Neige')
@@ -161,11 +161,12 @@ describe('WeatherModule', () => {
 
     it('getUvColor couvre toutes les plages', () => {
       const m = vm()
-      expect(m.getUvColor(1)).toBe('green')
-      expect(m.getUvColor(4)).toBe('yellow')
-      expect(m.getUvColor(6)).toBe('orange')
-      expect(m.getUvColor(9)).toBe('red')
-      expect(m.getUvColor(12)).toBe('purple')
+      // Teintes assez sombres pour le chiffre blanc de la pastille
+      expect(m.getUvColor(1)).toBe('#2e8a3e')
+      expect(m.getUvColor(4)).toBe('#b8860b')
+      expect(m.getUvColor(6)).toBe('#d9640b')
+      expect(m.getUvColor(9)).toBe('#c62828')
+      expect(m.getUvColor(12)).toBe('#7b1fa2')
     })
 
     it('getUvLabel couvre toutes les plages', () => {

@@ -1,13 +1,13 @@
 <template>
   <footer class="footer">
     <div class="left">
-      <span>&copy; {{ currentYear }} Abnd. All rights reserved.</span>
+      <span>&copy; {{ currentYear }} Abnd</span>
     </div>
     <div class="center">
       <ProgressBar />
     </div>
     <div class="right">
-      <span>v2.6.1</span>
+      <span class="num">v{{ version }}</span>
     </div>
   </footer>
 </template>
@@ -17,18 +17,19 @@ import { computed } from 'vue';
 import ProgressBar from './ProgressBar.vue';
 
 const currentYear = computed(() => new Date().getFullYear());
+const version = __APP_VERSION__;
 </script>
 
 <style scoped>
 .footer {
-  background-color: var(--color-surface);
-  padding: 0.25rem 0.5rem;
-  color: var(--color-primary);
-  height: 47px;
   flex-shrink: 0;
+  height: var(--footer-h);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: var(--space-3);
+  font-size: calc(11.5 * var(--px));
+  font-weight: 600;
+  color: var(--c-muted);
 }
 
 .left,
@@ -38,7 +39,7 @@ const currentYear = computed(() => new Date().getFullYear());
 
 .center {
   flex: 1;
+  min-width: 0;
   display: flex;
-  justify-content: center;
 }
 </style>

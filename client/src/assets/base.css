@@ -1,86 +1,157 @@
-/* color palette from <https://github.com/vuejs/theme> */
+/*
+ * Jetons de la refonte graphique (modèle « D · Mélange », specs/refonte-graphique.md).
+ *
+ * La maquette est dessinée en 1280×720 ; le kiosque affiche du 1920×1080. Les tailles passent
+ * par --px (1 px de maquette) pour garder les proportions quelle que soit la largeur d'écran :
+ * calc(14 * var(--px)) = 14 px en 1280, 21 px en 1920.
+ *
+ * Nuit = :root (défaut), jour = .light-theme (posé par App.vue selon themeStore).
+ */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  --px: calc(100vw / 1280);
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  /* Typographie */
+  --font-sans: 'Nunito Variable', 'Nunito', system-ui, sans-serif;
+  --fs-xs: calc(11 * var(--px));
+  --fs-sm: calc(12.5 * var(--px));
+  --fs-md: calc(14 * var(--px));
+  --fs-lg: calc(18 * var(--px));
+  --fs-xl: calc(22 * var(--px));
+  --fs-xxl: calc(44 * var(--px));
 
-  --vt-c-indigo: #2c3e50;
+  /* Espacements, rayons */
+  --space-1: calc(4 * var(--px));
+  --space-2: calc(8 * var(--px));
+  --space-3: calc(12 * var(--px));
+  --space-4: calc(16 * var(--px));
+  --radius-card: calc(18 * var(--px));
+  --radius-item: calc(12 * var(--px));
+  --radius-pill: 999px;
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  /* Grille de la page */
+  --page-pad-y: calc(10 * var(--px));
+  --page-pad-x: calc(16 * var(--px));
+  --page-gap: calc(10 * var(--px));
+  --header-h: calc(38 * var(--px));
+  --bottom-h: calc(216 * var(--px));
+  --weather-w: calc(400 * var(--px));
+  --footer-h: calc(18 * var(--px));
 
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
-}
+  /* Couleurs — nuit */
+  --c-bg: #0f1115;
+  --c-surface: #181b21;
+  --c-chip: #232833;
+  --c-text: #ecedef;
+  --c-muted: #9aa0aa;
+  --c-line: #2a2f38;
+  --c-accent: #7fa6ff;
+  --c-accent-text: #9dbbff;
+  --c-on-accent: #0f1115;
+  --c-today: #1b2538;
+  --c-due-bg: #3a2a12;
+  --c-due-fg: #ffc46b;
+  --c-nuage: #ffffff; /* nuages des icônes météo, dessinés en blanc */
+  --shadow-card: none;
 
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
+  /* Catégories d'événements — fond de carte / étiquette (nuit), palette « Vive » */
+  --cat-travail-bg: #1d2a4d;
+  --cat-travail-fg: #8cb2ff;
+  --cat-garde-bg: #3a1f4d;
+  --cat-garde-fg: #d9a3ff;
+  --cat-sport-bg: #12391f;
+  --cat-sport-fg: #6ee08f;
+  --cat-sante-bg: #4a1518;
+  --cat-sante-fg: #ff8a8f;
+  --cat-rdv-bg: #45290c;
+  --cat-rdv-fg: #ffb066;
+  --cat-poubelle-bg: #2a2a2a;
+  --cat-poubelle-fg: #c7c7c7;
+  --cat-anniversaire-bg: #4a1533;
+  --cat-anniversaire-fg: #ff8fc8;
+  --cat-national-bg: #182a55;
+  --cat-national-fg: #9ab8ff;
+  --cat-religieux-bg: #45330c;
+  --cat-religieux-fg: #ffd36b;
+  --cat-autre-bg: #0f3a38;
+  --cat-autre-fg: #6fe0d6;
+  /* Voile posé sur les images de fond pour garder le titre lisible */
+  --voile: rgba(15, 17, 21, 0.55);
 
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
-}
-
-/* App specific colors */
-:root {
-  /* Dark theme (default) */
-  --color-primary: #ffffff;
-  --color-secondary: #333333;
-  --color-tertiary: #1a1a1a;
-  --color-accent: #007bff;
-  --color-surface: rgba(255, 255, 255, 0.08);
-  --color-border: rgba(255, 255, 255, 0.15);
-  --color-text: #ffffff;
-  --color-text-secondary: rgba(255, 255, 255, 0.7);
-  --color-background: #1a1a1a;
-  --color-gray: rgba(255, 255, 255, 0.05);
-
-  /* Error colors */
+  /* Erreurs */
   --error-network: #ff9500;
   --error-no-data: #007aff;
   --error-generic: #ff6b6b;
 }
 
-/* Light theme */
 .light-theme {
-  --color-primary: #1a1a1a;
-  --color-secondary: #f0f0f0;
-  --color-tertiary: #e0e0e0;
-  --color-accent: #007bff;
-  --color-surface: rgba(255, 255, 255, 0.9);
-  --color-border: rgba(0, 0, 0, 0.15);
-  --color-text: #1a1a1a;
-  --color-text-secondary: rgba(26, 26, 26, 0.7);
-  --color-background: #f5f5f5;
-  --color-gray: rgba(0, 0, 0, 0.05);
+  /* Couleurs — jour */
+  --c-bg: #f3f2ef;
+  --c-surface: #ffffff;
+  --c-chip: #f1f0ec;
+  --c-text: #1c1d20;
+  --c-muted: #5d6068;
+  --c-line: #e3e1dc;
+  --c-accent: #2c63d9;
+  --c-accent-text: #2457c5;
+  --c-on-accent: #ffffff;
+  --c-today: #e3ebfb;
+  --c-due-bg: #ffebc7;
+  --c-due-fg: #7a4a00;
+  --c-nuage: #a3adbd;
+  --shadow-card: 0 2px 6px rgba(20, 20, 30, 0.07);
 
-  /* Error colors stay the same */
-  --error-network: #ff9500;
-  --error-no-data: #007aff;
-  --error-generic: #ff6b6b;
+  /* Catégories d'événements — fond de carte / étiquette (jour), palette « Vive » */
+  --cat-travail-bg: #dce6ff;
+  --cat-travail-fg: #1f45b0;
+  --cat-garde-bg: #f0dcff;
+  --cat-garde-fg: #7424b0;
+  --cat-sport-bg: #d2f5dc;
+  --cat-sport-fg: #0f6b32;
+  --cat-sante-bg: #ffd9da;
+  --cat-sante-fg: #b0141c;
+  --cat-rdv-bg: #ffe3c7;
+  --cat-rdv-fg: #8f4300;
+  --cat-poubelle-bg: #e6e6e6;
+  --cat-poubelle-fg: #3b3b3b;
+  --cat-anniversaire-bg: #ffd6ea;
+  --cat-anniversaire-fg: #ad145f;
+  --cat-national-bg: #d9e4ff;
+  --cat-national-fg: #1a3b9c;
+  --cat-religieux-bg: #ffeec4;
+  --cat-religieux-fg: #774f00;
+  --cat-autre-bg: #cff3ef;
+  --cat-autre-fg: #0a5e57;
+  --voile: rgba(255, 255, 255, 0.6);
 }
 
-/* Theme transitions */
+/*
+ * Anciens noms, encore lus par les zones pas encore refaites : ils pointent sur la nouvelle
+ * palette. À retirer quand plus aucun composant ne les utilise.
+ */
+:root,
+.light-theme {
+  --color-background: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-gray: var(--c-chip);
+  --color-primary: var(--c-text);
+  --color-text: var(--c-text);
+  --color-heading: var(--c-text);
+  --color-text-secondary: var(--c-muted);
+  --color-border: var(--c-line);
+  --color-border-hover: var(--c-muted);
+  --color-accent: var(--c-accent);
+  --color-secondary: var(--c-chip);
+  --color-tertiary: var(--c-line);
+  --color-background-soft: var(--c-surface);
+  --color-background-mute: var(--c-chip);
+}
+
+/* Bascule jour/nuit en douceur */
 * {
   transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
 }
 
-/* Module fade-in animations */
+/* Apparition des modules */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -96,18 +167,9 @@
 .fade-in-2 { animation: fadeInUp 0.6s ease-out 0.3s both; }
 .fade-in-3 { animation: fadeInUp 0.6s ease-out 0.5s both; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
+/* Heures, dates et températures : chiffres de même largeur, rien ne bouge d'une seconde à l'autre */
+.num {
+  font-variant-numeric: tabular-nums;
 }
 
 *,
@@ -115,31 +177,15 @@
 *::after {
   box-sizing: border-box;
   margin: 0;
-  font-weight: normal;
 }
 
 body {
   min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  transition:
-    color 0.5s,
-    background-color 0.5s;
-  line-height: 1.6;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
-  font-size: 15px;
+  color: var(--c-text);
+  background: var(--c-bg);
+  line-height: 1.4;
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

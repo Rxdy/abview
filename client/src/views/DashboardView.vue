@@ -42,37 +42,36 @@ const { activeKey: activeModule, progress } = useModuleRotation([
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  box-sizing: border-box;
+  gap: var(--page-gap);
 }
 
+/* Agenda : prend toute la hauteur restante ; chaque jour est sa propre carte. */
 .calendar-row {
-  flex: 0 0 60%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
-  background: var(--color-surface);
-  border-radius: 6px;
 }
 
+/* Bande du bas : météo à gauche (carte), tâches à droite (cartes par liste). */
 .bottom-row {
-  flex: 0 0 40%;
+  flex: 0 0 var(--bottom-h);
   display: flex;
-  gap: 0.5rem;
+  gap: calc(10 * var(--px));
   overflow: hidden;
 }
 
 .weather-container {
-  flex: 0 0 30%;
+  flex: 0 0 var(--weather-w);
   overflow: hidden;
-  background: var(--color-surface);
-  border-radius: 6px;
+  background: var(--c-surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
 .tasks-container {
-  flex: 0 0 69.5%;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
-  background: var(--color-surface);
-  border-radius: 6px;
 }
 
 .calendar-row > *,

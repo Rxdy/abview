@@ -8,6 +8,24 @@ export interface Event {
   end: string
   description: string
   location: string
+  // Catégorie déclarée par l'outil qui a écrit l'événement (propriété privée « categorie »,
+  // posée par exemple par planning-relay), sinon null
+  categorie: string | null
+  // Couleur choisie dans Google Agenda (colorId « 1 » à « 11 »), sinon null
+  couleur: string | null
+}
+
+function versEvenement(e: any): Event {
+  return {
+    id: e.id,
+    summary: e.summary || '',
+    start: e.start?.dateTime || e.start?.date || '',
+    end: e.end?.dateTime || e.end?.date || '',
+    description: e.description || '',
+    location: e.location || '',
+    categorie: e.extendedProperties?.private?.categorie || null,
+    couleur: e.colorId || null,
+  }
 }
 export default class GoogleCalendarService {
   private calendar: any
@@ -48,14 +66,7 @@ export default class GoogleCalendarService {
       timeMin: now.toISOString(),
       timeMax: eightDaysLater.toISOString(),
     })
-    return (res.data.items || []).map((e: any) => ({
-      id: e.id,
-      summary: e.summary || '',
-      start: e.start?.dateTime || e.start?.date || '',
-      end: e.end?.dateTime || e.end?.date || '',
-      description: e.description || '',
-      location: e.location || '',
-    }))
+    return (res.data.items || []).map(versEvenement)
   }
 
   private async fetchPastYearEvents(calendarId = 'primary', maxResults = 1000): Promise<Event[]> {
@@ -75,14 +86,7 @@ export default class GoogleCalendarService {
       timeMin: oneYearAgo.toISOString(),
       timeMax: now.toISOString(),
     })
-    return (res.data.items || []).map((e: any) => ({
-      id: e.id,
-      summary: e.summary || '',
-      start: e.start?.dateTime || e.start?.date || '',
-      end: e.end?.dateTime || e.end?.date || '',
-      description: e.description || '',
-      location: e.location || '',
-    }))
+    return (res.data.items || []).map(versEvenement)
   }
 
   async listEvents(calendarId = 'primary', maxResults = 100): Promise<Event[]> {

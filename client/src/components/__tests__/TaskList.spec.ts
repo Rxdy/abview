@@ -107,7 +107,7 @@ describe('TaskList', () => {
       props: { listTitle: 'Rudy', listColor: '#1e293b', tasks: [] },
     })
 
-    expect(wrapper.attributes('style')).toContain('rgb(139, 155, 171)') // #8B9BAB
+    expect(wrapper.find('.list-title').attributes('style')).toContain('rgb(139, 155, 171)') // #8B9BAB
   })
 
   it('conserve les autres couleurs en thème clair', () => {
@@ -116,7 +116,7 @@ describe('TaskList', () => {
       props: { listTitle: 'Luis', listColor: '#004C99', tasks: [] },
     })
 
-    expect(wrapper.attributes('style')).toContain('rgb(0, 76, 153)') // #004C99
+    expect(wrapper.find('.list-title').attributes('style')).toContain('rgb(0, 76, 153)') // #004C99
   })
 
   it('conserve la couleur brute en thème sombre', () => {
@@ -124,7 +124,22 @@ describe('TaskList', () => {
       props: { listTitle: 'Rudy', listColor: '#1e293b', tasks: [] },
     })
 
-    expect(wrapper.attributes('style')).toContain('rgb(30, 41, 59)') // #1e293b
+    expect(wrapper.find('.list-title').attributes('style')).toContain('rgb(30, 41, 59)') // #1e293b
+  })
+
+  it('écrit le titre en sombre sur une couleur claire, en blanc sur une foncée', () => {
+    const clair = mount(TaskList, { props: { listTitle: 'Action', listColor: '#ffd1dc', tasks: [] } })
+    const fonce = mount(TaskList, { props: { listTitle: 'Luis', listColor: '#004C99', tasks: [] } })
+
+    expect(clair.attributes('style')).toContain('--list-on: #1c1d20')
+    expect(fonce.attributes('style')).toContain('--list-on: #ffffff')
+  })
+
+  it('écrit en sombre sur le gris clair de Rudy en thème clair', () => {
+    mockThemeStore.isDark = false
+    const wrapper = mount(TaskList, { props: { listTitle: 'Rudy', listColor: '#1e293b', tasks: [] } })
+
+    expect(wrapper.attributes('style')).toContain('--list-on: #1c1d20')
   })
 
   it('passe isDark=true aux TaskItem pour les listes bleues en thème sombre', () => {

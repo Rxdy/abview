@@ -9,7 +9,8 @@
     "y": "Position verticale (ligne de départ, 1-based)",
     "width": "Largeur en colonnes",
     "height": "Hauteur en lignes",
-    "visible": "true pour afficher, false pour masquer"
+    "visible": "true pour afficher, false pour masquer",
+    "categories": "Couleurs et mots-clés des catégories de l'agenda. 'couleurs' associe une couleur Google Agenda (colorId : 1 Lavande, 2 Sauge, 3 Raisin, 4 Flamant, 5 Banane, 6 Mandarine, 7 Paon, 8 Graphite, 9 Myrtille, 10 Basilic, 11 Tomate) à une catégorie. 'motsCles' liste les mots du titre qui classent un événement (sans accents ni majuscules). Catégories : travail, garde, sport, sante, rdv, poubelle, anniversaire, national, religieux, autre."
   },
   "grid": {
     "columns": 12,
@@ -45,5 +46,34 @@
       "height": 2,
       "visible": true
     }
-  ]
+  ],
+  "categories": {
+    "couleurs": {
+      "3": "garde",
+      "5": "rdv",
+      "11": "sante"
+    },
+    "motsCles": {
+      "sante": [
+        "dentiste",
+        "medecin",
+        "docteur",
+        "kine",
+        "psy",
+        "neuropsy",
+        "ortho",
+        "ophtalmo",
+        "pediatre",
+        "hopital",
+        "vaccin",
+        "prise de sang",
+        "pharmacie"
+      ],
+      "rdv": [
+        "rdv",
+        "rendez-vous",
+        "rendez vous"
+      ]
+    }
+  }
 }
