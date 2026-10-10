@@ -85,8 +85,8 @@ Fichiers : `components/CalendarModule.vue` (763 lignes), `components/BirthdayEff
 
 ### Classer un événement saisi à la main dans Google Agenda
 - **Couleur de l'événement** (associations dans `client/public/config.json`, `categories.couleurs`) :
-  Raisin → Garde, Banane → Rendez-vous.
-- **Mots-clés du titre** (`categories.motsCles`) : santé (dentiste, kiné, psy…), rendez-vous (rdv,
+  Raisin → Garde, Banane → Rendez-vous, Tomate → Santé.
+- **Mots-clés du titre** (`categories.motsCles`) : santé (dentiste, kiné, psy… ; « radio » et « labo » retirés, trop larges), rendez-vous (rdv,
   rendez-vous). Pour un rendez-vous, le mot-clé est retiré du titre affiché.
 - Les outils qui écrivent dans l'agenda (planning-relay) posent la propriété privée `categorie`.
 
