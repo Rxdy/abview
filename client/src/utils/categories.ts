@@ -118,6 +118,23 @@ export function categorieEvenement(ev: EvenementAClasser, regles: ReglesCategori
   return 'autre'
 }
 
+/**
+ * Titre affiché : pour un rendez-vous, le mot-clé qui l'a fait reconnaître est retiré, l'étiquette
+ * « Rendez-vous » le dit déjà (« Rendez vous véhicule Renault » → « Véhicule Renault »).
+ */
+export function titreAffiche(titre: string, categorie: Categorie, regles: ReglesCategories = {}): string {
+  if (categorie !== 'rdv') return titre
+  const mots = { ...MOTS_CLES_PAR_DEFAUT, ...regles.motsCles }.rdv || []
+  let reste = titre
+  for (const mot of [...mots].sort((a, b) => b.length - a.length)) {
+    const motif = mot.split(/[\s-]+/).map(m => m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s-]+')
+    reste = reste.replace(new RegExp(`(^|\\s)${motif}(\\s*:)?(?=\\s|$)`, 'i'), ' ')
+  }
+  reste = reste.replace(/\s+/g, ' ').trim()
+  if (!reste) return titre
+  return reste.charAt(0).toUpperCase() + reste.slice(1)
+}
+
 /** Image de fond de la carte (anniversaire et fêtes qui en ont une), sinon null. */
 export function imageEvenement(type: string | undefined, nuit: boolean): string | null {
   switch ((type || '').toLowerCase()) {

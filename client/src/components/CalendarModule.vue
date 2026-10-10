@@ -54,7 +54,7 @@ import { useDashboardStore } from '../stores/dashboardStore';
 import ErrorDisplay from './ErrorDisplay.vue';
 import { useAutoScroll } from '../composables/useAutoScroll';
 import { getAllSpecialEvents } from '../utils/holidays';
-import { categorieEvenement, imageEvenement, ETIQUETTES } from '../utils/categories';
+import { categorieEvenement, imageEvenement, titreAffiche, ETIQUETTES } from '../utils/categories';
 
 const calendarStore = useCalendarStore();
 const themeStore = useThemeStore();
@@ -355,11 +355,13 @@ const getEventsForDay = (date: Date) => {
       { type: event.type, titre: event.summary || event.title, categorie: event.categorie, couleur: event.couleur },
       dashboardStore.categories,
     );
+    const title = titreAffiche(event.title, categorie, dashboardStore.categories);
     return {
       ...event,
+      title,
       categorie,
       // Pas d'étiquette qui répète le titre (« Poubelle » / POUBELLE)
-      etiquette: ETIQUETTES[categorie].toLowerCase() === String(event.title || '').trim().toLowerCase() ? '' : ETIQUETTES[categorie],
+      etiquette: ETIQUETTES[categorie].toLowerCase() === String(title || '').trim().toLowerCase() ? '' : ETIQUETTES[categorie],
       image: imageEvenement(event.type, themeStore.isDark),
     };
   });
