@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { categorieEvenement, imageEvenement, ETIQUETTES } from '../categories'
+import { categorieEvenement, imageEvenement, titreAffiche, ETIQUETTES } from '../categories'
 
 describe('categorieEvenement', () => {
   it('suit la catégorie déclarée par la source (JSON des horaires, propriété privée Google)', () => {
@@ -61,6 +61,23 @@ describe('categorieEvenement', () => {
   it('a une étiquette pour chaque catégorie sauf « autre »', () => {
     expect(ETIQUETTES.rdv).toBe('Rendez-vous')
     expect(ETIQUETTES.autre).toBe('')
+  })
+})
+
+describe('titreAffiche', () => {
+  it.each([
+    ['Rendez vous véhicule Renault Rudy', 'Véhicule Renault Rudy'],
+    ['Rendez-vous : banque', 'Banque'],
+    ['RDV coiffeur', 'Coiffeur'],
+    ['Garage rdv contrôle technique', 'Garage contrôle technique'],
+  ])('rendez-vous « %s » → « %s »', (titre, attendu) => {
+    expect(titreAffiche(titre, 'rdv')).toBe(attendu)
+  })
+
+  it('garde le titre tel quel hors rendez-vous, ou s\'il ne reste rien', () => {
+    expect(titreAffiche('Dentiste Luis', 'sante')).toBe('Dentiste Luis')
+    expect(titreAffiche('RDV', 'rdv')).toBe('RDV')
+    expect(titreAffiche('Garage Renault', 'rdv')).toBe('Garage Renault') // reconnu par la couleur
   })
 })
 
