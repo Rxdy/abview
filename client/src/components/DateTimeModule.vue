@@ -1,7 +1,8 @@
 <template>
   <div class="date-time">
-    <span>{{ currentDate }}</span>
-    <span>{{ currentTime }}</span>
+    <span class="date">{{ currentDate }}</span>
+    <span class="separateur" aria-hidden="true"></span>
+    <span class="heure num">{{ currentTime }}<span class="secondes">:{{ currentSeconds }}</span></span>
   </div>
 </template>
 
@@ -10,22 +11,25 @@ import { ref, onMounted, onUnmounted } from 'vue';
 
 const currentDate = ref('');
 const currentTime = ref('');
+const currentSeconds = ref('');
+
+const deuxChiffres = (n: number) => String(n).padStart(2, '0');
 
 const updateDateTime = () => {
   const now = new Date();
-  const day = now.getDate();
-  const month = now.toLocaleDateString('fr-FR', { month: 'long' });
-  const year = now.getFullYear();
   const weekday = now.toLocaleDateString('fr-FR', { weekday: 'long' });
-  currentDate.value = `${weekday} ${day} ${month} ${year}`; // Ajout du jour de la semaine
-  currentTime.value = now.toLocaleTimeString('fr-FR');
+  const month = now.toLocaleDateString('fr-FR', { month: 'long' });
+  // « Samedi 10 octobre 2026 »
+  currentDate.value = `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${now.getDate()} ${month} ${now.getFullYear()}`;
+  currentTime.value = `${deuxChiffres(now.getHours())}:${deuxChiffres(now.getMinutes())}`;
+  currentSeconds.value = deuxChiffres(now.getSeconds());
 };
 
 let interval: ReturnType<typeof setInterval>;
 
 onMounted(() => {
   updateDateTime();
-  interval = setInterval(updateDateTime, 1000); // Update every second
+  interval = setInterval(updateDateTime, 1000);
 });
 
 onUnmounted(() => {
@@ -34,21 +38,37 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Pilule centrée de l'en-tête : date, filet, heure (secondes en plus petit). */
 .date-time {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  color: white;
-  font-size: 1.2rem;
-  font-weight: bold;
-  gap: 1rem;
+  gap: calc(14 * var(--px));
+  padding: var(--space-2) calc(22 * var(--px));
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-card);
+  color: var(--c-text);
 }
 
-.date-time span:nth-child(2) {
-  font-family: monospace; /* Police monospace pour éviter le décalage des secondes */
+.date {
+  font-size: var(--fs-lg);
+  font-weight: 700;
 }
 
-.light-theme .date-time {
-  color: #000000;
+.separateur {
+  width: 1px;
+  height: calc(22 * var(--px));
+  background: var(--c-line);
+}
+
+.heure {
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  color: var(--c-accent-text);
+}
+
+.secondes {
+  font-size: calc(15 * var(--px));
+  color: var(--c-muted);
 }
 </style>

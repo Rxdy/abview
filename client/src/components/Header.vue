@@ -1,15 +1,11 @@
 <template>
   <header class="header">
     <div class="logo">
-      <img alt="Logo" src="/abview-logo.png" width="40" height="40" />
+      <img class="logo-img" src="/abview-logo.png" alt="" />
       <h1>AbView</h1>
     </div>
-    <div class="center">
-      <DateTimeModule />
-    </div>
-    <div class="right">
-      <h2>{{ dashboardStore.name }}</h2>
-    </div>
+    <DateTimeModule />
+    <h2 class="foyer">{{ dashboardStore.name }}</h2>
   </header>
 </template>
 
@@ -21,50 +17,36 @@ const dashboardStore = useDashboardStore();
 </script>
 
 <style scoped>
+/* Trois colonnes : logo à gauche, pilule date/heure centrée, nom du foyer à droite. */
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.25rem 0.5rem;
-  background-color: var(--color-surface);
-  color: var(--color-primary);
-  height: 47px;
   flex-shrink: 0;
-  position: relative;
-}
-
-.light-theme .header {
-  color: var(--color-primary);
+  height: var(--header-h);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  color: var(--c-text);
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: calc(10 * var(--px));
 }
 
-.center {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.right {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  min-width: 160px;
-}
-
-.right h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: bold;
+.logo-img {
+  width: calc(44 * var(--px));
+  height: calc(44 * var(--px));
+  object-fit: contain;
 }
 
 .logo h1 {
-  font-size: 1.2rem;
-  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 800;
+}
+
+.foyer {
+  justify-self: end;
+  font-size: calc(20 * var(--px));
+  font-weight: 800;
 }
 </style>
