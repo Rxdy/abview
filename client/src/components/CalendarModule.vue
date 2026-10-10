@@ -14,22 +14,32 @@
 
     <!-- Calendar Content -->
     <div class="calendar-grid">
-      <div v-for="(day, index) in weekDays" :key="day.date.toISOString()" class="day-column" :ref="el => setDayColumnRef(index, el)" :style="getDayStyle(day.date)">
-        <div class="day-header">{{ day.name }} {{ day.date.getDate() }}</div>
+      <div v-for="(day, index) in weekDays" :key="day.date.toISOString()"
+           :class="['day-column', { today: index === 0 }]" :ref="el => setDayColumnRef(index, el)">
+        <div class="day-header">
+          <span class="day-name">{{ index === 0 ? 'Aujourd’hui' : day.name }}</span>
+          <span class="day-num num">{{ day.date.getDate() }}</span>
+        </div>
         <div class="events" :data-day="day.date.toDateString()" :data-index="index">
-          <div v-for="event in getEventsForDay(day.date)" :key="event.id || event.summary" 
-               :class="['event', event.type, { 'theme-dark': themeStore.isDark, 'theme-light': !themeStore.isDark }]">
+          <div v-for="event in getEventsForDay(day.date)" :key="event.id || event.summary"
+               :class="['event', `cat-${event.categorie}`, event.type, { 'avec-image': event.image }]"
+               :style="event.image ? { '--image': `url(${event.image})` } : undefined">
+            <div v-if="event.etiquette" class="event-tag">{{ event.etiquette }}</div>
             <div class="event-header">
               <div class="event-title">{{ event.title }}</div>
               <div class="event-shift" v-if="event.shift && !(event.type === 'jaune' || event.type === 'noire')">{{ event.shift }}</div>
-              <div class="color-badge" v-if="event.type === 'jaune' || event.type === 'noire'" :class="event.type">
-                {{ event.type === "jaune" ? "Jaune" : "Noire" }}
-              </div>
             </div>
-            <div class="event-time" v-if="event.startTime && event.type !== 'birthday'">{{ event.startTime }}<span v-if="event.endTime"> - {{ event.endTime }}</span></div>
+            <div class="event-time num" v-if="event.startTime && event.type !== 'birthday'">{{ event.startTime }}<span v-if="event.endTime"> – {{ event.endTime }}</span></div>
             <div class="event-date-range" v-if="event.dateRange && event.type !== 'birthday'">{{ event.dateRange }}</div>
-            <div v-if="event.location && event.type !== 'sport'" class="event-location">📍 {{ event.location.split(',')[0] }}</div>
+            <div v-if="event.location && event.type !== 'sport'" class="event-location">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              {{ event.location.split(',')[0] }}
+            </div>
+            <div class="color-badge" v-if="event.type === 'jaune' || event.type === 'noire'" :class="event.type">
+              {{ event.type === "jaune" ? "Jaune" : "Noire" }}
+            </div>
           </div>
+          <div v-if="getEventsForDay(day.date).length === 0" class="day-empty">Journée libre</div>
         </div>
       </div>
     </div>
@@ -40,12 +50,15 @@
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useCalendarStore } from '../stores/calendarStore';
 import { useThemeStore } from '../stores/themeStore';
+import { useDashboardStore } from '../stores/dashboardStore';
 import ErrorDisplay from './ErrorDisplay.vue';
 import { useAutoScroll } from '../composables/useAutoScroll';
-import { getAllSpecialEvents, isHoliday } from '../utils/holidays';
+import { getAllSpecialEvents } from '../utils/holidays';
+import { categorieEvenement, imageEvenement, titreAffiche, ETIQUETTES } from '../utils/categories';
 
 const calendarStore = useCalendarStore();
 const themeStore = useThemeStore();
+const dashboardStore = useDashboardStore();
 const dayColumns = ref<(HTMLElement | null)[]>([]);
 const currentDate = ref(new Date());
 let dateUpdateTimer: number | null = null;
@@ -125,30 +138,6 @@ const weekDays = computed(() => {
   }
   return days;
 });
-
-const getHolidayForDay = (date: Date) => {
-  const year = date.getFullYear();
-  const holidays = getAllSpecialEvents(year);
-  return holidays.find(holiday => 
-    holiday.date.getDate() === date.getDate() &&
-    holiday.date.getMonth() === date.getMonth()
-  );
-};
-
-const getDayStyle = (date: Date) => {
-  const holiday = getHolidayForDay(date);
-  if (holiday) {
-    const theme = themeStore.isDark ? 'dark' : 'light';
-    const imagePath = `/src/assets/card/${theme}/${holiday.category}.png`;
-    return {
-      backgroundImage: `url(${imagePath})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat'
-    };
-  }
-  return {};
-};
 
 const getEventsForDay = (date: Date) => {
   // Create day boundaries in local time, then convert to UTC for comparison
@@ -360,7 +349,22 @@ const getEventsForDay = (date: Date) => {
       date: holiday.date.toISOString().split('T')[0]
     }));
 
-  return [...sorted, ...daySpecialEvents];
+  // Catégorie (étiquette, couleurs) et image de fond de chaque carte
+  return [...sorted, ...daySpecialEvents].map(event => {
+    const categorie = categorieEvenement(
+      { type: event.type, titre: event.summary || event.title, categorie: event.categorie, couleur: event.couleur },
+      dashboardStore.categories,
+    );
+    const title = titreAffiche(event.title, categorie, dashboardStore.categories);
+    return {
+      ...event,
+      title,
+      categorie,
+      // Pas d'étiquette qui répète le titre (« Poubelle » / POUBELLE)
+      etiquette: ETIQUETTES[categorie].toLowerCase() === String(title || '').trim().toLowerCase() ? '' : ETIQUETTES[categorie],
+      image: imageEvenement(event.type, themeStore.isDark),
+    };
+  });
 };
 
 // Function to check for birthdays today and trigger global effect
@@ -449,45 +453,72 @@ setInterval(() => {
 .calendar {
   display: flex;
   flex-direction: column;
-  color: var(--color-primary);
-  box-sizing: border-box;
-  padding: 0.25rem;
+  color: var(--c-text);
   height: 100%;
   overflow: hidden;
 }
 
+/* 8 jours, chacun dans sa carte ; aujourd'hui en bleu léger, sans ombre. */
 .calendar-grid {
   flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 0.25rem;
-  overflow: auto;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: var(--space-2);
 }
 
 .day-column {
   display: flex;
   flex-direction: column;
-  background: var(--color-gray);
-  border-radius: 6px;
-  padding: 0.25rem;
-  padding-bottom: 0.5rem;
+  gap: calc(6 * var(--px));
   min-height: 0;
   height: 100%;
+  padding: calc(6 * var(--px));
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.day-column.today {
+  background: var(--c-today);
+  box-shadow: none;
 }
 
 .day-header {
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 0.5rem;
-  padding: 0.25rem;
-  background: var(--color-gray);
-  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(6 * var(--px));
+  padding: calc(4 * var(--px)) 0;
+  border-radius: var(--radius-item);
+  background: var(--c-chip);
+  color: var(--c-text);
+}
+
+.today .day-header {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+}
+
+.day-name {
+  font-size: calc(13 * var(--px));
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.day-num {
+  font-size: calc(16 * var(--px));
+  font-weight: 800;
 }
 
 .events {
-  height: 100%;
-  overflow-y: auto;
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(5 * var(--px));
+  overflow-y: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -496,241 +527,131 @@ setInterval(() => {
   display: none;
 }
 
+.day-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(13 * var(--px));
+  color: var(--c-muted);
+}
+
+/* Carte d'événement : pastel de sa catégorie, étiquette en couleur. */
 .event {
-  background: var(--color-surface);
-  margin-bottom: 0.25rem;
-  padding: 0.25rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  word-wrap: break-word;
+  --cat-bg: var(--cat-autre-bg);
+  --cat-fg: var(--cat-autre-fg);
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: calc(1 * var(--px));
+  padding: calc(5 * var(--px)) calc(8 * var(--px));
+  border-radius: calc(10 * var(--px));
+  background: var(--cat-bg);
+  word-wrap: break-word;
 }
 
-.event.jaune {
-  border-left: 4px solid #ffeb3b; /* Jaune */
-}
+.cat-travail { --cat-bg: var(--cat-travail-bg); --cat-fg: var(--cat-travail-fg); }
+.cat-garde { --cat-bg: var(--cat-garde-bg); --cat-fg: var(--cat-garde-fg); }
+.cat-sport { --cat-bg: var(--cat-sport-bg); --cat-fg: var(--cat-sport-fg); }
+.cat-sante { --cat-bg: var(--cat-sante-bg); --cat-fg: var(--cat-sante-fg); }
+.cat-rdv { --cat-bg: var(--cat-rdv-bg); --cat-fg: var(--cat-rdv-fg); }
+.cat-poubelle { --cat-bg: var(--cat-poubelle-bg); --cat-fg: var(--cat-poubelle-fg); }
+.cat-anniversaire { --cat-bg: var(--cat-anniversaire-bg); --cat-fg: var(--cat-anniversaire-fg); }
+.cat-national { --cat-bg: var(--cat-national-bg); --cat-fg: var(--cat-national-fg); }
+.cat-religieux { --cat-bg: var(--cat-religieux-bg); --cat-fg: var(--cat-religieux-fg); }
 
-.event.noire {
-  border-left: 4px solid #424242; /* Noire */
-}
-
-.event.work {
-  border-left: 4px solid #2196f3; /* Blue for work schedules */
-}
-
-.event.garde-alternee {
-  border-left: 4px solid #9c27b0; /* Purple for garde alternée */
-}
-
-.event.planning {
-  border-left: 4px solid #ff9800; /* Orange for general planning */
-}
-
-.event.rugby {
-  border-left: 4px solid #f28c38; /* Rugby orange */
-}
-
-.event.birthday {
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.event.birthday.theme-light {
-  background-image: url('@/assets/card/light/anniversaire.png');
-}
-
-.event.birthday.theme-dark {
-  background-image: url('@/assets/card/dark/anniversaire.png');
-}
-
-.event.birthday .event-title {
+/* Anniversaires et fêtes : image de fond sous un voile, titre centré. */
+.event.avec-image {
+  background:
+    linear-gradient(var(--voile), var(--voile)),
+    var(--image) center / cover no-repeat,
+    var(--cat-bg);
   text-align: center;
-  font-weight: bold;
-  width: 100%;
 }
 
-.event.birthday.theme-light .event-title {
-  color: #000 !important;
-}
-
-.event.birthday.theme-dark .event-title {
-  color: #fff !important;
-}
-
-.event.christmas .event-title,
-.event.easter .event-title,
-.event.newyear .event-title,
-.event.ramadan .event-title,
-.event.lent .event-title,
-.event.labor .event-title,
-.event.victory .event-title,
-.event.bastille .event-title,
-.event.catholic .event-title {
+.cat-anniversaire .event-title,
+.cat-national .event-title,
+.cat-religieux .event-title {
   text-align: center;
-  font-weight: bold;
-  width: 100%;
 }
 
-/* Birthday today special animation - SUPPRIMÉ */
-/* Les effets sur les cartes individuelles ont été supprimés */
-/* Seul l'effet global BirthdayEffect.vue est maintenant utilisé */
-
-.event.sport {
-  border-left: 4px solid #4caf50; /* Green for sport */
-}
-
-.event.medical {
-  border-left: 4px solid #f44336; /* Red for medical */
-}
-
-.event.family {
-  border-left: 4px solid #9c27b0; /* Purple for family */
-}
-
-.event.work {
-  border-left: 4px solid #2196f3; /* Blue for work */
-}
-
-.event.default {
-  border-left: 4px solid #4caf50; /* Green for default calendar events */
-}
-
-/* Holiday backgrounds based on theme and event type */
-.event.christmas.theme-dark {
-  background-image: url('@/assets/card/dark/newyear.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-left: 4px solid #00bcd4; /* Cyan for all holidays */
-}
-
-.event.christmas.theme-light {
-  background-image: url('@/assets/card/light/newyear.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-left: 4px solid #00bcd4; /* Cyan for all holidays */
-}
-
-.event.easter.theme-dark {
-  background-image: url('@/assets/card/dark/paques.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-left: 4px solid #00bcd4; /* Cyan for all holidays */
-}
-
-.event.easter.theme-light {
-  background-image: url('@/assets/card/light/paques.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-left: 4px solid #00bcd4; /* Cyan for all holidays */
-}
-
-.event.newyear.theme-dark {
-  background-image: url('@/assets/card/dark/newyear.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-left: 4px solid #00bcd4; /* Cyan for all holidays */
-}
-
-.event.newyear.theme-light {
-  background-image: url('@/assets/card/light/newyear.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-left: 4px solid #00bcd4; /* Cyan for all holidays */
-}
-
-.event.newyear.theme-dark,
-.event.labor.theme-dark,
-.event.victory.theme-dark,
-.event.bastille.theme-dark,
-.event.armistice.theme-dark,
-.event.catholic.theme-dark {
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-left: 4px solid #00bcd4; /* Cyan for all holidays */
-}
-
-.event.newyear.theme-light,
-.event.labor.theme-light,
-.event.victory.theme-light,
-.event.bastille.theme-light,
-.event.armistice.theme-light,
-.event.catholic.theme-light {
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-left: 4px solid #00bcd4; /* Cyan for all holidays */
+.event-tag {
+  font-size: calc(9.5 * var(--px));
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cat-fg);
 }
 
 .event-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .event-title {
-  font-weight: bold;
-  font-size: 0.9rem;
   flex: 1;
+  font-size: calc(12.5 * var(--px));
+  font-weight: 700;
+  line-height: 1.2;
   word-break: break-word;
 }
 
+.event-time,
+.event-date-range {
+  font-size: calc(11 * var(--px));
+  font-weight: 600;
+  color: var(--c-muted);
+}
+
 .event-shift {
-  font-size: 0.8rem;
-  color: var(--color-accent);
-  background-color: var(--color-surface);
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-weight: bold;
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  padding: calc(1 * var(--px)) calc(9 * var(--px));
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  color: var(--cat-fg);
   white-space: nowrap;
 }
 
-.event-date-range {
-  font-size: 0.8rem;
-  color: var(--color-accent);
-  font-weight: bold;
-  margin-top: 0.15rem;
-}
-
 .event-location {
-  font-size: 0.8rem;
-  color: var(--color-text);
-  margin-top: 0.15rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: calc(11 * var(--px));
+  color: var(--c-muted);
 }
 
+.event-location svg {
+  width: calc(12 * var(--px));
+  height: calc(12 * var(--px));
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Badge de la poubelle à sortir */
 .color-badge {
-  font-size: 0.8rem;
-  color: var(--color-accent);
-  background-color: var(--color-surface);
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  margin-top: 0.25rem;
-  display: inline-block;
+  align-self: flex-start;
+  margin-top: calc(2 * var(--px));
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  padding: calc(1 * var(--px)) calc(9 * var(--px));
+  border-radius: var(--radius-pill);
 }
 
 .color-badge.jaune {
-  background-color: #ffeb3b;
-  color: #000;
+  background: #f2c94c;
+  color: #3a2e00;
 }
 
 .color-badge.noire {
-  background-color: #424242;
-  color: #fff;
-}
-
-.event-location {
-  font-size: clamp(0.8rem, 1.5vh, 1.2rem);
-  margin-top: 0.25rem;
+  background: #2a2a2a;
+  color: #ffffff;
 }
 
 .loading {
@@ -754,7 +675,7 @@ setInterval(() => {
 
 .loading-text {
   font-size: 0.9rem;
-  color: var(--color-secondary);
+  color: var(--c-muted);
 }
 
 @keyframes spin {

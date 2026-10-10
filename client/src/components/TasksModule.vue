@@ -216,8 +216,7 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 0.5rem;
-  color: var(--color-primary);
+  color: var(--c-text);
   box-sizing: border-box;
   position: relative;
 }
@@ -248,7 +247,7 @@ onUnmounted(() => {
 
 .loading-text {
   font-size: 0.9rem;
-  color: var(--color-secondary);
+  color: var(--c-muted);
 }
 
 @keyframes spin {
@@ -259,7 +258,7 @@ onUnmounted(() => {
 .tasks-container {
   display: flex;
   flex-direction: row;
-  gap: 1rem;
+  gap: calc(10 * var(--px));
   height: 100%;
   position: relative;
   overflow-x: auto;
@@ -277,7 +276,8 @@ onUnmounted(() => {
   top: 0;
   width: 4px;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  background-color: var(--c-line);
   z-index: 10;
 }
 
@@ -291,13 +291,10 @@ onUnmounted(() => {
 
 .progress-fill {
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: var(--c-accent);
   transition: height 0.1s ease;
   position: absolute;
   bottom: 0;
 }
 
-button:hover {
-  background: #0056b3;
-}
 </style>

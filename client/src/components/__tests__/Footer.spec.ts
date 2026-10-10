@@ -26,7 +26,7 @@ describe('Footer', () => {
       stubs: ['ProgressBar']
     })
 
-    expect(wrapper.text()).toContain('v2.6.1')
+    expect(wrapper.text()).toContain('v3.2.0') // package.json
   })
 
   it('includes ProgressBar component', () => {

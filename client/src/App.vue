@@ -113,21 +113,23 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Grille de la page : en-tête, contenu (agenda + bande météo/tâches), pied. */
 .app {
   display: flex;
   flex-direction: column;
+  gap: var(--page-gap);
   height: 100vh;
   width: 100%;
+  padding: var(--page-pad-y) var(--page-pad-x) calc(10 * var(--px));
+  background: var(--c-bg);
+  color: var(--c-text);
   cursor: none; /* Masquer le curseur pour affichage sans périphérique */
 }
 
 .content {
   flex: 1;
-  background-color: var(--color-background);
+  min-height: 0;
   overflow: hidden;
-  padding-bottom: 0.5rem;
-  box-sizing: border-box;
   transition: opacity 0.3s ease, filter 0.3s ease;
 }
-
 </style>

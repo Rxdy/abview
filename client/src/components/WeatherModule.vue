@@ -41,55 +41,41 @@
 
     <!-- Weather Content -->
     <div v-else class="weather-content">
-      <!-- Météo actuelle -->
+      <!-- Météo actuelle : température à gauche, détails en grille 2 colonnes à droite -->
       <div class="current-weather">
         <div class="current-quick">
           <div class="current-main">
             <div class="weather-icon-wrapper" :class="getWeatherIconClass(weatherStore.weather.current?.conditions)">
               <component :is="getWeatherIcon(weatherStore.weather.current?.conditions)" class="weather-icon" />
             </div>
-            <div class="temp" :style="{ color: getTempColor(weatherStore.weather.current?.temperature || 0) }">{{ Math.round(weatherStore.weather.current?.temperature || 0) }}°C</div>
+            <div class="temp num">{{ Math.round(weatherStore.weather.current?.temperature || 0) }}°</div>
           </div>
-          <div class="time">{{ languageStore.t('updated') }}: {{ weatherStore.weather.current?.datetime || 'N/A' }}</div>
-          <div class="sun-times">
-            <div class="sun-item">
-              <SunriseIcon class="sun-icon" />
-              <span>{{ (weatherStore.weather.current?.sunrise || '').substring(0, 5) }}</span>
-            </div>
-            <div class="sun-item">
-              <MoonIcon class="sun-icon" />
-              <span>{{ (weatherStore.weather.current?.sunset || '').substring(0, 5) }}</span>
-            </div>
-          </div>
+          <div class="condition">{{ translateCondition(weatherStore.weather.current?.conditions) }}</div>
+          <div class="time">{{ languageStore.t('updated') }} {{ weatherStore.weather.current?.datetime || 'N/A' }}</div>
         </div>
-        <div class="current-details">
-          <div class="details">
-            <span>{{ languageStore.t('feelsLike') }}: {{ Math.round(weatherStore.weather.current?.feelsLike || 0) }}°C</span>
-            <span>{{ languageStore.t('humidity') }}: {{ Math.round(weatherStore.weather.current?.humidity || 0) }}%</span>
-            <span>{{ languageStore.t('wind') }}: {{ Math.round(weatherStore.weather.current?.windSpeed || 0) }} km/h {{ getWindDirection(weatherStore.weather.current?.windDirection || 0) }}</span>
-            <span>{{ languageStore.t('clouds') }}: {{ Math.round(weatherStore.weather.current?.cloudCover || 0) }}%</span>
-            <div class="uv-full-width">
-              {{ languageStore.t('uvIndex') }}:
-              <div class="uv-display">
-                <div class="uv-circle" :style="{ backgroundColor: getUvColor(Math.round(weatherStore.weather.current?.uvIndex || 0)) }">
-                  {{ Math.round(weatherStore.weather.current?.uvIndex || 0) }}
-                </div>
-                <div class="uv-label">{{ getUvLabel(Math.round(weatherStore.weather.current?.uvIndex || 0)) }}</div>
-              </div>
-            </div>
+        <div class="details">
+          <div>{{ languageStore.t('feelsLike') }} <b class="num">{{ Math.round(weatherStore.weather.current?.feelsLike || 0) }}°</b></div>
+          <div>{{ languageStore.t('humidity') }} <b class="num">{{ Math.round(weatherStore.weather.current?.humidity || 0) }} %</b></div>
+          <div>{{ languageStore.t('wind') }} <b class="num">{{ Math.round(weatherStore.weather.current?.windSpeed || 0) }} km/h {{ getWindDirection(weatherStore.weather.current?.windDirection || 0) }}</b></div>
+          <div>{{ languageStore.t('clouds') }} <b class="num">{{ Math.round(weatherStore.weather.current?.cloudCover || 0) }} %</b></div>
+          <div class="sun-item"><SunriseIcon class="sun-icon" /> <b class="num">{{ (weatherStore.weather.current?.sunrise || '').substring(0, 5) }}</b></div>
+          <div class="sun-item"><MoonIcon class="sun-icon" /> <b class="num">{{ (weatherStore.weather.current?.sunset || '').substring(0, 5) }}</b></div>
+          <div class="uv">
+            {{ languageStore.t('uvIndex') }}
+            <span class="uv-circle num" :style="{ backgroundColor: getUvColor(Math.round(weatherStore.weather.current?.uvIndex || 0)) }">
+              {{ Math.round(weatherStore.weather.current?.uvIndex || 0) }}
+            </span>
+            <b>{{ getUvLabel(Math.round(weatherStore.weather.current?.uvIndex || 0)) }}</b>
           </div>
         </div>
       </div>
 
-      <!-- Prévisions 4 jours -->
+      <!-- Prévisions 4 jours, en ligne -->
       <div class="forecast">
         <div v-for="(day, index) in forecastDays" :key="index" class="forecast-day">
-          <component :is="getWeatherIcon(day.description)" class="forecast-icon" />
           <div class="day-name">{{ day.day }}</div>
-          <div class="day-temp">
-            <span :style="{ color: getTempColor(day.tempMin) }">{{ Math.round(day.tempMin) }}°C</span> /
-            <span :style="{ color: getTempColor(day.tempMax) }">{{ Math.round(day.tempMax) }}°C</span>
-          </div>
+          <component :is="getWeatherIcon(day.description)" class="forecast-icon" />
+          <div class="day-temp num">{{ Math.round(day.tempMax) }}° <span>{{ Math.round(day.tempMin) }}°</span></div>
           <div class="day-condition">{{ translateCondition(day.description) }}</div>
         </div>
       </div>
@@ -158,7 +144,7 @@ watch(() => weatherStore.weather?.current, (current) => {
 const forecastDays = computed(() => {
   if (!weatherStore.weather?.forecast) return [];
 
-  return weatherStore.weather.forecast.slice(1, 6).map((day: any, index: number) => ({
+  return weatherStore.weather.forecast.slice(1, 5).map((day: any, index: number) => ({
     day: index === 0 ? languageStore.t('tomorrow') : new Date(day.date).toLocaleDateString(languageStore.language === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'short' }),
     tempMin: day.tempMin,
     tempMax: day.tempMax,
@@ -168,11 +154,11 @@ const forecastDays = computed(() => {
 });
 
 const getUvColor = (uvIndex: number) => {
-  if (uvIndex <= 2) return 'green';
-  if (uvIndex <= 5) return 'yellow';
-  if (uvIndex <= 7) return 'orange';
-  if (uvIndex <= 10) return 'red';
-  return 'purple';
+  if (uvIndex <= 2) return '#2e8a3e';
+  if (uvIndex <= 5) return '#b8860b';
+  if (uvIndex <= 7) return '#d9640b';
+  if (uvIndex <= 10) return '#c62828';
+  return '#7b1fa2';
 };
 
 const getUvLabel = (uvIndex: number) => {
@@ -277,209 +263,158 @@ const getWeatherIconClass = (conditions: string) => {
 .weather {
   display: flex;
   flex-direction: column;
-  color: var(--color-primary);
-  box-sizing: border-box;
-  padding: 0.5rem;
   height: 100%;
   min-height: 0;
+  padding: calc(14 * var(--px)) var(--space-4) calc(8 * var(--px));
+  color: var(--c-text);
 }
 
 .weather-content {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  gap: var(--space-3);
 }
 
 .current-weather {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  background: var(--color-surface);
-  border-radius: 8px;
-  padding: 0.5rem;
-}
-
-.light-theme .current-weather {
-  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: calc(10 * var(--px));
 }
 
 .current-quick {
+  flex-shrink: 0;
+  width: calc(118 * var(--px));
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  gap: calc(2 * var(--px));
 }
 
 .current-main {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: var(--space-2);
 }
 
-.current-details {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+/* Les nuages des icônes sont blancs : invisibles sur la carte blanche du mode jour. */
+.weather-icon,
+.forecast-icon,
+.weather-icon :deep([fill="white"]),
+.forecast-icon :deep([fill="white"]) {
+  fill: var(--c-nuage);
 }
 
 .weather-icon {
-  width: 3rem;
-  height: 3rem;
+  width: calc(40 * var(--px));
+  height: calc(40 * var(--px));
 }
 
 .temp {
-  font-size: 2rem;
-  font-weight: bold;
+  font-size: var(--fs-xxl);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.condition {
+  font-size: var(--fs-md);
+  font-weight: 700;
 }
 
 .time {
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
-.sun-times {
-  display: flex;
-  justify-content: space-around;
-  width: 100%;
-  font-size: 0.8rem;
-}
-
-.sun-item {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.sun-icon {
-  width: 1rem;
-  height: 1rem;
+  font-size: calc(12 * var(--px));
+  color: var(--c-muted);
 }
 
 .details {
+  flex: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  font-size: 0.7rem;
-  text-align: center;
+  grid-template-columns: auto auto;
+  justify-content: space-between;
+  align-content: start;
+  gap: var(--space-1) calc(10 * var(--px));
+  font-size: var(--fs-sm);
+  color: var(--c-muted);
+  white-space: nowrap;
 }
 
-.forecast {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  background: var(--color-gray);
-  border-radius: 8px;
-  padding: 0.25rem;
+.details b {
+  color: var(--c-text);
+  font-weight: 700;
 }
 
-.forecast-day {
-  display: grid;
-  grid-template-columns: auto 1fr auto 2fr;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--color-surface);
-  border-radius: 8px;
-  padding: 0.25rem;
-}
-
-.light-theme .forecast-day {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.forecast-icon {
-  width: 2rem;
-  height: 2rem;
-}
-
-.day-name {
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-
-.day-temp {
-  font-size: 1rem;
-  font-weight: bold;
-  text-align: center;
-}
-
-.day-condition {
-  font-size: 0.8rem;
-  text-transform: capitalize;
-}
-
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  min-height: 200px;
-}
-
-.loading-spinner {
-  width: 2rem;
-  height: 2rem;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top: 3px solid #007bff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-.loading-text {
-  font-size: 0.9rem;
-  color: var(--color-secondary);
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.uv-legend {
-  margin-top: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.uv-full-width {
-  grid-column: 1 / -1;
+.sun-item,
+.uv {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
-  font-size: 0.7rem;
-  text-align: center;
+  gap: calc(6 * var(--px));
 }
 
-.uv-display {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.sun-icon {
+  width: calc(16 * var(--px));
+  height: calc(16 * var(--px));
 }
 
 .uv-circle {
-  width: 24px;
-  height: 24px;
+  width: calc(18 * var(--px));
+  height: calc(18 * var(--px));
   border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 0.8rem;
+  color: #ffffff;
+  font-size: var(--fs-xs);
+  font-weight: 800;
 }
 
-.uv-label {
-  font-size: 0.7rem;
-  font-weight: bold;
+.forecast {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: calc(6 * var(--px));
+  border-top: 1px solid var(--c-line);
+  padding-top: calc(10 * var(--px));
 }
 
-/* Weather Icon Animations */
+.forecast-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(2 * var(--px));
+  min-width: 0;
+}
+
+.day-name {
+  font-size: calc(12 * var(--px));
+  font-weight: 700;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.forecast-icon {
+  width: calc(26 * var(--px));
+  height: calc(26 * var(--px));
+}
+
+.day-temp {
+  font-size: var(--fs-md);
+  font-weight: 800;
+}
+
+.day-temp span {
+  color: var(--c-muted);
+  font-weight: 600;
+}
+
+.day-condition {
+  font-size: var(--fs-xs);
+  color: var(--c-muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
 .weather-icon-wrapper.rotate-slow {
   animation: rotate-slow 20s linear infinite;
 }
@@ -661,7 +596,7 @@ const getWeatherIconClass = (conditions: string) => {
 .module-progress-bar {
   width: 100%;
   height: 3px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--c-line);
   border-radius: 2px;
   overflow: hidden;
   flex-shrink: 0;
@@ -670,7 +605,7 @@ const getWeatherIconClass = (conditions: string) => {
 
 .module-progress-fill {
   height: 100%;
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--c-accent);
   border-radius: 2px;
   transition: width 0.1s linear;
 }
