@@ -7,6 +7,23 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [v3.2.0] — 2026-10-10
+
+### Modifié
+- **Interface** : refonte graphique complète sur le modèle « D · Mélange » (jour et nuit), voir `specs/refonte-graphique.md`
+- **En-tête** : plus bas, logo AbView, pilule date/heure centrée, nom du foyer à droite
+- **Agenda** : jours en cartes, aujourd'hui en bleu, événements en cartes pastel par catégorie (travail, garde, sport, santé, poubelle, anniversaire, fêtes) ; images des anniversaires et fêtes conservées sous un voile
+- **Météo** : carte unique, détails sur 2 colonnes, prévisions 4 jours en ligne
+- **Tâches** : cartes à en-tête plein couleur (nom centré, compteur), cases de la couleur de la liste, échéances en pastilles ; défilement inchangé
+- **Pied de page** : barre d'actualisation fine, version lue dans `package.json`
+- **Police** : Nunito, servie en local
+
+### Corrigé
+- **Pied de page** : la version affichée (figée à v2.6.1) suit maintenant `package.json`
+- **Météo** : nuages des icônes invisibles sur fond clair
+
+---
+
 ## [v2.6.2] — 2026-05-05
 
 ### Corrigé

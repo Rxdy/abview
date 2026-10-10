@@ -5,3 +5,6 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
+
+// Version de l'application (package.json), injectée par Vite
+declare const __APP_VERSION__: string

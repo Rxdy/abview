@@ -43,7 +43,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: calc(14 * var(--px));
-  padding: var(--space-2) calc(22 * var(--px));
+  padding: calc(4 * var(--px)) calc(18 * var(--px));
   border-radius: var(--radius-pill);
   background: var(--c-surface);
   box-shadow: var(--shadow-card);
@@ -51,24 +51,24 @@ onUnmounted(() => {
 }
 
 .date {
-  font-size: var(--fs-lg);
+  font-size: calc(15 * var(--px));
   font-weight: 700;
 }
 
 .separateur {
   width: 1px;
-  height: calc(22 * var(--px));
+  height: calc(18 * var(--px));
   background: var(--c-line);
 }
 
 .heure {
-  font-size: var(--fs-xl);
+  font-size: calc(18 * var(--px));
   font-weight: 800;
   color: var(--c-accent-text);
 }
 
 .secondes {
-  font-size: calc(15 * var(--px));
+  font-size: calc(12 * var(--px));
   color: var(--c-muted);
 }
 </style>

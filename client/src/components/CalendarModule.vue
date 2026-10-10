@@ -353,7 +353,8 @@ const getEventsForDay = (date: Date) => {
     return {
       ...event,
       categorie,
-      etiquette: ETIQUETTES[categorie],
+      // Pas d'étiquette qui répète le titre (« Poubelle » / POUBELLE)
+      etiquette: ETIQUETTES[categorie].toLowerCase() === String(event.title || '').trim().toLowerCase() ? '' : ETIQUETTES[categorie],
       image: imageEvenement(event.type, themeStore.isDark),
     };
   });

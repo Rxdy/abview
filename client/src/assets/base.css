@@ -29,10 +29,10 @@
   --radius-pill: 999px;
 
   /* Grille de la page */
-  --page-pad-y: calc(14 * var(--px));
+  --page-pad-y: calc(10 * var(--px));
   --page-pad-x: calc(16 * var(--px));
-  --page-gap: calc(12 * var(--px));
-  --header-h: calc(52 * var(--px));
+  --page-gap: calc(10 * var(--px));
+  --header-h: calc(38 * var(--px));
   --bottom-h: calc(216 * var(--px));
   --weather-w: calc(400 * var(--px));
   --footer-h: calc(18 * var(--px));
