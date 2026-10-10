@@ -49,14 +49,40 @@ Fichiers : `components/Header.vue`, `components/DateTimeModule.vue`.
 - Nom du foyer lu depuis la config (vérifier d'où vient « Alves » aujourd'hui ; jamais codé en dur).
 
 ### 2. Agenda 8 jours — `feature/refonte-agenda` (la plus grosse zone)
-Fichiers : `components/CalendarModule.vue` (763 lignes), `components/BirthdayEffect.vue`.
+Fichiers : `components/CalendarModule.vue` (763 lignes), `components/BirthdayEffect.vue`,
+`stores/calendarStore.ts` (attribution du type), `assets/card/`.
 - Colonnes en cartes blanches ; aujourd'hui = fond bleu léger + pastille bleu plein.
-- Événements en cartes pastel par catégorie, avec étiquette (Travail, Santé, Sport, Garde,
-  Anniversaire, Repos) ; badges Jaune/Noire conservés.
-- Images de fond des fêtes/anniversaires sur la carte pastel, avec voile.
-- **À trancher avant de commencer :** l'app ne connaît pas ces catégories aujourd'hui (seulement
-  les badges jaune/noire et les catégories de jours fériés). D'où viennent-elles : agenda
-  d'origine, couleur Google, mots-clés dans le titre ?
+- Événements en cartes pastel avec une étiquette de catégorie.
+
+**Catégories** (décidé le 10/10 : définies à partir des types que l'app attribue déjà) :
+
+| Catégorie | Étiquette | Vient de | Carte |
+|---|---|---|---|
+| Travail | Travail | `work`, `planning` (postes, plannings Silae) | pastel bleu |
+| Garde | Garde | `garde-alternee` | pastel violet |
+| Sport | Sport | `rugby`, `sport` | pastel vert |
+| Santé | Santé | `medical`, ou événement d'agenda dont le titre contient dentiste, médecin, docteur, kiné, psy, ortho, ophtalmo, pédiatre, hôpital, vaccin, prise de sang, rdv médical | pastel rouge |
+| Maison | Poubelle | `jaune`, `noire` (badge Jaune / Noire conservé) | pastel ambre |
+| Anniversaire | Anniversaire | `birthday` | **image de fond** + voile |
+| Fête nationale | Fête nationale | jours fériés `type: 'national'` (newyear, labor, victory, bastille, armistice) | **image de fond** + voile |
+| Fête religieuse | Fête religieuse | jours fériés `type: 'religious'` (christmas, easter, catholic, ramadan, lent) | **image de fond** + voile |
+| Autre | aucune | `default` (le reste de l'agenda) | pastel gris-bleu |
+
+- Couleurs : un fond pastel et une couleur d'étiquette par catégorie, en jour et en nuit, qui se
+  distinguent aussi par la luminosité (pas seulement la teinte) ; contraste du texte ≥ 4.5:1.
+- Les catégories sont calculées à un seul endroit (une fonction `categorieEvenement`, testée),
+  pas dispersées dans le CSS comme aujourd'hui.
+
+**Images de fond** (anniversaire, fêtes nationales, fêtes religieuses) :
+- Existantes dans `assets/card/{light,dark}/` : `anniversaire.png`, `paques.png`, `newyear.png`
+  (utilisée aujourd'hui pour Noël).
+- **Manquantes** : fête nationale (14 juillet, 8 mai, 11 novembre, 1er mai) et les autres fêtes
+  religieuses (Toussaint, Assomption, Ascension, Pentecôte, Ramadan, Carême). Le code y fait
+  référence mais les fichiers n'existent pas : ces jours n'ont aujourd'hui aucun fond. À créer
+  (jour + nuit), au minimum un fond « national » et un fond « religieux » génériques.
+- Bug à corriger au passage : `getDayStyle` construit `/src/assets/card/…` à l'exécution, un chemin
+  qui n'existe pas dans le build de prod. Passer par des imports Vite.
+- Le voile garde le titre lisible sur l'image, en jour comme en nuit.
 - Si la branche devient trop grosse : la couper en `refonte-agenda-colonnes` puis
   `refonte-agenda-cartes`.
 
@@ -69,9 +95,8 @@ Fichiers : `components/WeatherModule.vue` (676 lignes).
 ### 4. Tâches — `feature/refonte-taches`
 Fichiers : `components/TasksModule.vue`, `components/TaskList.vue`, `components/TaskItem.vue`.
 - Cartes à en-tête plein couleur, cases colorées, échéances en pastilles.
-- **À trancher :** la maquette montre 3 listes, l'app en a 5 ou plus (Action, Courses, Luis,
-  Rudy…), qui débordent à droite aujourd'hui. Défilement automatique, rotation par groupes de 3,
-  ou cartes plus étroites ?
+- **Défilement conservé comme l'original** (décidé le 10/10) : toutes les listes, avec le
+  défilement actuel ; seule l'apparence des cartes change.
 
 ### 5. Pied — `feature/refonte-pied`
 Fichiers : `components/Footer.vue`, `components/ProgressBar.vue`.
