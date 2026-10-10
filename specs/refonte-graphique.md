@@ -83,6 +83,13 @@ Fichiers : `components/CalendarModule.vue` (763 lignes), `components/BirthdayEff
 - Si la branche devient trop grosse : la couper en `refonte-agenda-colonnes` puis
   `refonte-agenda-cartes`.
 
+### Classer un événement saisi à la main dans Google Agenda
+- **Couleur de l'événement** (associations dans `client/public/config.json`, `categories.couleurs`) :
+  Raisin → Garde, Banane → Rendez-vous.
+- **Mots-clés du titre** (`categories.motsCles`) : santé (dentiste, kiné, psy…), rendez-vous (rdv,
+  rendez-vous). Pour un rendez-vous, le mot-clé est retiré du titre affiché.
+- Les outils qui écrivent dans l'agenda (planning-relay) posent la propriété privée `categorie`.
+
 ### 3. Météo — `feature/refonte-meteo`
 Fichiers : `components/WeatherModule.vue` (676 lignes).
 - Carte blanche : température et icône, détails en grille 2 colonnes (ressenti, humidité, vent,
