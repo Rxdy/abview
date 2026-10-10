@@ -23,7 +23,7 @@ describe('Header', () => {
       stubs: ['DateTimeModule']
     })
 
-    expect(wrapper.find('img').exists()).toBe(true)
+    expect(wrapper.find('.logo-badge').text()).toBe('Ab')
     expect(wrapper.text()).toContain('AbView')
   })
 
@@ -50,7 +50,6 @@ describe('Header', () => {
 
     expect(wrapper.find('.header').exists()).toBe(true)
     expect(wrapper.find('.logo').exists()).toBe(true)
-    expect(wrapper.find('.center').exists()).toBe(true)
-    expect(wrapper.find('.right').exists()).toBe(true)
+    expect(wrapper.find('.foyer').text()).toBe('Test Dashboard')
   })
 })

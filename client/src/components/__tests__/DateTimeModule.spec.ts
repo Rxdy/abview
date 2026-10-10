@@ -78,13 +78,23 @@ describe('DateTimeModule', () => {
     const wrapper = mount(DateTimeModule)
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.text()).toContain('lundi 15 juin 2026')
+    expect(wrapper.find('.date').text()).toBe('Lundi 15 juin 2026')
   })
 
   it('has correct CSS classes', () => {
     const wrapper = mount(DateTimeModule)
 
     expect(wrapper.find('.date-time').exists()).toBe(true)
-    expect(wrapper.findAll('span')).toHaveLength(2)
+    expect(wrapper.find('.date').exists()).toBe(true)
+    expect(wrapper.find('.heure').exists()).toBe(true)
+  })
+
+  it('shows hours:minutes, seconds apart', async () => {
+    vi.setSystemTime(new Date(2026, 0, 20, 9, 5, 7))
+    const wrapper = mount(DateTimeModule)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.heure').text()).toBe('09:05:07')
+    expect(wrapper.find('.secondes').text()).toBe(':07')
   })
 })
