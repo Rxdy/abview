@@ -34,19 +34,19 @@ const dashboardStore = useDashboardStore();
 }
 
 .logo-img {
-  width: calc(44 * var(--px));
-  height: calc(44 * var(--px));
+  width: calc(32 * var(--px));
+  height: calc(32 * var(--px));
   object-fit: contain;
 }
 
 .logo h1 {
-  font-size: var(--fs-lg);
+  font-size: calc(16 * var(--px));
   font-weight: 800;
 }
 
 .foyer {
   justify-self: end;
-  font-size: calc(20 * var(--px));
+  font-size: calc(17 * var(--px));
   font-weight: 800;
 }
 </style>

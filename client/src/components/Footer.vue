@@ -7,7 +7,7 @@
       <ProgressBar />
     </div>
     <div class="right">
-      <span class="num">v2.6.1</span>
+      <span class="num">v{{ version }}</span>
     </div>
   </footer>
 </template>
@@ -17,6 +17,7 @@ import { computed } from 'vue';
 import ProgressBar from './ProgressBar.vue';
 
 const currentYear = computed(() => new Date().getFullYear());
+const version = __APP_VERSION__;
 </script>
 
 <style scoped>

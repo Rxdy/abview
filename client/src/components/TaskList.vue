@@ -1,7 +1,7 @@
 <template>
   <div class="task-list" :style="{ '--list-color': adjustedListColor, '--list-on': texteSurCouleur }" :class="{ 'light-theme': !themeStore.isDark }">
     <div class="list-title" :style="{ backgroundColor: adjustedListColor }">
-      <span>{{ listTitle }}</span>
+      <span class="list-name">{{ listTitle }}</span>
       <span class="list-count num">{{ pendingCount }}</span>
     </div>
     <div ref="tasksContainer" class="tasks-container">
@@ -240,17 +240,24 @@ const isDark = computed(() => {
 
 .list-title {
   flex-shrink: 0;
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
+  justify-content: center;
   padding: calc(9 * var(--px)) calc(14 * var(--px));
   color: var(--list-on);
   font-size: calc(15 * var(--px));
   font-weight: 800;
 }
 
+.list-name {
+  text-align: center;
+}
+
+/* Compteur à droite, sans décentrer le nom */
 .list-count {
+  position: absolute;
+  right: calc(14 * var(--px));
   font-size: calc(12 * var(--px));
   font-weight: 800;
   padding: calc(1 * var(--px)) var(--space-2);

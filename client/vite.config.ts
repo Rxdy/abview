@@ -1,4 +1,8 @@
 import { fileURLToPath, URL } from 'node:url'
+import { readFileSync } from 'node:fs'
+
+// Version affichée dans le pied de page : une seule source, package.json
+const version = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -27,6 +31,7 @@ export default defineConfig({
     }
   },
   define: {
+    __APP_VERSION__: JSON.stringify(version),
     __VUE_PROD_DEVTOOLS__: false,
     __VUE_DEVTOOLS_GLOBAL_HOOK__: false,
   },

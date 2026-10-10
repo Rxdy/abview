@@ -367,7 +367,7 @@ describe('CalendarModule', () => {
 
       const [fete] = vm.getEventsForDay(new Date(new Date().getFullYear(), 6, 14))
       expect(fete.categorie).toBe('national')
-      expect(fete.etiquette).toBe('Fête nationale')
+      expect(fete.etiquette).toBe('') // le titre « Fête Nationale » suffit
     })
 
     it('donne une image de fond et l\'étiquette Anniversaire', () => {
@@ -380,6 +380,17 @@ describe('CalendarModule', () => {
       expect(anniv.categorie).toBe('anniversaire')
       expect(anniv.image).toBeTruthy()
       expect(anniv.title).toBe('Lou')
+    })
+
+    it("n'affiche pas d'étiquette qui répète le titre (Poubelle)", () => {
+      const jour = new Date(new Date().getFullYear(), 6, 2)
+      const iso = jour.getFullYear() + '-07-02'
+      mockCalendarStore.allEvents = [{ id: 'p', title: 'Poubelle', date: iso, type: 'jaune' }] as any
+      const vm = mount(CalendarModule, { stubs: ['ErrorDisplay'] }).vm as any
+
+      const [poubelle] = vm.getEventsForDay(jour)
+      expect(poubelle.categorie).toBe('poubelle')
+      expect(poubelle.etiquette).toBe('')
     })
 
     it('classe un poste de planning-relay en travail, sans image', () => {
