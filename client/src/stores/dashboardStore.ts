@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import type { ReglesCategories } from '../utils/categories';
 
 export interface GridConfig {
   columns: number;
@@ -20,12 +21,14 @@ export const useDashboardStore = defineStore('dashboard', {
     modules: [] as ModuleConfig[],
     name: 'Abview' as string,
     language: 'fr' as string,
+    categories: {} as ReglesCategories,
   }),
   actions: {
     async loadConfig() {
       try {
         const response = await fetch('/config.json');
-        const { grid, modules, name, language } = await response.json();
+        const { grid, modules, name, language, categories } = await response.json();
+        this.categories = categories || {};
         this.grid = grid;
         this.modules = modules;
         this.name = name || 'Abview';

@@ -1,6 +1,14 @@
 /**
  * Catégorie d'un événement de l'agenda : étiquette, couleurs (jetons --cat-* de base.css) et
  * image de fond éventuelle. Seul endroit où un événement est classé (specs/refonte-graphique.md).
+ *
+ * Ordre de décision, du plus fiable au moins fiable :
+ *  1. la catégorie déclarée par la source : champ « categorie » du JSON des horaires, ou propriété
+ *     privée « categorie » de l'événement Google (posée par l'outil qui l'a écrit, ex. planning-relay) ;
+ *  2. la couleur de l'événement dans Google Agenda, associée à une catégorie dans config.json ;
+ *  3. le type que l'app connaît déjà (anniversaire, fêtes, poubelle, postes et garde des horaires) ;
+ *  4. les mots-clés du titre, définis dans config.json (santé, rendez-vous).
+ * Jamais de prénom ni de titre précis codé ici.
  */
 import anniversaireJour from '@/assets/card/light/anniversaire.png'
 import anniversaireNuit from '@/assets/card/dark/anniversaire.png'
@@ -14,6 +22,7 @@ export type Categorie =
   | 'garde'
   | 'sport'
   | 'sante'
+  | 'rdv'
   | 'poubelle'
   | 'anniversaire'
   | 'national'
@@ -25,6 +34,7 @@ export const ETIQUETTES: Record<Categorie, string> = {
   garde: 'Garde',
   sport: 'Sport',
   sante: 'Santé',
+  rdv: 'Rendez-vous',
   poubelle: 'Poubelle',
   anniversaire: 'Anniversaire',
   national: 'Fête nationale',
@@ -32,26 +42,79 @@ export const ETIQUETTES: Record<Categorie, string> = {
   autre: '',
 }
 
-// Catégories des jours spéciaux de utils/holidays.ts
-const FETES_NATIONALES = ['newyear', 'labor', 'victory', 'bastille', 'armistice']
-const FETES_RELIGIEUSES = ['christmas', 'easter', 'catholic', 'ramadan', 'lent']
+/** Bloc « categories » de config.json */
+export interface ReglesCategories {
+  couleurs?: Record<string, string>
+  motsCles?: Partial<Record<Categorie, string[]>>
+}
 
-const SANTE = /\b(dentiste|m[ée]decin|docteur|dr\.?|kin[ée]|psy|neuropsy|ortho|ophtalmo|p[ée]diatre|h[ôo]pital|vaccin|prise de sang|rdv m[ée]dical|radio|labo|pharmacie)/i
-// Présence des enfants saisie dans l'agenda (en plus de la garde alternée des horaires)
-const GARDE = /\bgarde\b|lyam\s+(et|&)\s+noah/i
-// Postes écrits dans l'agenda par planning-relay (« Charlène — Matin ») ou saisis à la main
-const TRAVAIL = /(—|-)\s*(matin|soir|nuit|journ[ée]e)\b|\bposte\b/i
+/** Ce qu'il faut savoir d'un événement pour le classer */
+export interface EvenementAClasser {
+  type?: string
+  titre?: string
+  categorie?: string | null
+  couleur?: string | null
+}
 
-export function categorieEvenement(type: string | undefined, titre = ''): Categorie {
-  const t = (type || '').toLowerCase()
-  if (t === 'birthday') return 'anniversaire'
-  if (FETES_NATIONALES.includes(t)) return 'national'
-  if (FETES_RELIGIEUSES.includes(t)) return 'religieux'
-  if (t === 'jaune' || t === 'noire') return 'poubelle'
-  if (t === 'garde-alternee' || t === 'family' || GARDE.test(titre)) return 'garde'
-  if (t === 'rugby' || t === 'sport') return 'sport'
-  if (t === 'medical' || SANTE.test(titre)) return 'sante'
-  if (t === 'work' || t === 'planning' || TRAVAIL.test(titre)) return 'travail'
+const CATEGORIES = Object.keys(ETIQUETTES) as Categorie[]
+
+// Mots-clés par défaut, si config.json n'en donne pas
+const MOTS_CLES_PAR_DEFAUT: Partial<Record<Categorie, string[]>> = {
+  sante: ['dentiste', 'medecin', 'docteur', 'kine', 'psy', 'ortho', 'ophtalmo', 'pediatre', 'hopital', 'vaccin', 'prise de sang'],
+  rdv: ['rdv', 'rendez-vous', 'rendez vous'],
+}
+
+// Types déjà attribués par l'app (holidays.ts, horaires, anniversaires)
+const PAR_TYPE: Record<string, Categorie> = {
+  birthday: 'anniversaire',
+  newyear: 'national',
+  labor: 'national',
+  victory: 'national',
+  bastille: 'national',
+  armistice: 'national',
+  christmas: 'religieux',
+  easter: 'religieux',
+  catholic: 'religieux',
+  ramadan: 'religieux',
+  lent: 'religieux',
+  jaune: 'poubelle',
+  noire: 'poubelle',
+  'garde-alternee': 'garde',
+  family: 'garde',
+  rugby: 'sport',
+  sport: 'sport',
+  medical: 'sante',
+  work: 'travail',
+  planning: 'travail',
+}
+
+const valide = (c: string | null | undefined): Categorie | null =>
+  c && (CATEGORIES as string[]).includes(c) ? (c as Categorie) : null
+
+// « Kiné » → « kine » : comparaison sans accents ni majuscules
+const normaliser = (texte: string) =>
+  texte.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+
+const contientMot = (titre: string, mot: string) => {
+  const m = normaliser(mot).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(^|[^a-z0-9])${m}`).test(titre)
+}
+
+export function categorieEvenement(ev: EvenementAClasser, regles: ReglesCategories = {}): Categorie {
+  const declaree = valide(ev.categorie)
+  if (declaree) return declaree
+
+  const parCouleur = ev.couleur ? valide(regles.couleurs?.[ev.couleur]) : null
+  if (parCouleur) return parCouleur
+
+  const parType = PAR_TYPE[(ev.type || '').toLowerCase()]
+  if (parType) return parType
+
+  const titre = normaliser(ev.titre || '')
+  const motsCles = { ...MOTS_CLES_PAR_DEFAUT, ...regles.motsCles }
+  for (const [categorie, mots] of Object.entries(motsCles)) {
+    if (valide(categorie) && mots?.some(mot => contientMot(titre, mot))) return categorie as Categorie
+  }
   return 'autre'
 }
 

@@ -50,6 +50,7 @@
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useCalendarStore } from '../stores/calendarStore';
 import { useThemeStore } from '../stores/themeStore';
+import { useDashboardStore } from '../stores/dashboardStore';
 import ErrorDisplay from './ErrorDisplay.vue';
 import { useAutoScroll } from '../composables/useAutoScroll';
 import { getAllSpecialEvents } from '../utils/holidays';
@@ -57,6 +58,7 @@ import { categorieEvenement, imageEvenement, ETIQUETTES } from '../utils/categor
 
 const calendarStore = useCalendarStore();
 const themeStore = useThemeStore();
+const dashboardStore = useDashboardStore();
 const dayColumns = ref<(HTMLElement | null)[]>([]);
 const currentDate = ref(new Date());
 let dateUpdateTimer: number | null = null;
@@ -349,7 +351,10 @@ const getEventsForDay = (date: Date) => {
 
   // Catégorie (étiquette, couleurs) et image de fond de chaque carte
   return [...sorted, ...daySpecialEvents].map(event => {
-    const categorie = categorieEvenement(event.type, event.summary || event.title);
+    const categorie = categorieEvenement(
+      { type: event.type, titre: event.summary || event.title, categorie: event.categorie, couleur: event.couleur },
+      dashboardStore.categories,
+    );
     return {
       ...event,
       categorie,
@@ -547,6 +552,7 @@ setInterval(() => {
 .cat-garde { --cat-bg: var(--cat-garde-bg); --cat-fg: var(--cat-garde-fg); }
 .cat-sport { --cat-bg: var(--cat-sport-bg); --cat-fg: var(--cat-sport-fg); }
 .cat-sante { --cat-bg: var(--cat-sante-bg); --cat-fg: var(--cat-sante-fg); }
+.cat-rdv { --cat-bg: var(--cat-rdv-bg); --cat-fg: var(--cat-rdv-fg); }
 .cat-poubelle { --cat-bg: var(--cat-poubelle-bg); --cat-fg: var(--cat-poubelle-fg); }
 .cat-anniversaire { --cat-bg: var(--cat-anniversaire-bg); --cat-fg: var(--cat-anniversaire-fg); }
 .cat-national { --cat-bg: var(--cat-national-bg); --cat-fg: var(--cat-national-fg); }

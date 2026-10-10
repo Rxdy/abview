@@ -393,11 +393,11 @@ describe('CalendarModule', () => {
       expect(poubelle.etiquette).toBe('')
     })
 
-    it('classe un poste de planning-relay en travail, sans image', () => {
+    it('classe en travail un poste dont planning-relay a déclaré la catégorie, sans image', () => {
       const jour = new Date(new Date().getFullYear(), 6, 2)
       const iso = jour.getFullYear() + '-07-02'
       mockCalendarStore.allEvents = [
-        { id: 'c', summary: 'Charlène — Matin', start: `${iso}T07:00:00`, end: `${iso}T15:45:00`, type: 'default' },
+        { id: 'c', summary: 'Charlène — Matin', start: `${iso}T07:00:00`, end: `${iso}T15:45:00`, type: 'default', categorie: 'travail' },
       ] as any
       const vm = mount(CalendarModule, { stubs: ['ErrorDisplay'] }).vm as any
 
