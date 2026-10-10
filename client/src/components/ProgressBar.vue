@@ -1,9 +1,12 @@
 <template>
   <div v-if="progressStore.progress >= 0 && progressStore.progress <= 100" class="progress-container">
-    <div class="progress-bar" :style="{ transform: `scaleX(${progressStore.progress / 100})` }"></div>
-    <div class="progress-info">
-      <span class="progress-text">{{ timeRemaining }}</span>
-      <span class="last-update">Dernière mise à jour: {{ lastRefreshFormatted }}</span>
+    <div class="progress-track">
+      <div class="progress-bar" :style="{ transform: `scaleX(${progressStore.progress / 100})` }"></div>
+    </div>
+    <div class="progress-info num">
+      <span>Prochaine actualisation dans <span class="progress-text">{{ timeRemaining }}</span></span>
+      <span aria-hidden="true">·</span>
+      <span class="last-update">dernière à {{ lastRefreshFormatted }}</span>
     </div>
   </div>
 </template>
@@ -67,44 +70,36 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Barre fine et arrondie qui prend la largeur disponible, texte d'actualisation à droite. */
 .progress-container {
-  position: relative;
-  width: 800px;
-  height: 24px;
-  background: var(--color-surface);
-  border-radius: 12px;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.progress-track {
+  flex: 1;
+  height: calc(6 * var(--px));
+  border-radius: var(--radius-pill);
+  background: var(--c-line);
   overflow: hidden;
 }
 
 .progress-bar {
   height: 100%;
-  background: var(--color-accent);
+  border-radius: var(--radius-pill);
+  background: var(--c-accent);
   transform-origin: left;
   transition: transform 0.3s ease-out;
   will-change: transform;
 }
 
 .progress-info {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-size: 0.8rem;
-  font-weight: bold;
-}
-
-.progress-text {
-  white-space: nowrap;
-  font-weight: bold;
-}
-
-.last-update {
-  font-size: 0.7rem;
-  opacity: 0.8;
-  font-weight: normal;
+  gap: calc(6 * var(--px));
   white-space: nowrap;
 }
 </style>
