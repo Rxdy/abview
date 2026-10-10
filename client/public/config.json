@@ -48,7 +48,9 @@
     }
   ],
   "categories": {
-    "couleurs": {},
+    "couleurs": {
+      "3": "garde"
+    },
     "motsCles": {
       "sante": [
         "dentiste",
