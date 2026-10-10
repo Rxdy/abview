@@ -50,6 +50,7 @@
   --c-today: #1b2538;
   --c-due-bg: #3a2a12;
   --c-due-fg: #ffc46b;
+  --c-nuage: #ffffff; /* nuages des icônes météo, dessinés en blanc */
   --shadow-card: none;
 
   /* Catégories d'événements — fond de carte / étiquette (nuit) */
@@ -94,6 +95,7 @@
   --c-today: #e3ebfb;
   --c-due-bg: #ffebc7;
   --c-due-fg: #7a4a00;
+  --c-nuage: #a3adbd;
   --shadow-card: 0 2px 6px rgba(20, 20, 30, 0.07);
 
   /* Catégories d'événements — fond de carte / étiquette (jour) */
