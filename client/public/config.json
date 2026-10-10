@@ -50,7 +50,8 @@
   "categories": {
     "couleurs": {
       "3": "garde",
-      "5": "rdv"
+      "5": "rdv",
+      "11": "sante"
     },
     "motsCles": {
       "sante": [
@@ -66,8 +67,6 @@
         "hopital",
         "vaccin",
         "prise de sang",
-        "radio",
-        "labo",
         "pharmacie"
       ],
       "rdv": [
