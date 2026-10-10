@@ -1,7 +1,8 @@
 <template>
-  <div class="task-list" :style="{ backgroundColor: adjustedListColor }" :class="{ 'light-theme': !themeStore.isDark }">
-    <div class="list-title">
-      {{ listTitle }}
+  <div class="task-list" :style="{ '--list-color': adjustedListColor, '--list-on': texteSurCouleur }" :class="{ 'light-theme': !themeStore.isDark }">
+    <div class="list-title" :style="{ backgroundColor: adjustedListColor }">
+      <span>{{ listTitle }}</span>
+      <span class="list-count num">{{ pendingCount }}</span>
     </div>
     <div ref="tasksContainer" class="tasks-container">
       <!-- Pending Tasks -->
@@ -73,6 +74,22 @@ const adjustedListColor = computed(() => {
   }
   return props.listColor; // Luis keeps #004C99
 });
+
+// Texte de l'en-tête lisible sur la couleur de la liste (blanc sur foncé, sombre sur clair)
+const texteSurCouleur = computed(() => {
+  const hex = adjustedListColor.value.replace('#', '');
+  const full = hex.length === 3 ? hex.split('').map(c => c + c).join('') : hex;
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(full.slice(i, i + 2), 16) / 255);
+  if ([r, g, b].some(v => Number.isNaN(v))) return '#ffffff';
+  const lin = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  const luminance = 0.2126 * lin(r!) + 0.7152 * lin(g!) + 0.0722 * lin(b!);
+  // Le plus contrasté des deux : blanc (L = 1) ou texte sombre #1c1d20 (L ≈ 0.012)
+  const contrasteBlanc = 1.05 / (luminance + 0.05);
+  const contrasteSombre = (luminance + 0.05) / 0.062;
+  return contrasteSombre > contrasteBlanc ? '#1c1d20' : '#ffffff';
+});
+
+const pendingCount = computed(() => props.tasks.filter(t => t.status !== 'completed').length);
 
 const tasksMap = computed(() => {
   const map = new Map();
@@ -207,36 +224,47 @@ const isDark = computed(() => {
 </script>
 
 <style scoped>
+/* Carte de liste : en-tête plein de la couleur de la liste, corps sur la surface. */
 .task-list {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-radius: 10px;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  width: 300px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
   max-height: 100%;
-  position: relative;
+  width: calc(276 * var(--px));
+  flex-shrink: 0;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--c-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .list-title {
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 0.5rem;
-  color: var(--color-text);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: calc(9 * var(--px)) calc(14 * var(--px));
+  color: var(--list-on);
+  font-size: calc(15 * var(--px));
+  font-weight: 800;
+}
+
+.list-count {
+  font-size: calc(12 * var(--px));
+  font-weight: 800;
+  padding: calc(1 * var(--px)) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .tasks-container {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  height: 100%;
+  padding: calc(10 * var(--px)) calc(14 * var(--px));
   overflow-y: auto;
-  flex: 1;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -248,22 +276,6 @@ const isDark = computed(() => {
 .tasks-section {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: calc(7 * var(--px));
 }
-
-.section-title {
-  font-size: 0.8rem;
-  font-weight: bold;
-  color: inherit;
-  margin-bottom: 0.2rem;
-  text-transform: uppercase;
-}
-
-.completed-section {
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.2);
-}
-
-
 </style>

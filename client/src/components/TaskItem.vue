@@ -2,7 +2,7 @@
   <div
     class="task-item"
     :class="{ completed: task.status === 'completed', 'dark-bg': isDark }"
-    :style="{ marginLeft: task.level * 20 + 'px' }"
+    :style="{ marginLeft: `calc(${task.level * 24} * var(--px))` }"
   >
     <div class="task-header">
       <input
@@ -15,7 +15,7 @@
       <span class="task-title">{{ task.title }}</span>
       <span
         v-if="task.status !== 'completed' && task.due"
-        class="task-due"
+        class="task-due num"
       >
         {{ formatDate(task.due) }}
       </span>
@@ -59,83 +59,79 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <style scoped>
+/* Ligne de tâche : case carrée de la couleur de la liste (--list-color), échéance en pastille. */
 .task-item {
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 0.25rem 0.3rem;
-  color: #000;
-  min-height: 1.8rem;
-  margin-bottom: 0.25rem;
+  color: var(--c-text);
 }
 
 .task-item.completed {
   opacity: 0.7;
 }
 
-.task-item.dark-bg {
-  background-color: #f0f0f0;
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #000;
-}
-
 .task-header {
   display: flex;
   align-items: flex-start;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .task-title {
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: #000;
-  line-height: 1.15;
   flex: 1;
+  min-width: 0;
+  font-size: calc(13 * var(--px));
+  font-weight: 600;
+  line-height: 1.25;
 }
 
 .task-due {
-  font-size: 0.65rem;
-  opacity: 0.9;
-  margin-left: auto;
-  color: #000;
+  flex-shrink: 0;
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  padding: calc(1 * var(--px)) calc(7 * var(--px));
+  border-radius: var(--radius-pill);
+  background: var(--c-due-bg);
+  color: var(--c-due-fg);
 }
 
 .task-notes {
-  font-size: 0.5rem;
-  color: #000;
-  margin-top: 0.1rem;
-  padding-left: 1.4rem;
+  margin-top: calc(1 * var(--px));
+  padding-left: calc(24 * var(--px));
+  font-size: var(--fs-xs);
+  color: var(--c-muted);
+  line-height: 1.2;
   word-break: break-word;
-  line-height: 1.1;
 }
 
 .task-checkbox {
-  width: 1rem;
-  height: 1rem;
-  cursor: default;
-  background-color: var(--color-gray);
-  border: 2px solid #000;
-  border-radius: 50%;
+  flex-shrink: 0;
+  width: calc(16 * var(--px));
+  height: calc(16 * var(--px));
+  margin-top: calc(1 * var(--px));
+  /* un peu de la couleur du texte : visible même pour une liste foncée en mode nuit */
+  border: 2px solid color-mix(in srgb, var(--list-color, var(--c-muted)) 70%, var(--c-text));
+  border-radius: calc(6 * var(--px));
+  background: transparent;
   appearance: none;
   -webkit-appearance: none;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-  flex-shrink: 0;
-  margin-top: 0.1rem;
+  cursor: default;
 }
 
 .task-checkbox:checked {
-  background-color: #4caf50;
-  border-color: #4caf50;
+  background-color: var(--list-color, #4caf50);
   position: relative;
 }
 
 .task-checkbox:checked::after {
   content: "✔";
   color: #fff;
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+/* Tâche parente (avec sous-tâches) : pas de case, titre en gras */
+.task-header:not(:has(.task-checkbox)) .task-title {
+  font-weight: 800;
 }
 </style>
