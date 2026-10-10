@@ -40,6 +40,27 @@ test.group('GoogleCalendarService', (group) => {
     assert.equal(events[0].start, '2026-01-01T10:00:00Z')
   })
 
+  test('listEvents transmet la catégorie privée et la couleur Google', async ({ assert }) => {
+    mockCalendarApi(async () => ({
+      data: {
+        items: [
+          fakeEvent({
+            extendedProperties: { private: { categorie: 'travail', planning_relay: 'x' } },
+            colorId: '3',
+          }),
+          fakeEvent({ id: 'evt-sans' }),
+        ],
+      },
+    }))
+
+    const events = await new GoogleCalendarService().listEvents()
+
+    assert.equal(events[0].categorie, 'travail')
+    assert.equal(events[0].couleur, '3')
+    assert.isNull(events[1].categorie)
+    assert.isNull(events[1].couleur)
+  })
+
   test('listEvents gère les événements sans champs optionnels', async ({ assert }) => {
     mockCalendarApi(async () => ({
       data: {

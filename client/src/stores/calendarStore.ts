@@ -183,6 +183,7 @@ function transformHorairesToEvents(horaires: any[]): any[] {
             endTime: null,
             location: "Chez Papa",
             isPlanning: true,
+            categorie: person.categorie || null,
             isAllDay: true,
             noNotification: true,
             type: "garde-alternee",
@@ -246,6 +247,7 @@ function transformHorairesToEvents(horaires: any[]): any[] {
             endTime: end,
             location: person.location || "",
             isPlanning: true,
+            categorie: person.categorie || null,
             type: eventType,
           });
         });
@@ -314,6 +316,7 @@ function transformHorairesToEvents(horaires: any[]): any[] {
               endTime: end,
               location: person.location || "",
               isPlanning: true,
+              categorie: person.categorie || null,
               type: eventType,
             });
           });
@@ -344,6 +347,7 @@ function transformHorairesToEvents(horaires: any[]): any[] {
             endTime: null,
             location: person.location || "",
             isPlanning: true,
+            categorie: person.categorie || null,
             isAllDay: true,
             type: eventType,
             description: person.description || "",
