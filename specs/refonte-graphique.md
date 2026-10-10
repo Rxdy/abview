@@ -76,12 +76,9 @@ Fichiers : `components/CalendarModule.vue` (763 lignes), `components/BirthdayEff
 **Images de fond** (anniversaire, fêtes nationales, fêtes religieuses) :
 - Existantes dans `assets/card/{light,dark}/` : `anniversaire.png`, `paques.png`, `newyear.png`
   (utilisée aujourd'hui pour Noël).
-- **Manquantes** : fête nationale (14 juillet, 8 mai, 11 novembre, 1er mai) et les autres fêtes
-  religieuses (Toussaint, Assomption, Ascension, Pentecôte, Ramadan, Carême). Le code y fait
-  référence mais les fichiers n'existent pas : ces jours n'ont aujourd'hui aucun fond. À créer
-  (jour + nuit), au minimum un fond « national » et un fond « religieux » génériques.
-- Bug à corriger au passage : `getDayStyle` construit `/src/assets/card/…` à l'exécution, un chemin
-  qui n'existe pas dans le build de prod. Passer par des imports Vite.
+- Les images manquantes (fête nationale, autres fêtes religieuses) sont des **tâches en attente,
+  hors refonte**. En attendant, une carte sans image garde le pastel de sa catégorie.
+- Le fond de colonne des jours fériés (`getDayStyle`) n'est pas repris dans la refonte.
 - Le voile garde le titre lisible sur l'image, en jour comme en nuit.
 - Si la branche devient trop grosse : la couper en `refonte-agenda-colonnes` puis
   `refonte-agenda-cartes`.
