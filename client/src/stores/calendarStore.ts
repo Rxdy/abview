@@ -367,13 +367,21 @@ function transformCalendarEvents(calendarEvents: any[]): any[] {
     const endTime = hasTime && event.end ? new Date(event.end).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null;
     
     let eventType = 'default';
+    let title = event.summary || 'Événement';
     if (event.summary?.toLowerCase().includes('anniversaire') || event.summary?.toLowerCase().includes('birthday')) {
       eventType = 'birthday';
+    }
+
+    // Poubelle publiée par planning-relay (« Poubelle — Jaune ») : même badge Jaune / Noire qu'avant
+    const bac = event.categorie === 'poubelle' ? /\b(jaune|noire)\b/i.exec(title)?.[1]?.toLowerCase() : undefined;
+    if (bac) {
+      eventType = bac;
+      title = 'Poubelle';
     }
     
     return {
       ...event,
-      title: event.summary || 'Événement',
+      title,
       startTime,
       endTime,
       type: eventType,

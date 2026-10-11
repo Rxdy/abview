@@ -389,6 +389,20 @@ describe('useCalendarStore', () => {
       const bday = store.allEvents.find((e) => e.id === 'bday')
       expect(bday?.type).toBe('birthday')
     })
+
+    it('redonne son badge à la poubelle publiée par planning-relay', () => {
+      const store = useCalendarStore()
+      const demain = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+      store.calendarEvents = [
+        { id: 'p1', summary: 'Poubelle — Noire', start: demain, end: demain, categorie: 'poubelle' },
+        { id: 'p2', summary: 'Noire de monde', start: demain, end: demain, categorie: null },
+      ]
+
+      const poubelle = store.allEvents.find((e) => e.id === 'p1')
+      expect(poubelle?.type).toBe('noire')
+      expect(poubelle?.title).toBe('Poubelle')
+      expect(store.allEvents.find((e) => e.id === 'p2')?.type).toBe('default')
+    })
   })
 
   describe('Transformation du planning (horaires)', () => {

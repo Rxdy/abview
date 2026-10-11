@@ -1,12 +1,1 @@
-[
-  {
-    "name": "Poubelle",
-    "type": "allday",
-    "days": ["thursday"],
-    "rotationType": "alternate",
-    "alternating": [
-      { "weekMod2": 0, "type": "Jaune" },
-      { "weekMod2": 1, "type": "Noire" }
-    ]
-  }
-]
+[]
