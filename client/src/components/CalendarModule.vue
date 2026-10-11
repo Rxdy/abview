@@ -482,9 +482,11 @@ setInterval(() => {
   box-shadow: var(--shadow-card);
 }
 
+/* Aujourd'hui : même fond que les autres jours (les cartes Travail, bleues, doivent
+   ressortir), signalé par un contour d'accent en plus de l'en-tête bleu */
 .day-column.today {
-  background: var(--c-today);
-  box-shadow: none;
+  background: var(--c-surface);
+  box-shadow: inset 0 0 0 calc(3 * var(--px)) var(--c-accent);
 }
 
 .day-header {
