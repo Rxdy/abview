@@ -380,6 +380,13 @@ function transformCalendarEvents(calendarEvents: any[]): any[] {
       title = poste[1]! + (poste[3] || '');
       shift = poste[2];
     }
+
+    // Poubelle publiée par planning-relay (« Poubelle — Jaune ») : même badge Jaune / Noire qu'avant
+    const bac = event.categorie === 'poubelle' ? /\b(jaune|noire)\b/i.exec(title)?.[1]?.toLowerCase() : undefined;
+    if (bac) {
+      eventType = bac;
+      title = 'Poubelle';
+    }
     
     return {
       ...event,
