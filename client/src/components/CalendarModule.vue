@@ -24,10 +24,13 @@
           <div v-for="event in getEventsForDay(day.date)" :key="event.id || event.summary"
                :class="['event', `cat-${event.categorie}`, event.type, { 'avec-image': event.image }]"
                :style="event.image ? { '--image': `url(${event.image})` } : undefined">
-            <div v-if="event.etiquette" class="event-tag">{{ event.etiquette }}</div>
+            <!-- Étiquette à gauche, poste (Matin, Soir, Nuit…) dans le coin droit -->
+            <div v-if="event.etiquette || event.shift" class="event-top">
+              <div class="event-tag">{{ event.etiquette }}</div>
+              <div class="event-shift" v-if="event.shift">{{ event.shift }}</div>
+            </div>
             <div class="event-header">
               <div class="event-title">{{ event.title }}</div>
-              <div class="event-shift" v-if="event.shift && !(event.type === 'jaune' || event.type === 'noire')">{{ event.shift }}</div>
             </div>
             <div class="event-time num" v-if="event.startTime && event.type !== 'birthday'">{{ event.startTime }}<span v-if="event.endTime"> – {{ event.endTime }}</span></div>
             <div class="event-date-range" v-if="event.dateRange && event.type !== 'birthday'">{{ event.dateRange }}</div>
@@ -581,6 +584,13 @@ setInterval(() => {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--cat-fg);
+}
+
+.event-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .event-header {

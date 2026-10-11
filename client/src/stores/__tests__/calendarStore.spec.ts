@@ -389,6 +389,22 @@ describe('useCalendarStore', () => {
       const bday = store.allEvents.find((e) => e.id === 'bday')
       expect(bday?.type).toBe('birthday')
     })
+
+    it('sépare le poste du prénom pour un poste publié par planning-relay', () => {
+      const store = useCalendarStore()
+      const demain = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      store.calendarEvents = [
+        { id: 'c1', summary: 'Charlène — Matin', start: demain, categorie: 'travail' },
+        { id: 'c2', summary: 'Charlène — Nuit (modifié)', start: demain, categorie: 'travail' },
+        { id: 'r1', summary: 'Léa — Garage', start: demain, categorie: null },
+      ]
+
+      const parId = (id: string) => store.allEvents.find((e) => e.id === id)
+      expect([parId('c1')?.title, parId('c1')?.shift]).toEqual(['Charlène', 'Matin'])
+      expect([parId('c2')?.title, parId('c2')?.shift]).toEqual(['Charlène (modifié)', 'Nuit'])
+      // Hors catégorie travail, le titre reste tel quel
+      expect([parId('r1')?.title, parId('r1')?.shift]).toEqual(['Léa — Garage', undefined])
+    })
   })
 
   describe('Transformation du planning (horaires)', () => {

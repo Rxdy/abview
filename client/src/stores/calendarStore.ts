@@ -367,13 +367,24 @@ function transformCalendarEvents(calendarEvents: any[]): any[] {
     const endTime = hasTime && event.end ? new Date(event.end).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null;
     
     let eventType = 'default';
+    let title = event.summary || 'Événement';
+    let shift: string | undefined;
     if (event.summary?.toLowerCase().includes('anniversaire') || event.summary?.toLowerCase().includes('birthday')) {
       eventType = 'birthday';
+    }
+
+    // Poste publié par planning-relay (« Charlène — Matin (modifié) ») : le prénom en titre,
+    // le poste dans la pastille de la carte
+    const poste = event.categorie === 'travail' ? /^(.+?) — (.+?)( \((?:modifié|supprimé)\))?$/.exec(title) : null;
+    if (poste) {
+      title = poste[1]! + (poste[3] || '');
+      shift = poste[2];
     }
     
     return {
       ...event,
-      title: event.summary || 'Événement',
+      title,
+      shift,
       startTime,
       endTime,
       type: eventType,
