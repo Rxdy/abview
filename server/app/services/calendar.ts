@@ -31,7 +31,11 @@ export default class GoogleCalendarService {
   private calendar: any
   private cachedEvents: Event[] = []
   private lastRefresh: number = 0
-  private refreshInterval = 5 * 60 * 1000 // 5 minutes en ms
+  // Un événement ajouté dans Google Agenda apparaît au plus ~1 min après sur l'écran (avec le cycle de 30 s de la page).
+  // Coût : 1 appel par rafraîchissement, soit au plus 2 880 par jour.
+  private refreshInterval = 30 * 1000
+  // Appel en cours : les requêtes simultanées l'attendent au lieu de relancer Google
+  private enCours: Promise<Event[]> | null = null
 
   private async getAuthClient() {
     const clientId = process.env.GOOGLE_CLIENT_ID!
@@ -92,9 +96,19 @@ export default class GoogleCalendarService {
   async listEvents(calendarId = 'primary', maxResults = 100): Promise<Event[]> {
     const now = Date.now()
     if (now - this.lastRefresh > this.refreshInterval || this.cachedEvents.length === 0) {
-      this.cachedEvents = await this.fetchEvents(calendarId, maxResults)
-      this.lastRefresh = now
-      updateGlobalLastRefresh() // Mettre à jour le lastRefresh global
+      if (!this.enCours) {
+        this.enCours = this.fetchEvents(calendarId, maxResults)
+          .then((events) => {
+            this.cachedEvents = events
+            this.lastRefresh = Date.now()
+            updateGlobalLastRefresh() // Mettre à jour le lastRefresh global
+            return events
+          })
+          .finally(() => {
+            this.enCours = null
+          })
+      }
+      await this.enCours
     }
     return this.cachedEvents
   }

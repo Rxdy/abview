@@ -7,9 +7,14 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
-## [Unreleased]
+## [v3.4.0] — 2026-11-07
+
+### Ajouté
+- **Tâches** : une liste qu'on vient de créer s'affiche tout de suite, avant sa première tâche (avant, elle restait invisible tant qu'elle était vide)
+- **Agenda** : catégorie Périscolaire (lime) pour les inscriptions des enfants publiées par planning-relay ; test : chaque catégorie doit avoir ses couleurs CSS
 
 ### Modifié
+- **Actualisation plus rapide** : un événement ajouté dans Google Agenda ou une tâche ajoutée dans Google Tasks apparaît à l'écran en 1 minute au plus (avant : jusqu'à 6 minutes). Cycle de la page de 60 à 30 s, cache serveur de l'agenda de 5 min à 30 s, celui des tâches de 5 min à 60 s ; les listes de tâches sont lues en parallèle ; des requêtes simultanées partagent un seul appel à Google
 - **Version** : le numéro affiché dans le pied de page et l'étiquette de l'image Docker viennent du titre le plus récent de ce fichier ; `client/package.json` doit rester aligné (un test le vérifie)
 
 ---
