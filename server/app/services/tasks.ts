@@ -102,14 +102,15 @@ export default class GoogleTasksService {
       Général: '#9b59b6', // Violet (complémentaire)
     }
 
-    // Couleurs aléatoires pour les autres listes
+    // Couleurs pour les autres listes. Une couleur attitrée (ex. le rose de Julie)
+    // est réservée : elle n'est jamais donnée à une autre liste.
+    const reservees = new Set(Object.values(colorMap).map((c) => c.toLowerCase()))
     const randomColors = [
       '#fff9a6', // Jaune
-      '#ffd1dc', // Rose
       '#c3f7d6', // Vert
       '#cce0ff', // Bleu clair
       '#ffe6b3', // Orange clair
-    ]
+    ].filter((c) => !reservees.has(c.toLowerCase()))
 
     // Chercher correspondance (insensible à la casse)
     const normalizedTitle = listTitle?.trim()

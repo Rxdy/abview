@@ -22,7 +22,7 @@
         </div>
         <div class="events" :data-day="day.date.toDateString()" :data-index="index">
           <div v-for="event in getEventsForDay(day.date)" :key="event.id || event.summary"
-               :class="['event', `cat-${event.categorie}`, event.type, { 'avec-image': event.image }]"
+               :class="['event', `cat-${event.categorie}`, event.type, { 'avec-image': event.image, 'sans-poste': !event.shift, [`bac-${couleurBac(event)}`]: !!couleurBac(event) }]"
                :style="event.image ? { '--image': `url(${event.image})` } : undefined">
             <!-- Étiquette à gauche, poste (Matin, Soir, Nuit…) dans le coin droit -->
             <div v-if="event.etiquette || event.shift" class="event-top">
@@ -37,9 +37,6 @@
             <div v-if="event.location && event.type !== 'sport'" class="event-location">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>
               {{ event.location.split(',')[0] }}
-            </div>
-            <div class="color-badge" v-if="event.type === 'jaune' || event.type === 'noire'" :class="event.type">
-              {{ event.type === "jaune" ? "Jaune" : "Noire" }}
             </div>
           </div>
           <div v-if="getEventsForDay(day.date).length === 0" class="day-empty">Journée libre</div>
@@ -102,7 +99,7 @@ const scheduleDateUpdate = () => {
 
 onMounted(() => {
   calendarStore.fetchAll();
-  calendarStore.startPolling();
+  // Le rechargement périodique est piloté par la barre d'actualisation (progressStore)
   scheduleDateUpdate(); // Start the date update timer
   
   // Initialize auto-scroll after data is loaded
@@ -369,6 +366,10 @@ const getEventsForDay = (date: Date) => {
     };
   });
 };
+
+// Couleur du bac à sortir : elle colore le fond de la carte « Poubelle »
+const couleurBac = (event: { type?: string }) =>
+  event.type === 'jaune' ? 'jaune' : event.type === 'noire' ? 'noire' : '';
 
 // Function to check for birthdays today and trigger global effect
 const checkForTodaysBirthdays = () => {
@@ -646,25 +647,36 @@ setInterval(() => {
   stroke-linejoin: round;
 }
 
-/* Badge de la poubelle à sortir */
-.color-badge {
-  align-self: flex-start;
-  margin-top: calc(2 * var(--px));
-  font-size: var(--fs-xs);
-  font-weight: 800;
-  padding: calc(1 * var(--px)) calc(9 * var(--px));
-  border-radius: var(--radius-pill);
+/* Poubelle : le fond est la couleur du bac, avec un liseré (visible du bac noir en mode sombre) */
+.event.bac-jaune,
+.event.bac-noire {
+  border: 2px solid transparent;
 }
+.event.bac-jaune { background: var(--bac-jaune-bg); color: var(--bac-jaune-fg); border-color: var(--bac-jaune-bord); }
+.event.bac-noire { background: var(--bac-noire-bg); color: var(--bac-noire-fg); border-color: var(--bac-noire-bord); }
+.event.bac-jaune .event-title,
+.event.bac-noire .event-title { color: inherit; }
 
-.color-badge.jaune {
-  background: #f2c94c;
-  color: #3a2e00;
+/* Carte de travail compacte : pas d'étiquette « Travail » (la couleur le dit déjà),
+   nom et poste sur une ligne, horaire dessous ; sans poste, nom et horaire sur une seule ligne. */
+.event.cat-travail {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "titre poste" "heure heure";
+  align-items: center;
+  column-gap: var(--space-2);
+  row-gap: 0;
+  padding-block: calc(4 * var(--px));
 }
-
-.color-badge.noire {
-  background: #2a2a2a;
-  color: #ffffff;
+.event.cat-travail .event-top { display: contents; }
+.event.cat-travail .event-tag { display: none; }
+.event.cat-travail .event-shift { grid-area: poste; }
+.event.cat-travail .event-header { grid-area: titre; }
+.event.cat-travail .event-time { grid-area: heure; }
+.event.cat-travail.sans-poste {
+  grid-template-areas: "titre heure";
 }
+.event.cat-travail.sans-poste .event-time { white-space: nowrap; }
 
 .loading {
   display: flex;

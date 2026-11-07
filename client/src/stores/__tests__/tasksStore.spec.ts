@@ -48,7 +48,7 @@ describe('tasksStore', () => {
     expect(store.loading).toBe(false)
   })
 
-  it('fetchTasks reset la progression seulement quand les données changent', async () => {
+  it('fetchTasks ne touche pas à la barre (seule la barre pilote son cycle)', async () => {
     mockGetTasks.mockResolvedValue({ tasks: fakeTasks, lastRefresh: null })
 
     const store = useTasksStore()
@@ -56,9 +56,9 @@ describe('tasksStore', () => {
     const resetSpy = vi.spyOn(progressStore, 'resetProgress')
 
     await store.fetchTasks()
-    await store.fetchTasks() // données identiques → pas de reset
+    await store.fetchTasks()
 
-    expect(resetSpy).toHaveBeenCalledTimes(1)
+    expect(resetSpy).not.toHaveBeenCalled()
   })
 
   it('fetchTasks stocke le message en cas d’erreur', async () => {

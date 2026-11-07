@@ -65,6 +65,14 @@
   --cat-rdv-fg: #ffb066;
   --cat-poubelle-bg: #2a2a2a;
   --cat-poubelle-fg: #c7c7c7;
+  /* Bacs : le fond de la carte est la couleur du bac. Le noir garde un liseré clair
+     pour rester visible sur le fond sombre. */
+  --bac-jaune-bg: #f2c94c;
+  --bac-jaune-fg: #3a2e00;
+  --bac-jaune-bord: #f2c94c;
+  --bac-noire-bg: #000000;
+  --bac-noire-fg: #ffffff;
+  --bac-noire-bord: #9aa3b2;
   --cat-anniversaire-bg: #4a1533;
   --cat-anniversaire-fg: #ff8fc8;
   --cat-national-bg: #182a55;
@@ -111,6 +119,12 @@
   --cat-rdv-fg: #8f4300;
   --cat-poubelle-bg: #e6e6e6;
   --cat-poubelle-fg: #3b3b3b;
+  --bac-jaune-bg: #f2c94c;
+  --bac-jaune-fg: #3a2e00;
+  --bac-jaune-bord: #9a7400;
+  --bac-noire-bg: #1f1f1f;
+  --bac-noire-fg: #ffffff;
+  --bac-noire-bord: #1f1f1f;
   --cat-anniversaire-bg: #ffd6ea;
   --cat-anniversaire-fg: #ad145f;
   --cat-national-bg: #d9e4ff;

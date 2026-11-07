@@ -49,19 +49,7 @@ describe('weatherStore', () => {
     expect(store.loading).toBe(false)
   })
 
-  it('fetchWeather reset la barre de progression quand les données changent', async () => {
-    mockGetWeather.mockResolvedValue({ weather: fakeWeather, lastRefresh: null })
-
-    const store = useWeatherStore()
-    const progressStore = useProgressStore()
-    const resetSpy = vi.spyOn(progressStore, 'resetProgress')
-
-    await store.fetchWeather()
-
-    expect(resetSpy).toHaveBeenCalledTimes(1)
-  })
-
-  it('fetchWeather ne reset pas la progression si les données sont identiques', async () => {
+  it('fetchWeather ne touche pas à la barre (seule la barre pilote son cycle)', async () => {
     mockGetWeather.mockResolvedValue({ weather: fakeWeather, lastRefresh: null })
 
     const store = useWeatherStore()
@@ -71,7 +59,7 @@ describe('weatherStore', () => {
     await store.fetchWeather()
     await store.fetchWeather()
 
-    expect(resetSpy).toHaveBeenCalledTimes(1)
+    expect(resetSpy).not.toHaveBeenCalled()
   })
 
   it('fetchWeather laisse sunrise/sunset à null sans bloc current', async () => {

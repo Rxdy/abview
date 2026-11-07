@@ -393,6 +393,21 @@ describe('CalendarModule', () => {
       expect(poubelle.etiquette).toBe('')
     })
 
+    it('colore la carte Poubelle selon le bac, sans pastille', () => {
+      const jour = new Date()
+      const iso = jour.getFullYear() + '-' + String(jour.getMonth() + 1).padStart(2, '0') + '-' + String(jour.getDate()).padStart(2, '0')
+      mockCalendarStore.allEvents = [
+        { id: 'pj', title: 'Poubelle', date: iso, type: 'jaune' },
+        { id: 'pn', title: 'Poubelle', date: iso, type: 'noire' },
+      ] as any
+      const wrapper = mount(CalendarModule, { stubs: ['ErrorDisplay'] })
+      expect(wrapper.find('.event.bac-jaune').exists()).toBe(true)
+      expect(wrapper.find('.event.bac-noire').exists()).toBe(true)
+      expect(wrapper.find('.color-badge').exists()).toBe(false)
+      expect(wrapper.find('.event.bac-noire .event-shift').exists()).toBe(false)
+      wrapper.unmount()
+    })
+
     it('classe en travail un poste dont planning-relay a déclaré la catégorie, sans image', () => {
       const jour = new Date(new Date().getFullYear(), 6, 2)
       const iso = jour.getFullYear() + '-07-02'

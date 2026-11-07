@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { tasksService } from '../services/tasksService';
-import { useProgressStore } from './progressStore';
 
 export const useTasksStore = defineStore('tasks', {
   state: () => ({
@@ -27,9 +26,6 @@ export const useTasksStore = defineStore('tasks', {
           this.tasks = result.tasks;
           this.lastHash = newHash;
           console.log('Tasks updated');
-          // Reset progress bar
-          const progressStore = useProgressStore();
-          progressStore.resetProgress();
         } else {
           console.log('Tasks unchanged');
         }
