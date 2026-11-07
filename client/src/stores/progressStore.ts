@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useTasksStore } from './tasksStore';
 import { useWeatherStore } from './weatherStore';
 import { useCalendarStore } from './calendarStore';
+import { rechargerSiNouvelleVersion } from '../utils/nouvelleVersion';
 
 /**
  * Horloge unique de l'actualisation de l'écran.
@@ -11,6 +12,8 @@ import { useCalendarStore } from './calendarStore';
  * (tâches, météo, calendrier) sont rechargées ensemble. À la fin du rechargement,
  * « dernière à » prend l'heure de fin et un nouveau cycle commence.
  * Aucun autre minuteur ne recharge les données ni ne remet la barre à zéro.
+ * Après chaque rechargement, la page se recharge elle-même si une nouvelle version
+ * de l'app a été déployée.
  */
 export const useProgressStore = defineStore('progress', () => {
   const totalTime = 60 * 1000; // 1 minute
@@ -60,6 +63,8 @@ export const useProgressStore = defineStore('progress', () => {
       enCours.value = false;
       nouveauCycle();
     }
+    // Une nouvelle version en ligne : la page se recharge (le kiosque ne le ferait jamais seul)
+    await rechargerSiNouvelleVersion();
   };
 
   const tic = () => {

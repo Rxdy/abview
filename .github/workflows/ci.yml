@@ -210,6 +210,11 @@ jobs:
               if: steps.should.outputs.build == 'true'
               run: echo "name=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
+            - name: Version de l'app
+              id: version
+              if: steps.should.outputs.build == 'true'
+              run: echo "numero=$(node -p "require('./client/package.json').version")" >> "$GITHUB_OUTPUT"
+
             - uses: docker/setup-qemu-action@v3
               if: steps.should.outputs.build == 'true'
             - uses: docker/setup-buildx-action@v3
@@ -234,5 +239,6 @@ jobs:
                   tags: |
                       ghcr.io/${{ steps.owner.outputs.name }}/abview/${{ matrix.target }}:latest
                       ghcr.io/${{ steps.owner.outputs.name }}/abview/${{ matrix.target }}:${{ github.sha }}
+                      ghcr.io/${{ steps.owner.outputs.name }}/abview/${{ matrix.target }}:${{ steps.version.outputs.numero }}
                   cache-from: type=gha
                   cache-to: type=gha,mode=max

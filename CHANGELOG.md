@@ -7,6 +7,26 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [v3.3.0] — 2026-11-07
+
+### Ajouté
+- **Kiosque** : la page se recharge toute seule quand une nouvelle version est déployée (vérifiée après chaque actualisation, jamais plus d'un rechargement toutes les 5 minutes)
+- **Calendrier** : la poubelle prend la couleur du bac (jaune ou noir), avec un liseré clair en mode sombre ; contraste testé dans les deux thèmes
+- **Calendrier** : poste (Matin, Soir, Nuit) en pastille dans le coin droit de la carte
+- **Agenda** : les postes de travail et la poubelle sont publiés par planning-relay dans Google Agenda ; couleur Paon (7) → catégorie Travail ; horaires fixes de Léa ; couleur Mandarine (6) → Rendez-vous
+
+### Modifié
+- **Calendrier** : cartes de travail compactes (plus d'étiquette « Travail », nom et poste sur une ligne, horaire dessous ; une seule ligne sans poste)
+- **Calendrier** : colonne du jour contrastée avec les cartes Travail
+- **Pied de page** : une seule horloge d'actualisation ; « dernière à » affiche l'heure de fin du dernier rechargement réussi de l'écran, et « échec, dernière réussie à » quand une source est en panne
+- **Images Docker** : en plus de `latest` et du SHA, chaque image est publiée avec le numéro de version de l'app (`:3.3.0`)
+
+### Corrigé
+- **Tâches** : une liste sans couleur attitrée ne prend plus une couleur réservée (le rose de Julie était donné à « Action »)
+- **Actualisation** : chaque module rechargeait ses données sur son propre minuteur et remettait la barre à zéro ; seule la barre pilote maintenant le cycle
+
+---
+
 ## [v3.2.0] — 2026-10-10
 
 ### Modifié
