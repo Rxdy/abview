@@ -562,6 +562,7 @@ setInterval(() => {
 .cat-sante { --cat-bg: var(--cat-sante-bg); --cat-fg: var(--cat-sante-fg); }
 .cat-rdv { --cat-bg: var(--cat-rdv-bg); --cat-fg: var(--cat-rdv-fg); }
 .cat-poubelle { --cat-bg: var(--cat-poubelle-bg); --cat-fg: var(--cat-poubelle-fg); }
+.cat-periscolaire { --cat-bg: var(--cat-periscolaire-bg); --cat-fg: var(--cat-periscolaire-fg); }
 .cat-anniversaire { --cat-bg: var(--cat-anniversaire-bg); --cat-fg: var(--cat-anniversaire-fg); }
 .cat-national { --cat-bg: var(--cat-national-bg); --cat-fg: var(--cat-national-fg); }
 .cat-religieux { --cat-bg: var(--cat-religieux-bg); --cat-fg: var(--cat-religieux-fg); }
