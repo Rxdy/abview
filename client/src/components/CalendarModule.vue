@@ -563,6 +563,7 @@ setInterval(() => {
 .cat-rdv { --cat-bg: var(--cat-rdv-bg); --cat-fg: var(--cat-rdv-fg); }
 .cat-poubelle { --cat-bg: var(--cat-poubelle-bg); --cat-fg: var(--cat-poubelle-fg); }
 .cat-periscolaire { --cat-bg: var(--cat-periscolaire-bg); --cat-fg: var(--cat-periscolaire-fg); }
+.cat-cantine { --cat-bg: var(--cat-cantine-bg); --cat-fg: var(--cat-cantine-fg); }
 .cat-anniversaire { --cat-bg: var(--cat-anniversaire-bg); --cat-fg: var(--cat-anniversaire-fg); }
 .cat-national { --cat-bg: var(--cat-national-bg); --cat-fg: var(--cat-national-fg); }
 .cat-religieux { --cat-bg: var(--cat-religieux-bg); --cat-fg: var(--cat-religieux-fg); }
@@ -658,26 +659,25 @@ setInterval(() => {
 .event.bac-jaune .event-title,
 .event.bac-noire .event-title { color: inherit; }
 
-/* Carte de travail compacte : pas d'étiquette « Travail » (la couleur le dit déjà),
-   nom et poste sur une ligne, horaire dessous ; sans poste, nom et horaire sur une seule ligne. */
+/* Carte de travail compacte : l'étiquette « Travail » et le poste (Matin, Soir, Nuit) sur la première
+   ligne, le nom et l'horaire sur la seconde. Sans poste, l'étiquette seule au-dessus. */
 .event.cat-travail {
   display: grid;
   grid-template-columns: 1fr auto;
-  grid-template-areas: "titre poste" "heure heure";
+  grid-template-areas: "etiquette poste" "titre heure";
   align-items: center;
   column-gap: var(--space-2);
   row-gap: 0;
   padding-block: calc(4 * var(--px));
 }
 .event.cat-travail .event-top { display: contents; }
-.event.cat-travail .event-tag { display: none; }
+.event.cat-travail .event-tag { grid-area: etiquette; }
 .event.cat-travail .event-shift { grid-area: poste; }
 .event.cat-travail .event-header { grid-area: titre; }
-.event.cat-travail .event-time { grid-area: heure; }
+.event.cat-travail .event-time { grid-area: heure; white-space: nowrap; }
 .event.cat-travail.sans-poste {
-  grid-template-areas: "titre heure";
+  grid-template-areas: "etiquette etiquette" "titre heure";
 }
-.event.cat-travail.sans-poste .event-time { white-space: nowrap; }
 
 .loading {
   display: flex;

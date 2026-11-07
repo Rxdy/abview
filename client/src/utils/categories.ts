@@ -25,6 +25,7 @@ export type Categorie =
   | 'rdv'
   | 'poubelle'
   | 'periscolaire'
+  | 'cantine'
   | 'anniversaire'
   | 'national'
   | 'religieux'
@@ -38,6 +39,7 @@ export const ETIQUETTES: Record<Categorie, string> = {
   rdv: 'Rendez-vous',
   poubelle: 'Poubelle',
   periscolaire: 'Périscolaire',
+  cantine: 'Cantine',
   anniversaire: 'Anniversaire',
   national: 'Fête nationale',
   religieux: 'Fête religieuse',
