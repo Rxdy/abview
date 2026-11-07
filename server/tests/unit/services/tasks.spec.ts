@@ -117,6 +117,43 @@ test.group('GoogleTasksService', (group) => {
     assert.match(lists[0].color, /^#[0-9a-f]{6}$/i)
   })
 
+  test('une liste inconnue ne prend jamais une couleur attitrée (le rose de Julie)', async ({
+    assert,
+  }) => {
+    const reservees = ['#004c99', '#ffd1dc', '#e74c3c', '#f39c12', '#1e293b', '#9b59b6']
+    const noms = [
+      'Action',
+      'Maison',
+      'Travaux',
+      'Vacances',
+      'Noël',
+      'Jardin',
+      'Voiture',
+      'École',
+      'A',
+      'B',
+      'C',
+      'D',
+    ]
+    mockTasksApi({
+      tasklists: noms.map((title, i) => ({ id: `l${i}`, title })),
+      tasksByList: Object.fromEntries(
+        noms.map((_, i) => [`l${i}`, [{ id: `t${i}`, title: 'X', status: 'needsAction' }]])
+      ),
+    })
+
+    const lists = await new GoogleTasksService().listAllTasks()
+
+    assert.lengthOf(lists, noms.length)
+    for (const liste of lists) {
+      assert.notInclude(
+        reservees,
+        liste.color.toLowerCase(),
+        `${liste.title} a pris ${liste.color}`
+      )
+    }
+  })
+
   test('listAllTasks met en cache et ne refait pas d’appel avant expiration', async ({
     assert,
   }) => {

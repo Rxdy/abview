@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { weatherService } from '../services/weatherService';
-import { useProgressStore } from './progressStore';
 import { useErrorStore } from './errorStore';
 
 export const useWeatherStore = defineStore('weather', {
@@ -36,9 +35,6 @@ export const useWeatherStore = defineStore('weather', {
           }
           this.lastHash = newHash;
           console.log('Weather updated');
-          // Reset progress bar
-          const progressStore = useProgressStore();
-          progressStore.resetProgress();
         } else {
           console.log('Weather unchanged');
         }

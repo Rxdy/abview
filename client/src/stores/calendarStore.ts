@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { calendarService } from '../services/calendarService';
-import { useProgressStore } from './progressStore';
 
 export const useCalendarStore = defineStore('calendar', {
   state: () => ({
@@ -106,9 +105,6 @@ export const useCalendarStore = defineStore('calendar', {
         if (newHash !== this.lastHash) {
           this.lastHash = newHash;
           console.log('Calendar updated');
-          // Reset progress bar
-          const progressStore = useProgressStore();
-          progressStore.resetProgress();
         } else {
           console.log('Calendar unchanged');
         }

@@ -6,22 +6,16 @@
     <div class="progress-info num">
       <span>Prochaine actualisation dans <span class="progress-text">{{ timeRemaining }}</span></span>
       <span aria-hidden="true">·</span>
-      <span class="last-update">dernière à {{ lastRefreshFormatted }}</span>
+      <span class="last-update" :class="{ echec: progressStore.enEchec }">{{ progressStore.enEchec ? 'échec, dernière réussie à' : 'dernière à' }} {{ lastRefreshFormatted }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import { useProgressStore } from '../stores/progressStore';
-import { useCalendarStore } from '../stores/calendarStore';
-import { useTasksStore } from '../stores/tasksStore';
-import { useWeatherStore } from '../stores/weatherStore';
 
 const progressStore = useProgressStore();
-const calendarStore = useCalendarStore();
-const tasksStore = useTasksStore();
-const weatherStore = useWeatherStore();
 
 // Calculer le temps restant en format mm:ss
 const timeRemaining = computed(() => {
@@ -31,34 +25,13 @@ const timeRemaining = computed(() => {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 });
 
-// Afficher le datetime du dernier appel du serveur aux APIs externes (toutes les 5 minutes)
+// Heure de fin du dernier rechargement réussi de l'écran (le cycle d'une minute)
+const deuxChiffres = (n: number) => n.toString().padStart(2, '0');
 const lastRefreshFormatted = computed(() => {
-  const dates = [
-    calendarStore.lastRefresh,
-    tasksStore.lastRefresh,
-    weatherStore.lastRefresh
-  ].filter(d => d !== null) as Date[];
-  
-  if (dates.length === 0) {
-    // Si aucun refresh n'a eu lieu, afficher "sync..."
-    return 'sync...';
-  }
-  
-  // Prendre la date la plus récente (dernière mise à jour du serveur)
-  const mostRecent = new Date(Math.max(...dates.map(d => d.getTime())));
-  
-  const hours = mostRecent.getHours().toString().padStart(2, '0');
-  const minutes = mostRecent.getMinutes().toString().padStart(2, '0');
-  const seconds = mostRecent.getSeconds().toString().padStart(2, '0');
-  
-  return `${hours}:${minutes}:${seconds}`;
+  const d = progressStore.derniereActualisation;
+  if (!d) return 'sync...';
+  return `${deuxChiffres(d.getHours())}:${deuxChiffres(d.getMinutes())}:${deuxChiffres(d.getSeconds())}`;
 });
-
-// Mettre à jour l'affichage chaque seconde pour le cas "sync..."
-const currentTime = ref(Date.now());
-setInterval(() => {
-  currentTime.value = Date.now();
-}, 1000);
 
 onMounted(() => {
   progressStore.startProgress();
@@ -101,5 +74,8 @@ onUnmounted(() => {
   align-items: center;
   gap: calc(6 * var(--px));
   white-space: nowrap;
+}
+.last-update.echec {
+  color: var(--cat-sante-fg);
 }
 </style>
