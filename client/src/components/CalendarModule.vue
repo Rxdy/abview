@@ -22,13 +22,12 @@
         </div>
         <div class="events" :data-day="day.date.toDateString()" :data-index="index">
           <div v-for="event in getEventsForDay(day.date)" :key="event.id || event.summary"
-               :class="['event', `cat-${event.categorie}`, event.type, { 'avec-image': event.image, 'sans-poste': !event.shift }]"
+               :class="['event', `cat-${event.categorie}`, event.type, { 'avec-image': event.image, 'sans-poste': !event.shift, [`bac-${couleurBac(event)}`]: !!couleurBac(event) }]"
                :style="event.image ? { '--image': `url(${event.image})` } : undefined">
             <!-- Étiquette à gauche, poste (Matin, Soir, Nuit…) dans le coin droit -->
-            <div v-if="event.etiquette || event.shift || couleurPoubelle(event)" class="event-top">
+            <div v-if="event.etiquette || event.shift" class="event-top">
               <div class="event-tag">{{ event.etiquette }}</div>
               <div class="event-shift" v-if="event.shift">{{ event.shift }}</div>
-              <div class="event-shift" v-else-if="couleurPoubelle(event)" :class="`poubelle-${event.type}`">{{ couleurPoubelle(event) }}</div>
             </div>
             <div class="event-header">
               <div class="event-title">{{ event.title }}</div>
@@ -368,9 +367,9 @@ const getEventsForDay = (date: Date) => {
   });
 };
 
-// Couleur du bac à sortir, affichée en pastille dans le coin droit comme le poste (Matin, Soir, Nuit)
-const couleurPoubelle = (event: { type?: string }) =>
-  event.type === 'jaune' ? 'Jaune' : event.type === 'noire' ? 'Noire' : '';
+// Couleur du bac à sortir : elle colore le fond de la carte « Poubelle »
+const couleurBac = (event: { type?: string }) =>
+  event.type === 'jaune' ? 'jaune' : event.type === 'noire' ? 'noire' : '';
 
 // Function to check for birthdays today and trigger global effect
 const checkForTodaysBirthdays = () => {
@@ -648,16 +647,15 @@ setInterval(() => {
   stroke-linejoin: round;
 }
 
-/* Pastille de la poubelle : même forme que le poste, couleur du bac */
-.event-shift.poubelle-jaune {
-  background: #f2c94c;
-  color: #3a2e00;
+/* Poubelle : le fond est la couleur du bac, avec un liseré (visible du bac noir en mode sombre) */
+.event.bac-jaune,
+.event.bac-noire {
+  border: 2px solid transparent;
 }
-
-.event-shift.poubelle-noire {
-  background: #2a2a2a;
-  color: #ffffff;
-}
+.event.bac-jaune { background: var(--bac-jaune-bg); color: var(--bac-jaune-fg); border-color: var(--bac-jaune-bord); }
+.event.bac-noire { background: var(--bac-noire-bg); color: var(--bac-noire-fg); border-color: var(--bac-noire-bord); }
+.event.bac-jaune .event-title,
+.event.bac-noire .event-title { color: inherit; }
 
 /* Carte de travail compacte : pas d'étiquette « Travail » (la couleur le dit déjà),
    nom et poste sur une ligne, horaire dessous ; sans poste, nom et horaire sur une seule ligne. */
