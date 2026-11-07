@@ -7,6 +7,13 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [v3.5.1] — 2026-11-07
+
+### Corrigé
+- **Calendrier** : la couleur de la catégorie Cantine, trop proche de celle du Travail, passe de l'indigo au brun sable
+
+---
+
 ## [v3.5.0] — 2026-11-07
 
 ### Ajouté

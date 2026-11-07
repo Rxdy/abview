@@ -67,8 +67,8 @@
   --cat-poubelle-fg: #c7c7c7;
   --cat-periscolaire-bg: #2f3a0f;
   --cat-periscolaire-fg: #c6e86a;
-  --cat-cantine-bg: #25234d;
-  --cat-cantine-fg: #b9b4ff;
+  --cat-cantine-bg: #3d3126;
+  --cat-cantine-fg: #e3c9a3;
   /* Bacs : le fond de la carte est la couleur du bac. Le noir garde un liseré clair
      pour rester visible sur le fond sombre. */
   --bac-jaune-bg: #f2c94c;
@@ -125,8 +125,8 @@
   --cat-poubelle-fg: #3b3b3b;
   --cat-periscolaire-bg: #eaf5c4;
   --cat-periscolaire-fg: #4a5f00;
-  --cat-cantine-bg: #e4e0ff;
-  --cat-cantine-fg: #3b2fa8;
+  --cat-cantine-bg: #ecdfcc;
+  --cat-cantine-fg: #5e4222;
   --bac-jaune-bg: #f2c94c;
   --bac-jaune-fg: #3a2e00;
   --bac-jaune-bord: #9a7400;
