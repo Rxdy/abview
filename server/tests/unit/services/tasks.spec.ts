@@ -94,21 +94,32 @@ test.group('GoogleTasksService', (group) => {
     google.tasks = (() => ({
       tasklists: {
         list: async () => ({
-          data: { items: [{ id: 'a', title: 'A' }, { id: 'b', title: 'B' }, { id: 'c', title: 'C' }] },
+          data: {
+            items: [
+              { id: 'a', title: 'A' },
+              { id: 'b', title: 'B' },
+              { id: 'c', title: 'C' },
+            ],
+          },
         }),
       },
       tasks: {
         // la première liste répond en dernier
         list: async ({ tasklist }: { tasklist: string }) => {
           await new Promise((r) => setTimeout(r, tasklist === 'a' ? 30 : 1))
-          return { data: { items: [{ id: `t-${tasklist}`, title: tasklist, status: 'needsAction' }] } }
+          return {
+            data: { items: [{ id: `t-${tasklist}`, title: tasklist, status: 'needsAction' }] },
+          }
         },
         patch: async () => ({}),
       },
     })) as unknown as typeof google.tasks
 
     const lists = await new GoogleTasksService().listAllTasks()
-    assert.deepEqual(lists.map((l) => l.id), ['a', 'b', 'c'])
+    assert.deepEqual(
+      lists.map((l) => l.id),
+      ['a', 'b', 'c']
+    )
   })
 
   test('listAllTasks calcule la hiérarchie parent/enfant (level)', async ({ assert }) => {
@@ -250,7 +261,11 @@ test.group('GoogleTasksService', (group) => {
     })) as unknown as typeof google.tasks
 
     const service = new GoogleTasksService()
-    const [a, b, c] = await Promise.all([service.listAllTasks(), service.listAllTasks(), service.listAllTasks()])
+    const [a, b, c] = await Promise.all([
+      service.listAllTasks(),
+      service.listAllTasks(),
+      service.listAllTasks(),
+    ])
     assert.equal(callCount, 1)
     assert.deepEqual(a, b)
     assert.deepEqual(b, c)
