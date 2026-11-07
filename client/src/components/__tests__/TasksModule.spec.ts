@@ -66,13 +66,13 @@ describe('TasksModule', () => {
     expect(wrapper.findComponent({ name: 'ErrorDisplay' }).props('type')).toBe('no-data')
   })
 
-  it('renders task lists when tasks exist and starts polling', () => {
+  it('affiche les listes, sans minuteur propre (la barre pilote le rechargement)', () => {
     mockTasksStore.tasks = [task(1, 'List 1'), task(2, 'List 1'), task(3, 'List 2', 'blue')]
 
     const wrapper = mount(TasksModule, { stubs: ['TaskList'] })
 
     expect(wrapper.findAllComponents({ name: 'TaskList' })).toHaveLength(2)
-    expect(mockTasksStore.startPolling).toHaveBeenCalled()
+    expect(mockTasksStore.startPolling).not.toHaveBeenCalled()
   })
 
   it('centre la liste la plus fournie', () => {

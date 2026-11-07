@@ -51,7 +51,7 @@ const progressSide = ref<'left' | 'right'>('left');
 let currentSide: 'left' | 'right' = 'left';
 
 onMounted(() => {
-  tasksStore.startPolling();
+  // Le rechargement périodique est piloté par la barre d'actualisation (progressStore)
 });
 
 const groupedLists = computed(() => {

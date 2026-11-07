@@ -100,21 +100,89 @@ describe('progressStore', () => {
     store.stopProgress()
   })
 
-  it('la barre plafonne à 100 % si le refresh tarde', async () => {
-    // Refresh bloqué : aucune promesse ne se résout (sinon les stores
-    // eux-mêmes resettent la barre via resetProgress)
+  it('la barre reste pleine tant que le rechargement tarde', async () => {
+    // Rechargement bloqué : aucune promesse ne se résout
     vi.mocked(tasksService.getTasks).mockReturnValue(new Promise(() => {}))
     vi.mocked(weatherService.getWeather).mockReturnValue(new Promise(() => {}))
     vi.mocked(calendarService.getHoraires).mockReturnValue(new Promise(() => {}))
     vi.mocked(calendarService.getCalendarEvents).mockReturnValue(new Promise(() => {}))
 
     const store = useProgressStore()
-    await store.startProgress()
+    void store.startProgress() // le premier rechargement ne se termine jamais
 
     await vi.advanceTimersByTimeAsync(65 * 1000)
 
+    expect(store.enCours).toBe(true)
     expect(store.progress).toBe(100)
-    expect(store.timeRemaining).toBe(0)
+    expect(store.derniereActualisation).toBeNull()
+
+    store.stopProgress()
+  })
+
+  it('« dernière à » prend l\'heure de fin de chaque rechargement, une fois par minute', async () => {
+    vi.setSystemTime(new Date('2026-11-07T11:24:00'))
+    const store = useProgressStore()
+    await store.startProgress()
+    await vi.advanceTimersByTimeAsync(0)
+
+    // Premier rechargement au démarrage
+    expect(store.derniereActualisation?.toTimeString().slice(0, 8)).toBe('11:24:00')
+
+    for (const attendu of ['11:25:00', '11:26:00', '11:27:00']) {
+      await vi.advanceTimersByTimeAsync(60 * 1000)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(store.derniereActualisation?.toTimeString().slice(0, 8)).toBe(attendu)
+      expect(store.enEchec).toBe(false)
+    }
+
+    store.stopProgress()
+  })
+
+  it('un seul rechargement par minute : 1 au démarrage + 1 par cycle', async () => {
+    vi.mocked(tasksService.getTasks).mockClear()
+    vi.mocked(weatherService.getWeather).mockClear()
+    const store = useProgressStore()
+    await store.startProgress()
+    await vi.advanceTimersByTimeAsync(3 * 60 * 1000 + 500)
+
+    expect(tasksService.getTasks).toHaveBeenCalledTimes(4)
+    expect(weatherService.getWeather).toHaveBeenCalledTimes(4)
+
+    store.stopProgress()
+  })
+
+  it('le compte à rebours repart de 1:00 à la fin du rechargement', async () => {
+    const store = useProgressStore()
+    await store.startProgress()
+    await vi.advanceTimersByTimeAsync(60 * 1000)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(store.progress).toBe(0)
+    expect(store.timeRemaining).toBe(60 * 1000)
+
+    store.stopProgress()
+  })
+
+  it('en cas d\'échec, garde l\'heure du dernier succès et signale l\'échec', async () => {
+    vi.setSystemTime(new Date('2026-11-07T11:24:00'))
+    const store = useProgressStore()
+    await store.startProgress()
+    const succes = store.derniereActualisation
+
+    vi.mocked(weatherService.getWeather).mockRejectedValue(new Error('down'))
+    await vi.advanceTimersByTimeAsync(60 * 1000)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(store.enEchec).toBe(true)
+    expect(store.derniereActualisation).toEqual(succes)
+
+    // La source revient : l'heure repart
+    vi.mocked(weatherService.getWeather).mockResolvedValue({ weather: null, lastRefresh: null })
+    await vi.advanceTimersByTimeAsync(60 * 1000)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(store.enEchec).toBe(false)
+    expect(store.derniereActualisation?.toTimeString().slice(0, 8)).toBe('11:26:00')
 
     store.stopProgress()
   })

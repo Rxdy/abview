@@ -7,6 +7,8 @@ import ProgressBar from '../ProgressBar.vue'
 const mockProgressStore = {
   progress: 50,
   timeRemaining: 120000, // 2 minutes
+  derniereActualisation: null as Date | null,
+  enEchec: false,
   startProgress: vi.fn(),
   stopProgress: vi.fn(),
   resetProgress: vi.fn()
@@ -50,6 +52,8 @@ describe('ProgressBar', () => {
     mockCalendarStore.lastRefresh = new Date('2026-01-20T14:30:00')
     mockTasksStore.lastRefresh = new Date('2026-01-20T14:35:00')
     mockWeatherStore.lastRefresh = null
+    mockProgressStore.derniereActualisation = null
+    mockProgressStore.enEchec = false
   })
 
   it('renders when progress is between 0 and 100', () => {
@@ -75,24 +79,31 @@ describe('ProgressBar', () => {
     expect(wrapper.find('.progress-text').text()).toBe('2:05')
   })
 
-  it('displays last refresh time from most recent store', () => {
-    mockCalendarStore.lastRefresh = new Date('2026-01-20T14:30:00')
+  it("affiche l'heure du dernier rechargement de l'écran, pas celle du serveur", () => {
+    // Le serveur a interrogé Google à 14:35 ; l'écran s'est rechargé à 14:41:07
     mockTasksStore.lastRefresh = new Date('2026-01-20T14:35:00')
-    mockWeatherStore.lastRefresh = new Date('2026-01-20T14:25:00')
+    mockProgressStore.derniereActualisation = new Date('2026-01-20T14:41:07')
 
     const wrapper = mount(ProgressBar)
 
-    expect(wrapper.find('.last-update').text()).toContain('14:35:00')
+    expect(wrapper.find('.last-update').text()).toBe('dernière à 14:41:07')
   })
 
-  it('shows sync when no refresh dates', () => {
-    mockCalendarStore.lastRefresh = null
-    mockTasksStore.lastRefresh = null
-    mockWeatherStore.lastRefresh = null
-
+  it('affiche sync... avant le premier rechargement', () => {
     const wrapper = mount(ProgressBar)
 
     expect(wrapper.find('.last-update').text()).toContain('sync...')
+  })
+
+  it("signale un échec en gardant l'heure du dernier rechargement réussi", () => {
+    mockProgressStore.derniereActualisation = new Date('2026-01-20T14:40:00')
+    mockProgressStore.enEchec = true
+
+    const wrapper = mount(ProgressBar)
+
+    const texte = wrapper.find('.last-update')
+    expect(texte.text()).toBe('échec, dernière réussie à 14:40:00')
+    expect(texte.classes()).toContain('echec')
   })
 
   it('applies correct scale to progress bar', () => {

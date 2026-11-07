@@ -99,7 +99,7 @@ const scheduleDateUpdate = () => {
 
 onMounted(() => {
   calendarStore.fetchAll();
-  calendarStore.startPolling();
+  // Le rechargement périodique est piloté par la barre d'actualisation (progressStore)
   scheduleDateUpdate(); // Start the date update timer
   
   // Initialize auto-scroll after data is loaded

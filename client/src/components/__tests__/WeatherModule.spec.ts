@@ -136,12 +136,12 @@ describe('WeatherModule', () => {
     expect(themeStore.sunTimes).toEqual({ sunrise: '06:15', sunset: '21:30' })
   })
 
-  it('lance le fetch et le polling au montage', async () => {
+  it('lance le fetch au montage, sans minuteur propre (la barre pilote le rechargement)', async () => {
     mount(WeatherModule, { stubs: ['ErrorDisplay'] })
     await flushPromises() // onMounted attend loadLanguage avant de fetcher
 
     expect(mockWeatherStore.fetchWeather).toHaveBeenCalled()
-    expect(mockWeatherStore.startPolling).toHaveBeenCalled()
+    expect(mockWeatherStore.startPolling).not.toHaveBeenCalled()
   })
 
   it('affiche la barre de progression selon la prop progress', () => {

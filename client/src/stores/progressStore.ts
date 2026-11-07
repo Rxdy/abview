@@ -4,75 +4,78 @@ import { useTasksStore } from './tasksStore';
 import { useWeatherStore } from './weatherStore';
 import { useCalendarStore } from './calendarStore';
 
+/**
+ * Horloge unique de l'actualisation de l'écran.
+ *
+ * Un cycle dure une minute : la barre se remplit, puis les trois sources
+ * (tâches, météo, calendrier) sont rechargées ensemble. À la fin du rechargement,
+ * « dernière à » prend l'heure de fin et un nouveau cycle commence.
+ * Aucun autre minuteur ne recharge les données ni ne remet la barre à zéro.
+ */
 export const useProgressStore = defineStore('progress', () => {
-  const progress = ref(0);
   const totalTime = 60 * 1000; // 1 minute
+  const progress = ref(0);
   const startTime = ref(Date.now());
-  const currentTime = ref(Date.now()); // Pour forcer la réactivité du computed
+  const currentTime = ref(Date.now());
+  // Heure de fin du dernier rechargement réussi (null : pas encore eu lieu)
+  const derniereActualisation = ref<Date | null>(null);
+  // Le dernier rechargement a échoué sur au moins une source
+  const enEchec = ref(false);
+  const enCours = ref(false);
   let interval: ReturnType<typeof setInterval> | null = null;
-  let refreshInterval: ReturnType<typeof setInterval> | null = null; // Timer séparé pour les refreshes
 
-  // Calculer le temps restant en millisecondes
   const timeRemaining = computed(() => {
     const elapsed = currentTime.value - startTime.value;
     return Math.max(0, totalTime - elapsed);
   });
 
-  const startProgress = async () => {
-    if (interval) return; // Already started
+  const nouveauCycle = () => {
+    startTime.value = Date.now();
+    currentTime.value = startTime.value;
+    progress.value = 0;
+  };
 
-    // Timer pour mettre à jour la progression (toutes les 100ms)
-    interval = setInterval(async () => {
-      const now = Date.now();
-      currentTime.value = now; // Force la réactivité du computed
+  const actualiser = async () => {
+    if (enCours.value) return;
+    enCours.value = true;
+    progress.value = 100;
 
-      const elapsed = now - startTime.value;
+    const tasksStore = useTasksStore();
+    const weatherStore = useWeatherStore();
+    const calendarStore = useCalendarStore();
 
-      // Calculer le progrès basé sur le temps écoulé
-      const newProgress = Math.min((elapsed / totalTime) * 100, 100);
-      
-      // Si on atteint 100%, rester à 100% (le reset sera fait par le timer de refresh)
-      if (newProgress >= 100) {
-        progress.value = 100;
-      } else {
-        progress.value = newProgress;
-      }
-
-    }, 100); // Mise à jour toutes les 100ms pour fluidité
-
-    // Timer séparé pour les refreshes (toutes les minutes)
-    refreshInterval = setInterval(async () => {
-      console.log('Déclenchement du refresh périodique');
-
-      // Laisser la barre à 100% pendant le fetch
-      progress.value = 100;
-
-      // Trigger global refresh en arrière-plan
-      const tasksStore = useTasksStore();
-      const weatherStore = useWeatherStore();
-      const calendarStore = useCalendarStore();
-
-      // Rafraîchir en parallèle sans bloquer
-      Promise.all([
+    try {
+      await Promise.all([
         tasksStore.fetchTasks(true),
         weatherStore.fetchWeather(true),
-        calendarStore.fetchAll(true)
-      ]).then(() => {
-        console.log('Refresh terminé');
-        // Reset immédiat du cycle après le refresh
-        startTime.value = Date.now();
-        currentTime.value = Date.now();
-        progress.value = 0;
-        console.log('Nouveau cycle commencé');
-      }).catch(error => {
-        console.warn('Erreur lors du rafraîchissement:', error);
-        // Même en cas d'erreur, reset le cycle
-        startTime.value = Date.now();
-        currentTime.value = Date.now();
-        progress.value = 0;
-      });
+        calendarStore.fetchAll(true),
+      ]);
+      // Les stores gardent leur erreur au lieu de la lever
+      enEchec.value = Boolean(tasksStore.error || weatherStore.error || calendarStore.error);
+    } catch (error) {
+      console.warn('Erreur lors du rafraîchissement:', error);
+      enEchec.value = true;
+    } finally {
+      if (!enEchec.value) derniereActualisation.value = new Date();
+      enCours.value = false;
+      nouveauCycle();
+    }
+  };
 
-    }, 60 * 1000); // Toutes les minutes
+  const tic = () => {
+    currentTime.value = Date.now();
+    if (enCours.value) return; // la barre reste pleine pendant le rechargement
+    const elapsed = currentTime.value - startTime.value;
+    progress.value = Math.min((elapsed / totalTime) * 100, 100);
+    if (elapsed >= totalTime) void actualiser();
+  };
+
+  const startProgress = async () => {
+    if (interval) return; // déjà démarré
+    nouveauCycle();
+    interval = setInterval(tic, 100);
+    // Premier rechargement tout de suite : « dernière à » est connue dès l'ouverture
+    await actualiser();
   };
 
   const stopProgress = () => {
@@ -80,23 +83,21 @@ export const useProgressStore = defineStore('progress', () => {
       clearInterval(interval);
       interval = null;
     }
-    if (refreshInterval) {
-      clearInterval(refreshInterval);
-      refreshInterval = null;
-    }
   };
 
   const resetProgress = () => {
-    startTime.value = Date.now();
-    currentTime.value = Date.now();
-    progress.value = 0;
+    nouveauCycle();
   };
 
   return {
     progress,
     timeRemaining,
+    derniereActualisation,
+    enEchec,
+    enCours,
     startProgress,
     stopProgress,
     resetProgress,
+    actualiser,
   };
 });

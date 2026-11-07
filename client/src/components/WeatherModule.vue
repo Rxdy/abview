@@ -116,7 +116,7 @@ const emit = defineEmits(['sun-times']);
 onMounted(async () => {
   await languageStore.loadLanguage();
   weatherStore.fetchWeather();
-  weatherStore.startPolling();
+  // Le rechargement périodique est piloté par la barre d'actualisation (progressStore)
 });
 
 // Watch for weather data changes to emit sun times
