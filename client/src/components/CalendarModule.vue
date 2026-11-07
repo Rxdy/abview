@@ -22,12 +22,13 @@
         </div>
         <div class="events" :data-day="day.date.toDateString()" :data-index="index">
           <div v-for="event in getEventsForDay(day.date)" :key="event.id || event.summary"
-               :class="['event', `cat-${event.categorie}`, event.type, { 'avec-image': event.image }]"
+               :class="['event', `cat-${event.categorie}`, event.type, { 'avec-image': event.image, 'sans-poste': !event.shift }]"
                :style="event.image ? { '--image': `url(${event.image})` } : undefined">
             <!-- Étiquette à gauche, poste (Matin, Soir, Nuit…) dans le coin droit -->
-            <div v-if="event.etiquette || event.shift" class="event-top">
+            <div v-if="event.etiquette || event.shift || couleurPoubelle(event)" class="event-top">
               <div class="event-tag">{{ event.etiquette }}</div>
               <div class="event-shift" v-if="event.shift">{{ event.shift }}</div>
+              <div class="event-shift" v-else-if="couleurPoubelle(event)" :class="`poubelle-${event.type}`">{{ couleurPoubelle(event) }}</div>
             </div>
             <div class="event-header">
               <div class="event-title">{{ event.title }}</div>
@@ -37,9 +38,6 @@
             <div v-if="event.location && event.type !== 'sport'" class="event-location">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>
               {{ event.location.split(',')[0] }}
-            </div>
-            <div class="color-badge" v-if="event.type === 'jaune' || event.type === 'noire'" :class="event.type">
-              {{ event.type === "jaune" ? "Jaune" : "Noire" }}
             </div>
           </div>
           <div v-if="getEventsForDay(day.date).length === 0" class="day-empty">Journée libre</div>
@@ -370,6 +368,10 @@ const getEventsForDay = (date: Date) => {
   });
 };
 
+// Couleur du bac à sortir, affichée en pastille dans le coin droit comme le poste (Matin, Soir, Nuit)
+const couleurPoubelle = (event: { type?: string }) =>
+  event.type === 'jaune' ? 'Jaune' : event.type === 'noire' ? 'Noire' : '';
+
 // Function to check for birthdays today and trigger global effect
 const checkForTodaysBirthdays = () => {
   console.log('🎂 CHECKING FOR TODAY\'S BIRTHDAYS...');
@@ -646,25 +648,37 @@ setInterval(() => {
   stroke-linejoin: round;
 }
 
-/* Badge de la poubelle à sortir */
-.color-badge {
-  align-self: flex-start;
-  margin-top: calc(2 * var(--px));
-  font-size: var(--fs-xs);
-  font-weight: 800;
-  padding: calc(1 * var(--px)) calc(9 * var(--px));
-  border-radius: var(--radius-pill);
-}
-
-.color-badge.jaune {
+/* Pastille de la poubelle : même forme que le poste, couleur du bac */
+.event-shift.poubelle-jaune {
   background: #f2c94c;
   color: #3a2e00;
 }
 
-.color-badge.noire {
+.event-shift.poubelle-noire {
   background: #2a2a2a;
   color: #ffffff;
 }
+
+/* Carte de travail compacte : pas d'étiquette « Travail » (la couleur le dit déjà),
+   nom et poste sur une ligne, horaire dessous ; sans poste, nom et horaire sur une seule ligne. */
+.event.cat-travail {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "titre poste" "heure heure";
+  align-items: center;
+  column-gap: var(--space-2);
+  row-gap: 0;
+  padding-block: calc(4 * var(--px));
+}
+.event.cat-travail .event-top { display: contents; }
+.event.cat-travail .event-tag { display: none; }
+.event.cat-travail .event-shift { grid-area: poste; }
+.event.cat-travail .event-header { grid-area: titre; }
+.event.cat-travail .event-time { grid-area: heure; }
+.event.cat-travail.sans-poste {
+  grid-template-areas: "titre heure";
+}
+.event.cat-travail.sans-poste .event-time { white-space: nowrap; }
 
 .loading {
   display: flex;
