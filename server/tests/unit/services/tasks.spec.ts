@@ -117,11 +117,24 @@ test.group('GoogleTasksService', (group) => {
     assert.match(lists[0].color, /^#[0-9a-f]{6}$/i)
   })
 
-  test("une liste inconnue ne prend jamais une couleur attitrée (le rose de Julie)", async ({
+  test('une liste inconnue ne prend jamais une couleur attitrée (le rose de Julie)', async ({
     assert,
   }) => {
     const reservees = ['#004c99', '#ffd1dc', '#e74c3c', '#f39c12', '#1e293b', '#9b59b6']
-    const noms = ['Action', 'Maison', 'Travaux', 'Vacances', 'Noël', 'Jardin', 'Voiture', 'École', 'A', 'B', 'C', 'D']
+    const noms = [
+      'Action',
+      'Maison',
+      'Travaux',
+      'Vacances',
+      'Noël',
+      'Jardin',
+      'Voiture',
+      'École',
+      'A',
+      'B',
+      'C',
+      'D',
+    ]
     mockTasksApi({
       tasklists: noms.map((title, i) => ({ id: `l${i}`, title })),
       tasksByList: Object.fromEntries(
@@ -133,7 +146,11 @@ test.group('GoogleTasksService', (group) => {
 
     assert.lengthOf(lists, noms.length)
     for (const liste of lists) {
-      assert.notInclude(reservees, liste.color.toLowerCase(), `${liste.title} a pris ${liste.color}`)
+      assert.notInclude(
+        reservees,
+        liste.color.toLowerCase(),
+        `${liste.title} a pris ${liste.color}`
+      )
     }
   })
 
