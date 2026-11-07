@@ -11,8 +11,11 @@ export const tasksService = {
         listColor: list.color 
       }))
     );
+    // Les listes à part : une liste sans tâche n'a aucune tâche à aplatir, mais doit s'afficher
+    const lists = data.lists.map((list: any) => ({ id: list.id, title: list.title, color: list.color }));
     return {
       tasks,
+      lists,
       lastRefresh: data.lastRefresh ? new Date(data.lastRefresh) : null
     };
   },

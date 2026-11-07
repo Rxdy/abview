@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useProgressStore } from '../progressStore'
+import { useProgressStore, DUREE_CYCLE_MS } from '../progressStore'
 import { tasksService } from '../../services/tasksService'
 import { weatherService } from '../../services/weatherService'
 import { calendarService } from '../../services/calendarService'
@@ -44,18 +44,18 @@ describe('progressStore', () => {
   it('initializes with default progress', () => {
     const store = useProgressStore()
     expect(store.progress).toBe(0)
-    expect(store.timeRemaining).toBe(60 * 1000)
+    expect(store.timeRemaining).toBe(DUREE_CYCLE_MS)
   })
 
   it('startProgress fait avancer la barre au fil du temps', async () => {
     const store = useProgressStore()
     await store.startProgress()
 
-    await vi.advanceTimersByTimeAsync(30 * 1000)
+    await vi.advanceTimersByTimeAsync(DUREE_CYCLE_MS / 2)
 
     expect(store.progress).toBeGreaterThan(40)
     expect(store.progress).toBeLessThan(60)
-    expect(store.timeRemaining).toBeLessThanOrEqual(30 * 1000)
+    expect(store.timeRemaining).toBeLessThanOrEqual(DUREE_CYCLE_MS / 2)
 
     store.stopProgress()
   })
@@ -71,11 +71,11 @@ describe('progressStore', () => {
     store.stopProgress()
   })
 
-  it('à 60s, déclenche le refresh des trois stores puis reset le cycle', async () => {
+  it('en fin de cycle, déclenche le refresh des trois stores puis reset le cycle', async () => {
     const store = useProgressStore()
     await store.startProgress()
 
-    await vi.advanceTimersByTimeAsync(60 * 1000)
+    await vi.advanceTimersByTimeAsync(DUREE_CYCLE_MS)
     // Laisse les promesses de refresh se résoudre
     await vi.advanceTimersByTimeAsync(0)
 
@@ -97,7 +97,7 @@ describe('progressStore', () => {
     const store = useProgressStore()
     await store.startProgress()
 
-    await vi.advanceTimersByTimeAsync(60 * 1000)
+    await vi.advanceTimersByTimeAsync(DUREE_CYCLE_MS)
     await vi.advanceTimersByTimeAsync(0)
 
     expect(store.progress).toBe(0)
@@ -115,7 +115,7 @@ describe('progressStore', () => {
     const store = useProgressStore()
     void store.startProgress() // le premier rechargement ne se termine jamais
 
-    await vi.advanceTimersByTimeAsync(65 * 1000)
+    await vi.advanceTimersByTimeAsync(DUREE_CYCLE_MS + 5000)
 
     expect(store.enCours).toBe(true)
     expect(store.progress).toBe(100)
@@ -124,7 +124,7 @@ describe('progressStore', () => {
     store.stopProgress()
   })
 
-  it('« dernière à » prend l\'heure de fin de chaque rechargement, une fois par minute', async () => {
+  it('« dernière à » prend l\'heure de fin de chaque rechargement, à chaque cycle', async () => {
     vi.setSystemTime(new Date('2026-11-07T11:24:00'))
     const store = useProgressStore()
     await store.startProgress()
@@ -133,8 +133,8 @@ describe('progressStore', () => {
     // Premier rechargement au démarrage
     expect(store.derniereActualisation?.toTimeString().slice(0, 8)).toBe('11:24:00')
 
-    for (const attendu of ['11:25:00', '11:26:00', '11:27:00']) {
-      await vi.advanceTimersByTimeAsync(60 * 1000)
+    for (const attendu of ['11:24:30', '11:25:00', '11:25:30']) {
+      await vi.advanceTimersByTimeAsync(DUREE_CYCLE_MS)
       await vi.advanceTimersByTimeAsync(0)
       expect(store.derniereActualisation?.toTimeString().slice(0, 8)).toBe(attendu)
       expect(store.enEchec).toBe(false)
@@ -143,12 +143,12 @@ describe('progressStore', () => {
     store.stopProgress()
   })
 
-  it('un seul rechargement par minute : 1 au démarrage + 1 par cycle', async () => {
+  it('un seul rechargement par cycle : 1 au démarrage + 1 par cycle', async () => {
     vi.mocked(tasksService.getTasks).mockClear()
     vi.mocked(weatherService.getWeather).mockClear()
     const store = useProgressStore()
     await store.startProgress()
-    await vi.advanceTimersByTimeAsync(3 * 60 * 1000 + 500)
+    await vi.advanceTimersByTimeAsync(3 * DUREE_CYCLE_MS + 500)
 
     expect(tasksService.getTasks).toHaveBeenCalledTimes(4)
     expect(weatherService.getWeather).toHaveBeenCalledTimes(4)
@@ -156,14 +156,14 @@ describe('progressStore', () => {
     store.stopProgress()
   })
 
-  it('le compte à rebours repart de 1:00 à la fin du rechargement', async () => {
+  it('le compte à rebours repart du début du cycle à la fin du rechargement', async () => {
     const store = useProgressStore()
     await store.startProgress()
-    await vi.advanceTimersByTimeAsync(60 * 1000)
+    await vi.advanceTimersByTimeAsync(DUREE_CYCLE_MS)
     await vi.advanceTimersByTimeAsync(0)
 
     expect(store.progress).toBe(0)
-    expect(store.timeRemaining).toBe(60 * 1000)
+    expect(store.timeRemaining).toBe(DUREE_CYCLE_MS)
 
     store.stopProgress()
   })
@@ -175,7 +175,7 @@ describe('progressStore', () => {
     const succes = store.derniereActualisation
 
     vi.mocked(weatherService.getWeather).mockRejectedValue(new Error('down'))
-    await vi.advanceTimersByTimeAsync(60 * 1000)
+    await vi.advanceTimersByTimeAsync(DUREE_CYCLE_MS)
     await vi.advanceTimersByTimeAsync(0)
 
     expect(store.enEchec).toBe(true)
@@ -183,11 +183,11 @@ describe('progressStore', () => {
 
     // La source revient : l'heure repart
     vi.mocked(weatherService.getWeather).mockResolvedValue({ weather: null, lastRefresh: null })
-    await vi.advanceTimersByTimeAsync(60 * 1000)
+    await vi.advanceTimersByTimeAsync(DUREE_CYCLE_MS)
     await vi.advanceTimersByTimeAsync(0)
 
     expect(store.enEchec).toBe(false)
-    expect(store.derniereActualisation?.toTimeString().slice(0, 8)).toBe('11:26:00')
+    expect(store.derniereActualisation?.toTimeString().slice(0, 8)).toBe('11:25:00') // 2 cycles de 30 s après 11:24:00
 
     store.stopProgress()
   })
@@ -198,7 +198,7 @@ describe('progressStore', () => {
     await store.startProgress()
     expect(rechargerSiNouvelleVersion).toHaveBeenCalledTimes(1)
 
-    await vi.advanceTimersByTimeAsync(60 * 1000)
+    await vi.advanceTimersByTimeAsync(DUREE_CYCLE_MS)
     await vi.advanceTimersByTimeAsync(0)
     expect(rechargerSiNouvelleVersion).toHaveBeenCalledTimes(2)
 
@@ -230,7 +230,7 @@ describe('progressStore', () => {
 
     store.resetProgress()
     expect(store.progress).toBe(0)
-    expect(store.timeRemaining).toBe(60 * 1000)
+    expect(store.timeRemaining).toBe(DUREE_CYCLE_MS)
 
     store.stopProgress()
   })

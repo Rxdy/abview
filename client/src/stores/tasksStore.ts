@@ -4,6 +4,8 @@ import { tasksService } from '../services/tasksService';
 export const useTasksStore = defineStore('tasks', {
   state: () => ({
     tasks: [] as any[],
+    // Toutes les listes Google, même vides
+    lists: [] as { id: string; title: string; color: string }[],
     loading: false,
     error: null as string | null,
     lastHash: '' as string,
@@ -21,9 +23,11 @@ export const useTasksStore = defineStore('tasks', {
       this.error = null;
       try {
         const result = await tasksService.getTasks();
-        const newHash = JSON.stringify(result.tasks);
+        const lists = result.lists ?? [];
+        const newHash = JSON.stringify({ tasks: result.tasks, lists });
         if (newHash !== this.lastHash) {
           this.tasks = result.tasks;
+          this.lists = lists;
           this.lastHash = newHash;
           console.log('Tasks updated');
         } else {
