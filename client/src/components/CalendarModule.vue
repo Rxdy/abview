@@ -563,6 +563,7 @@ setInterval(() => {
 .cat-rdv { --cat-bg: var(--cat-rdv-bg); --cat-fg: var(--cat-rdv-fg); }
 .cat-poubelle { --cat-bg: var(--cat-poubelle-bg); --cat-fg: var(--cat-poubelle-fg); }
 .cat-periscolaire { --cat-bg: var(--cat-periscolaire-bg); --cat-fg: var(--cat-periscolaire-fg); }
+.cat-cantine { --cat-bg: var(--cat-cantine-bg); --cat-fg: var(--cat-cantine-fg); }
 .cat-anniversaire { --cat-bg: var(--cat-anniversaire-bg); --cat-fg: var(--cat-anniversaire-fg); }
 .cat-national { --cat-bg: var(--cat-national-bg); --cat-fg: var(--cat-national-fg); }
 .cat-religieux { --cat-bg: var(--cat-religieux-bg); --cat-fg: var(--cat-religieux-fg); }
@@ -658,26 +659,8 @@ setInterval(() => {
 .event.bac-jaune .event-title,
 .event.bac-noire .event-title { color: inherit; }
 
-/* Carte de travail compacte : pas d'étiquette « Travail » (la couleur le dit déjà),
-   nom et poste sur une ligne, horaire dessous ; sans poste, nom et horaire sur une seule ligne. */
-.event.cat-travail {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas: "titre poste" "heure heure";
-  align-items: center;
-  column-gap: var(--space-2);
-  row-gap: 0;
-  padding-block: calc(4 * var(--px));
-}
-.event.cat-travail .event-top { display: contents; }
-.event.cat-travail .event-tag { display: none; }
-.event.cat-travail .event-shift { grid-area: poste; }
-.event.cat-travail .event-header { grid-area: titre; }
-.event.cat-travail .event-time { grid-area: heure; }
-.event.cat-travail.sans-poste {
-  grid-template-areas: "titre heure";
-}
-.event.cat-travail.sans-poste .event-time { white-space: nowrap; }
+/* Carte de travail : même structure que les autres cartes, sur trois niveaux (étiquette « Travail » avec le
+   poste à droite, nom, horaire). Aucune mise en page à part : tout le monde se lit de la même façon. */
 
 .loading {
   display: flex;

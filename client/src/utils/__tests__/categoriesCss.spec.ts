@@ -20,7 +20,7 @@ describe('couleurs CSS des catégories', () => {
     expect(CATEGORIES.length).toBeGreaterThan(5)
   })
 
-  it.each(CATEGORIES)('%s : jetons --cat-%s-bg et -fg définis en nuit et en jour', (cat) => {
+  it.each(CATEGORIES)('%s : jetons --cat-…-bg et -fg définis en nuit et en jour', (cat) => {
     for (const ton of ['bg', 'fg']) {
       const definitions = nb(BASE_CSS, new RegExp(`^\\s*--cat-${cat}-${ton}\\s*:`, 'gm'))
       expect(definitions, `--cat-${cat}-${ton} dans base.css (nuit et jour)`).toBeGreaterThanOrEqual(2)
@@ -28,7 +28,11 @@ describe('couleurs CSS des catégories', () => {
   })
 
   // « autre » est la valeur par défaut de .event : elle n'a pas de règle propre.
-  it.each(CATEGORIES.filter((c) => c !== 'autre'))('%s : règle .cat-%s dans la carte d\'événement', (cat) => {
+  it.each(CATEGORIES.filter((c) => c !== 'autre'))('%s : règle .cat-… dans la carte d\'événement', (cat) => {
     expect(nb(CARTE, new RegExp(`\\.cat-${cat}\\s*\\{[^}]*--cat-bg:\\s*var\\(--cat-${cat}-bg\\)[^}]*--cat-fg:\\s*var\\(--cat-${cat}-fg\\)`, 'g'))).toBe(1)
+  })
+
+  it("la carte de travail affiche son étiquette « Travail » comme les autres cartes (Garde, Périscolaire…)", () => {
+    expect(CARTE).not.toMatch(/\.event\.cat-travail\s+\.event-tag\s*\{[^}]*display:\s*none/)
   })
 })

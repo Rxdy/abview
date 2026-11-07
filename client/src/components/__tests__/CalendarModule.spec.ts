@@ -370,6 +370,30 @@ describe('CalendarModule', () => {
       expect(fete.etiquette).toBe('') // le titre « Fête Nationale » suffit
     })
 
+    it('affiche l\'étiquette Travail sur une carte de travail, avec son poste', () => {
+      const jour = new Date(); jour.setDate(jour.getDate() + 2) // pas aujourd'hui : un événement fini serait masqué
+      const iso = jour.getFullYear() + '-' + String(jour.getMonth() + 1).padStart(2, '0') + '-' + String(jour.getDate()).padStart(2, '0')
+      mockCalendarStore.allEvents = [{ id: 'w', title: 'Caroline', date: iso, type: 'work', shift: 'Matin', startTime: '05:00', endTime: '13:00', categorie: 'travail' }] as any
+      const wrapper = mount(CalendarModule, { stubs: ['ErrorDisplay'] })
+
+      const carte = wrapper.find('.event.cat-travail')
+      expect(carte.exists()).toBe(true)
+      expect(carte.find('.event-tag').text()).toBe('Travail')
+      expect(carte.find('.event-shift').text()).toBe('Matin')
+    })
+
+    it('classe une carte déclarée « cantine » avec son étiquette', () => {
+      const jour = new Date(); jour.setDate(jour.getDate() + 2) // pas aujourd'hui : un événement fini serait masqué
+      const iso = jour.getFullYear() + '-' + String(jour.getMonth() + 1).padStart(2, '0') + '-' + String(jour.getDate()).padStart(2, '0')
+      mockCalendarStore.allEvents = [{ id: 'c', title: 'Lyam et Noah', date: iso, type: 'default', categorie: 'cantine', startTime: '11:30', endTime: '13:30' }] as any
+      const vm = mount(CalendarModule, { stubs: ['ErrorDisplay'] }).vm as any
+
+      const [carte] = vm.getEventsForDay(jour)
+      expect(carte.categorie).toBe('cantine')
+      expect(carte.etiquette).toBe('Cantine')
+      expect(carte.title).toBe('Lyam et Noah')
+    })
+
     it('donne une image de fond et l\'étiquette Anniversaire', () => {
       const jour = new Date(new Date().getFullYear(), 6, 2)
       const iso = jour.getFullYear() + '-07-02'
