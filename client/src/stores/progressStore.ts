@@ -15,8 +15,14 @@ import { rechargerSiNouvelleVersion } from '../utils/nouvelleVersion';
  * Après chaque rechargement, la page se recharge elle-même si une nouvelle version
  * de l'app a été déployée.
  */
+/**
+ * Durée d'un cycle d'actualisation. Avec le cache serveur (30 s agenda, 60 s tâches), un ajout fait dans
+ * Google apparaît à l'écran en 1 minute au plus (avant : jusqu'à 6 minutes).
+ */
+export const DUREE_CYCLE_MS = 30 * 1000;
+
 export const useProgressStore = defineStore('progress', () => {
-  const totalTime = 60 * 1000; // 1 minute
+  const totalTime = DUREE_CYCLE_MS;
   const progress = ref(0);
   const startTime = ref(Date.now());
   const currentTime = ref(Date.now());

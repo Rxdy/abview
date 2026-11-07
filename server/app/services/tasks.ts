@@ -25,7 +25,11 @@ export default class GoogleTasksService {
   private tasks: any
   private cachedLists: TaskList[] = []
   private lastRefresh: number = 0
-  private refreshInterval = 5 * 60 * 1000 // 5 minutes en ms
+  // Un ajout fait dans Google Tasks apparaît au plus ~1 min après sur l'écran (avec le cycle de 30 s de la page).
+  // Coût : 1 appel « listes » + 1 par liste, soit environ 12 000 appels par jour pour 6 listes (quota Google : 50 000).
+  private refreshInterval = 60 * 1000
+  // Rafraîchissement en cours : les requêtes simultanées l'attendent au lieu de relancer des appels Google
+  private enCours: Promise<TaskList[]> | null = null
   private statsService = new StatsService()
   private previousTasksState: { [listId: string]: { [taskId: string]: Task } } = {}
 
@@ -168,46 +172,47 @@ export default class GoogleTasksService {
     const taskListsResponse = await this.tasks.tasklists.list()
     const taskLists = taskListsResponse.data.items || []
 
-    const lists: TaskList[] = []
+    // Une requête par liste, en parallèle : le rafraîchissement dure le temps de la plus lente,
+    // pas la somme. Promise.all garde l'ordre des listes de Google.
+    const lists: TaskList[] = await Promise.all(
+      taskLists.map(async (list: any) => {
+        const res = await this.tasks.tasks.list({
+          tasklist: list.id,
+          showCompleted: true,
+          maxResults: 100,
+          showHidden: true,
+        })
 
-    for (const list of taskLists) {
-      const res = await this.tasks.tasks.list({
-        tasklist: list.id,
-        showCompleted: true,
-        maxResults: 100,
-        showHidden: true,
-      })
+        // Une liste vide est gardée : une liste qu'on vient de créer doit apparaître tout de suite
+        const rawTasks = res.data.items || []
+        const taskMap = new Map<string, any>()
+        const tasks: Task[] = rawTasks.map((t: any) => {
+          const task = {
+            id: t.id,
+            title: t.title || '',
+            status: t.status || '',
+            due: t.due || null,
+            completed: t.completed || null,
+            updated: t.updated || null,
+            notes: t.notes || null,
+            parent: t.parent || null,
+            level: 0, // Will be set later
+          }
+          taskMap.set(t.id, task)
+          return task
+        })
 
-      const rawTasks = res.data.items || []
-      if (rawTasks.length === 0) continue // Skip lists with no tasks
+        // Compute levels
+        this.computeTaskLevel(taskMap)
 
-      const taskMap = new Map<string, any>()
-      const tasks: Task[] = rawTasks.map((t: any) => {
-        const task = {
-          id: t.id,
-          title: t.title || '',
-          status: t.status || '',
-          due: t.due || null,
-          completed: t.completed || null,
-          updated: t.updated || null,
-          notes: t.notes || null,
-          parent: t.parent || null,
-          level: 0, // Will be set later
+        return {
+          id: list.id,
+          title: list.title || 'Unknown',
+          color: this.getPostItColor(list.title || 'Unknown'),
+          tasks: tasks,
         }
-        taskMap.set(t.id, task)
-        return task
       })
-
-      // Compute levels
-      this.computeTaskLevel(taskMap)
-
-      lists.push({
-        id: list.id,
-        title: list.title || 'Unknown',
-        color: this.getPostItColor(list.title || 'Unknown'),
-        tasks: tasks,
-      })
-    }
+    )
 
     // Track task changes for stats
     this.trackTaskChanges(lists)
@@ -217,14 +222,24 @@ export default class GoogleTasksService {
 
   async listAllTasks(): Promise<TaskList[]> {
     const now = Date.now()
-    // Vérifier le cache : rafraîchir seulement toutes les 5 minutes
+    // Cache de 1 minute ; au-delà, un seul rafraîchissement part, même si plusieurs requêtes arrivent ensemble
     if (now - this.lastRefresh > this.refreshInterval || this.cachedLists.length === 0) {
-      this.cachedLists = await this.fetchAllLists()
-      this.lastRefresh = now
-      updateGlobalLastRefresh() // Mettre à jour le lastRefresh global seulement lors d'un vrai refresh
+      if (!this.enCours) {
+        this.enCours = this.fetchAllLists()
+          .then((lists) => {
+            this.cachedLists = lists
+            this.lastRefresh = Date.now()
+            updateGlobalLastRefresh() // Mettre à jour le lastRefresh global seulement lors d'un vrai refresh
 
-      // Update stats from current state
-      this.statsService.updateTaskStatsFromCurrentState(this.cachedLists)
+            // Update stats from current state
+            this.statsService.updateTaskStatsFromCurrentState(this.cachedLists)
+            return lists
+          })
+          .finally(() => {
+            this.enCours = null
+          })
+      }
+      await this.enCours
     }
 
     return this.cachedLists

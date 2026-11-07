@@ -106,6 +106,36 @@ test.group('GoogleCalendarService', (group) => {
     assert.equal(callCount, 1)
   })
 
+  test('listEvents revérifie Google après 30 s, pas avant', async ({ assert }) => {
+    let callCount = 0
+    mockCalendarApi(async () => {
+      callCount++
+      return { data: { items: [fakeEvent()] } }
+    })
+
+    const service = new GoogleCalendarService()
+    await service.listEvents()
+    ;(service as any).lastRefresh = Date.now() - 20_000
+    await service.listEvents()
+    assert.equal(callCount, 1, 'à 20 s : encore le cache')
+    ;(service as any).lastRefresh = Date.now() - 31_000
+    await service.listEvents()
+    assert.equal(callCount, 2, 'à 31 s : nouvel appel Google')
+  })
+
+  test('des requêtes simultanées partagent un seul appel Google', async ({ assert }) => {
+    let callCount = 0
+    mockCalendarApi(async () => {
+      callCount++
+      await new Promise((r) => setTimeout(r, 20))
+      return { data: { items: [fakeEvent()] } }
+    })
+
+    const service = new GoogleCalendarService()
+    await Promise.all([service.listEvents(), service.listEvents(), service.listEvents()])
+    assert.equal(callCount, 1)
+  })
+
   test('listPastYearEvents ne met jamais en cache (toujours un appel)', async ({ assert }) => {
     let callCount = 0
     mockCalendarApi(async () => {

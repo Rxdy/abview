@@ -70,6 +70,24 @@ describe('tasksService', () => {
       })
     })
 
+    it('rend aussi les listes, même vides (une nouvelle liste doit apparaître avant sa première tâche)', async () => {
+      ;(apiService.get as any).mockResolvedValueOnce({
+        lists: [
+          { id: 'a', title: 'Courses', color: '#111', tasks: [{ id: 1, title: 'Pain' }] },
+          { id: 'b', title: 'Nouvelle', color: '#222', tasks: [] },
+        ],
+        lastRefresh: null,
+      })
+
+      const result = await tasksService.getTasks()
+
+      expect(result.lists).toEqual([
+        { id: 'a', title: 'Courses', color: '#111' },
+        { id: 'b', title: 'Nouvelle', color: '#222' },
+      ])
+      expect(result.tasks).toHaveLength(1)
+    })
+
     it('should parse lastRefresh as Date object', async () => {
       const mockData = {
         lists: [],

@@ -62,7 +62,9 @@ test.group('GoogleTasksService', (group) => {
     assert.equal(lists[0].tasks[1].status, 'completed')
   })
 
-  test('listAllTasks ignore les listes sans tâches', async ({ assert }) => {
+  test('listAllTasks garde les listes vides : une nouvelle liste apparaît tout de suite', async ({
+    assert,
+  }) => {
     mockTasksApi({
       tasklists: [
         { id: 'list-1', title: 'VideList' },
@@ -77,8 +79,36 @@ test.group('GoogleTasksService', (group) => {
     const service = new GoogleTasksService()
     const lists = await service.listAllTasks()
 
-    assert.lengthOf(lists, 1)
-    assert.equal(lists[0].title, 'Courses')
+    assert.deepEqual(
+      lists.map((l) => [l.title, l.tasks.length]),
+      [
+        ['VideList', 0],
+        ['Courses', 1],
+      ]
+    )
+  })
+
+  test('listAllTasks garde l’ordre des listes de Google même quand les appels partent en parallèle', async ({
+    assert,
+  }) => {
+    google.tasks = (() => ({
+      tasklists: {
+        list: async () => ({
+          data: { items: [{ id: 'a', title: 'A' }, { id: 'b', title: 'B' }, { id: 'c', title: 'C' }] },
+        }),
+      },
+      tasks: {
+        // la première liste répond en dernier
+        list: async ({ tasklist }: { tasklist: string }) => {
+          await new Promise((r) => setTimeout(r, tasklist === 'a' ? 30 : 1))
+          return { data: { items: [{ id: `t-${tasklist}`, title: tasklist, status: 'needsAction' }] } }
+        },
+        patch: async () => ({}),
+      },
+    })) as unknown as typeof google.tasks
+
+    const lists = await new GoogleTasksService().listAllTasks()
+    assert.deepEqual(lists.map((l) => l.id), ['a', 'b', 'c'])
   })
 
   test('listAllTasks calcule la hiérarchie parent/enfant (level)', async ({ assert }) => {
@@ -176,6 +206,54 @@ test.group('GoogleTasksService', (group) => {
     await service.listAllTasks()
 
     assert.equal(callCount, 1)
+  })
+
+  test('listAllTasks revérifie Google après 60 s, pas avant', async ({ assert }) => {
+    let callCount = 0
+    google.tasks = (() => ({
+      tasklists: {
+        list: async () => {
+          callCount++
+          return { data: { items: [{ id: 'list-1', title: 'Rudy' }] } }
+        },
+      },
+      tasks: {
+        list: async () => ({ data: { items: [{ id: 't1', title: 'X', status: 'needsAction' }] } }),
+        patch: async () => ({}),
+      },
+    })) as unknown as typeof google.tasks
+
+    const service = new GoogleTasksService()
+    await service.listAllTasks()
+    ;(service as any).lastRefresh = Date.now() - 50_000
+    await service.listAllTasks()
+    assert.equal(callCount, 1, 'à 50 s : encore le cache')
+    ;(service as any).lastRefresh = Date.now() - 61_000
+    await service.listAllTasks()
+    assert.equal(callCount, 2, 'à 61 s : nouvel appel Google')
+  })
+
+  test('des requêtes simultanées partagent un seul rafraîchissement', async ({ assert }) => {
+    let callCount = 0
+    google.tasks = (() => ({
+      tasklists: {
+        list: async () => {
+          callCount++
+          await new Promise((r) => setTimeout(r, 20))
+          return { data: { items: [{ id: 'list-1', title: 'Rudy' }] } }
+        },
+      },
+      tasks: {
+        list: async () => ({ data: { items: [{ id: 't1', title: 'X', status: 'needsAction' }] } }),
+        patch: async () => ({}),
+      },
+    })) as unknown as typeof google.tasks
+
+    const service = new GoogleTasksService()
+    const [a, b, c] = await Promise.all([service.listAllTasks(), service.listAllTasks(), service.listAllTasks()])
+    assert.equal(callCount, 1)
+    assert.deepEqual(a, b)
+    assert.deepEqual(b, c)
   })
 
   test('updateTask met à jour le statut et retourne true en cas de succès', async ({ assert }) => {

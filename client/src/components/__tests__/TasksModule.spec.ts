@@ -9,6 +9,7 @@ const mockTasksStore = reactive({
   loading: false,
   error: null as string | null,
   tasks: [] as any[],
+  lists: [] as any[],
   startPolling: vi.fn(),
   fetchTasks: vi.fn(async () => {}),
 })
@@ -35,10 +36,29 @@ describe('TasksModule', () => {
     mockTasksStore.loading = false
     mockTasksStore.error = null
     mockTasksStore.tasks = []
+    mockTasksStore.lists = []
   })
 
   afterEach(() => {
     vi.useRealTimers()
+  })
+
+  it('affiche une liste vide (nouvelle liste sans tâche)', () => {
+    mockTasksStore.tasks = [task(1, 'Courses')]
+    mockTasksStore.lists = [{ id: 'a', title: 'Courses', color: 'red' }, { id: 'b', title: 'Nouvelle', color: 'blue' }]
+
+    const wrapper = mount(TasksModule, { stubs: ['TaskList'] })
+
+    const listes = wrapper.findAllComponents({ name: 'TaskList' })
+    expect(listes.map((l) => l.props('listTitle')).sort()).toEqual(['Courses', 'Nouvelle'])
+    expect(listes.find((l) => l.props('listTitle') === 'Nouvelle')?.props('tasks')).toEqual([])
+  })
+
+  it('n\'affiche « aucune donnée » que sans tâche et sans liste', () => {
+    mockTasksStore.lists = [{ id: 'b', title: 'Nouvelle', color: 'blue' }]
+    const wrapper = mount(TasksModule, { stubs: ['TaskList'] })
+    expect(wrapper.findComponent({ name: 'ErrorDisplay' }).exists()).toBe(false)
+    expect(wrapper.findAllComponents({ name: 'TaskList' })).toHaveLength(1)
   })
 
   it('shows loading state when loading', () => {
