@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import Footer from '../Footer.vue'
-import { version } from '../../../package.json'
+import changelog from '../../../../CHANGELOG.md?raw'
+import { versionDuChangelog } from '../../utils/versionChangelog'
+
+const version = versionDuChangelog(changelog)
 
 describe('Footer', () => {
   beforeEach(() => {
@@ -27,7 +30,7 @@ describe('Footer', () => {
       stubs: ['ProgressBar']
     })
 
-    expect(wrapper.text()).toContain(`v${version}`) // lue dans package.json : ne casse plus à chaque montée de version
+    expect(wrapper.text()).toContain(`v${version}`) // lue dans CHANGELOG.md : ne casse plus à chaque montée de version
   })
 
   it('includes ProgressBar component', () => {

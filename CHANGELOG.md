@@ -7,6 +7,13 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [Unreleased]
+
+### Modifié
+- **Version** : le numéro affiché dans le pied de page et l'étiquette de l'image Docker viennent du titre le plus récent de ce fichier ; `client/package.json` doit rester aligné (un test le vérifie)
+
+---
+
 ## [v3.3.0] — 2026-11-07
 
 ### Ajouté
