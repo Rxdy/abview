@@ -104,6 +104,8 @@ docker-compose*.yml
 
 # Documentation
 *.md
+# sauf le changelog : la version de l'app en vient (voir Dockerfile)
+!CHANGELOG.md
 docs/
 
 # Test files

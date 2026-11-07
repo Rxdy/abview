@@ -213,7 +213,11 @@ jobs:
             - name: Version de l'app
               id: version
               if: steps.should.outputs.build == 'true'
-              run: echo "numero=$(node -p "require('./client/package.json').version")" >> "$GITHUB_OUTPUT"
+              run: |
+                  # Même source que le pied de page : le titre le plus récent de CHANGELOG.md
+                  numero=$(sed -n 's/^##[[:space:]]*\[v\{0,1\}\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)\].*/\1/p' CHANGELOG.md | head -n 1)
+                  test -n "$numero" || { echo "Aucune version trouvée dans CHANGELOG.md" >&2; exit 1; }
+                  echo "numero=$numero" >> "$GITHUB_OUTPUT"
 
             - uses: docker/setup-qemu-action@v3
               if: steps.should.outputs.build == 'true'
