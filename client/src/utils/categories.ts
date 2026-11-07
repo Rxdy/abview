@@ -24,6 +24,7 @@ export type Categorie =
   | 'sante'
   | 'rdv'
   | 'poubelle'
+  | 'periscolaire'
   | 'anniversaire'
   | 'national'
   | 'religieux'
@@ -36,6 +37,7 @@ export const ETIQUETTES: Record<Categorie, string> = {
   sante: 'Santé',
   rdv: 'Rendez-vous',
   poubelle: 'Poubelle',
+  periscolaire: 'Périscolaire',
   anniversaire: 'Anniversaire',
   national: 'Fête nationale',
   religieux: 'Fête religieuse',

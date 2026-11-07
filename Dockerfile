@@ -10,6 +10,9 @@ COPY client/package*.json ./
 # Install ALL dependencies (including dev) for build
 RUN npm ci
 
+# La version de l'app vient de CHANGELOG.md (lu par vite.config.ts via ../CHANGELOG.md)
+COPY CHANGELOG.md /app/CHANGELOG.md
+
 # Copy source code
 COPY client/ .
 

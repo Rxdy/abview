@@ -4,6 +4,7 @@ import { useProgressStore } from '../progressStore'
 import { tasksService } from '../../services/tasksService'
 import { weatherService } from '../../services/weatherService'
 import { calendarService } from '../../services/calendarService'
+import { rechargerSiNouvelleVersion } from '../../utils/nouvelleVersion'
 
 vi.mock('../../services/tasksService', () => ({
   tasksService: { getTasks: vi.fn(), updateTask: vi.fn() },
@@ -17,6 +18,10 @@ vi.mock('../../services/calendarService', () => ({
     getCalendarEvents: vi.fn(),
     getRecapData: vi.fn(),
   },
+}))
+
+vi.mock('../../utils/nouvelleVersion', () => ({
+  rechargerSiNouvelleVersion: vi.fn().mockResolvedValue(false),
 }))
 
 describe('progressStore', () => {
@@ -183,6 +188,19 @@ describe('progressStore', () => {
 
     expect(store.enEchec).toBe(false)
     expect(store.derniereActualisation?.toTimeString().slice(0, 8)).toBe('11:26:00')
+
+    store.stopProgress()
+  })
+
+  it('après chaque rechargement, vérifie si une nouvelle version est en ligne', async () => {
+    vi.mocked(rechargerSiNouvelleVersion).mockClear()
+    const store = useProgressStore()
+    await store.startProgress()
+    expect(rechargerSiNouvelleVersion).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(60 * 1000)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(rechargerSiNouvelleVersion).toHaveBeenCalledTimes(2)
 
     store.stopProgress()
   })
