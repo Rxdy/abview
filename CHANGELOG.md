@@ -13,7 +13,7 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 - **Agenda** : catégorie Cantine (indigo) pour la cantine des enfants, publiée par planning-relay d'après le portail de l'école
 
 ### Modifié
-- **Calendrier** : les cartes de travail affichent de nouveau l'étiquette « Travail » (en haut à gauche, le poste à droite), comme les autres cartes (Garde, Périscolaire…) ; le nom et l'horaire passent sur la ligne du dessous, la carte garde le même nombre de lignes
+- **Calendrier** : les cartes de travail affichent de nouveau l'étiquette « Travail » et ont la même structure que les autres cartes (Garde, Périscolaire…) : trois niveaux, étiquette avec le poste à droite, nom, horaire
 
 ---
 
