@@ -7,6 +7,13 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [v3.5.2] — 2026-11-07
+
+### Corrigé
+- **Tâches** : les listes sans tâche ne s'affichent plus (retour sur le changement de la v3.4.0) ; une liste apparaît avec sa première tâche, à la vitesse d'actualisation rapide
+
+---
+
 ## [v3.5.1] — 2026-11-07
 
 ### Corrigé

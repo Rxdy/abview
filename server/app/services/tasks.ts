@@ -174,7 +174,7 @@ export default class GoogleTasksService {
 
     // Une requête par liste, en parallèle : le rafraîchissement dure le temps de la plus lente,
     // pas la somme. Promise.all garde l'ordre des listes de Google.
-    const lists: TaskList[] = await Promise.all(
+    let lists: TaskList[] = await Promise.all(
       taskLists.map(async (list: any) => {
         const res = await this.tasks.tasks.list({
           tasklist: list.id,
@@ -183,7 +183,6 @@ export default class GoogleTasksService {
           showHidden: true,
         })
 
-        // Une liste vide est gardée : une liste qu'on vient de créer doit apparaître tout de suite
         const rawTasks = res.data.items || []
         const taskMap = new Map<string, any>()
         const tasks: Task[] = rawTasks.map((t: any) => {
@@ -213,6 +212,9 @@ export default class GoogleTasksService {
         }
       })
     )
+
+    // Les listes sans tâche ne sont pas affichées : une liste apparaît avec sa première tâche
+    lists = lists.filter((l) => l.tasks.length > 0)
 
     // Track task changes for stats
     this.trackTaskChanges(lists)

@@ -14,7 +14,7 @@
 
     <!-- No Data State -->
     <ErrorDisplay
-      v-else-if="tasksStore.tasks.length === 0 && (tasksStore.lists ?? []).length === 0"
+      v-else-if="tasksStore.tasks.length === 0"
       type="no-data"
     />
 
@@ -56,10 +56,6 @@ onMounted(() => {
 
 const groupedLists = computed(() => {
   const groups: { [key: string]: { title: string; color: string; tasks: any[] } } = {};
-  // D'abord toutes les listes, vides comprises : une liste qu'on vient de créer s'affiche avant sa première tâche
-  (tasksStore.lists ?? []).forEach((list: any) => {
-    groups[list.title] = { title: list.title, color: list.color || '#ccc', tasks: [] };
-  });
   tasksStore.tasks.forEach(task => {
     const key = task.taskListTitle;
     if (!groups[key]) {

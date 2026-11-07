@@ -62,9 +62,7 @@ test.group('GoogleTasksService', (group) => {
     assert.equal(lists[0].tasks[1].status, 'completed')
   })
 
-  test('listAllTasks garde les listes vides : une nouvelle liste apparaît tout de suite', async ({
-    assert,
-  }) => {
+  test('listAllTasks ignore les listes sans tâches', async ({ assert }) => {
     mockTasksApi({
       tasklists: [
         { id: 'list-1', title: 'VideList' },
@@ -79,13 +77,8 @@ test.group('GoogleTasksService', (group) => {
     const service = new GoogleTasksService()
     const lists = await service.listAllTasks()
 
-    assert.deepEqual(
-      lists.map((l) => [l.title, l.tasks.length]),
-      [
-        ['VideList', 0],
-        ['Courses', 1],
-      ]
-    )
+    assert.lengthOf(lists, 1)
+    assert.equal(lists[0].title, 'Courses')
   })
 
   test('listAllTasks garde l’ordre des listes de Google même quand les appels partent en parallèle', async ({
