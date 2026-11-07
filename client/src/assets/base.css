@@ -65,6 +65,8 @@
   --cat-rdv-fg: #ffb066;
   --cat-poubelle-bg: #2a2a2a;
   --cat-poubelle-fg: #c7c7c7;
+  --cat-periscolaire-bg: #2f3a0f;
+  --cat-periscolaire-fg: #c6e86a;
   /* Bacs : le fond de la carte est la couleur du bac. Le noir garde un liseré clair
      pour rester visible sur le fond sombre. */
   --bac-jaune-bg: #f2c94c;
@@ -119,6 +121,8 @@
   --cat-rdv-fg: #8f4300;
   --cat-poubelle-bg: #e6e6e6;
   --cat-poubelle-fg: #3b3b3b;
+  --cat-periscolaire-bg: #eaf5c4;
+  --cat-periscolaire-fg: #4a5f00;
   --bac-jaune-bg: #f2c94c;
   --bac-jaune-fg: #3a2e00;
   --bac-jaune-bord: #9a7400;
