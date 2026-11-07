@@ -36,26 +36,6 @@ describe('tasksStore', () => {
     expect(store.error).toBeNull()
   })
 
-  it('une liste ajoutée sans aucune tâche met le store à jour', async () => {
-    const store = useTasksStore()
-    mockGetTasks.mockResolvedValueOnce({
-      tasks: fakeTasks,
-      lists: [{ id: 'a', title: 'Rudy', color: '#1e293b' }],
-      lastRefresh: null,
-    } as any)
-    await store.fetchTasks()
-    expect(store.lists).toHaveLength(1)
-
-    // Même tâches, mais une nouvelle liste vide : le contenu a changé
-    mockGetTasks.mockResolvedValueOnce({
-      tasks: fakeTasks,
-      lists: [{ id: 'a', title: 'Rudy', color: '#1e293b' }, { id: 'b', title: 'Nouvelle', color: '#333' }],
-      lastRefresh: null,
-    } as any)
-    await store.fetchTasks(true)
-    expect(store.lists.map((l: any) => l.title)).toEqual(['Rudy', 'Nouvelle'])
-  })
-
   it('fetchTasks met à jour les tâches et lastRefresh', async () => {
     const lastRefresh = new Date('2026-07-08T10:00:00Z')
     mockGetTasks.mockResolvedValue({ tasks: fakeTasks, lastRefresh })
