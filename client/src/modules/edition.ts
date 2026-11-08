@@ -36,6 +36,13 @@ export function ajouter(config: Configuration, module: string): Configuration | 
   return avec(config, [...config.placements, { id: identifiantLibre(config, module), module, ...place }])
 }
 
+/** Pose un module à une case donnée (sa case de départ) ; null si ça ne tient pas là. */
+export function ajouterA(config: Configuration, module: string, x: number, y: number): Configuration | null {
+  if (!variante(REGISTRE, module)) return null
+  const suivante = avec(config, [...config.placements, { id: identifiantLibre(config, module), module, x, y }])
+  return valider(suivante).length === 0 ? suivante : null
+}
+
 export function retirer(config: Configuration, id: string): Configuration {
   return avec(config, config.placements.filter((p) => p.id !== id))
 }
