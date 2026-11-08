@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { apiService } from '../services/apiService';
 import type { ReglesCategories } from '../utils/categories';
 import { CONFIGURATION_PAR_DEFAUT, valider, type Configuration } from '../modules/configuration';
 
@@ -39,11 +40,33 @@ export const useDashboardStore = defineStore('dashboard', {
     configuration: CONFIGURATION_PAR_DEFAUT as Configuration,
   }),
   actions: {
+    /**
+     * Va chercher la configuration active sur le serveur (celle choisie dans l'éditeur). Si le serveur n'en
+     * a pas, ou n'est pas joignable, la disposition en place reste : l'écran ne change jamais à cause d'une panne.
+     */
+    async chargerConfigurationActive() {
+      try {
+        const { configuration } = await apiService.get('/configuration');
+        if (!configuration) return;
+        const choisie = choisirConfiguration(configuration);
+        if (JSON.stringify(choisie) !== JSON.stringify(this.configuration)) this.configuration = choisie;
+      } catch (error) {
+        console.error('Configuration du serveur indisponible, disposition conservée :', error);
+      }
+    },
+
+    /** Relit la configuration active à intervalle régulier ; rend la fonction qui arrête la relecture. */
+    suivreConfiguration(intervalleMs = 60_000) {
+      const minuteur = setInterval(() => void this.chargerConfigurationActive(), intervalleMs);
+      return () => clearInterval(minuteur);
+    },
+
     async loadConfig() {
       try {
         const response = await fetch('/config.json');
         const { grid, modules, name, language, categories, configuration } = await response.json();
         this.configuration = choisirConfiguration(configuration);
+        await this.chargerConfigurationActive();
         this.categories = categories || {};
         this.grid = grid;
         this.modules = modules;
