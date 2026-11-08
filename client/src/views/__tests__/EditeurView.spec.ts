@@ -222,7 +222,10 @@ describe('EditeurView', () => {
   it('un déplacement sans effet (bord de la grille) laisse l’éditeur utilisable', async () => {
     const w = await monter()
     await w.findAll('.module')[1]!.trigger('click') // la météo, en bas à gauche
-    await w.find('[aria-label="Aller à gauche"]').trigger('click') // bord de la grille
+    const avant = w.findAll('.module').map((m) => m.attributes('style'))
+    await w.find('[aria-label="Aller à gauche"]').trigger('click') // bord de la grille : rien ne bouge, rien n'est dit
+    expect(w.find('.message').exists()).toBe(false)
+    expect(w.findAll('.module').map((m) => m.attributes('style'))).toEqual(avant)
     await w.findAll('.module')[2]!.trigger('click')
     expect(w.find('[aria-label="Taille du module"]').exists()).toBe(true)
   })

@@ -261,27 +261,21 @@ function dupliquer() {
   message.value = 'Copie prête : changez le nom si vous voulez, puis enregistrez.'
 }
 
-const AUCUNE_PLACE = 'Pas de place pour déplacer les modules voisins : rien n’a bougé. Retirez-en un ou réduisez une taille.'
-
-function appliquer(suivante: Configuration | null, refus: string, selectionner = false) {
-  if (!suivante) {
-    message.value = refus
-    return false
-  }
+// Une modification impossible (pas de place, bord de la grille…) ne change rien et ne dit rien : la grille montre
+// que le module n'a pas bougé.
+function appliquer(suivante: Configuration | null, selectionner = false) {
+  if (!suivante) return false
   message.value = ''
   remplacer(suivante)
   if (selectionner) selection.value = suivante.placements[suivante.placements.length - 1]!.id
   return true
 }
 
-/** Applique un déplacement qui a pu pousser d'autres modules ; ne dit un mot que s'il est impossible. */
+/** Applique un déplacement qui a pu pousser d'autres modules ; s'il est impossible, rien ne change. */
 function appliquerPousse(resultat: { config: Configuration; deplaces: Deplacement[] } | null, selectionner = false) {
-  if (!resultat) {
-    message.value = AUCUNE_PLACE
-    return false
-  }
+  if (!resultat) return false
   remplacer(resultat.config)
-  message.value = '' // pas de confirmation : on voit le résultat sur la grille
+  message.value = ''
   if (selectionner) selection.value = resultat.config.placements.find((p) => !brouillonAvant.has(p.id))?.id ?? selection.value
   return true
 }
@@ -316,7 +310,7 @@ function regler(r: Reglage, e: Event) {
 
 function changerTaille(e: Event) {
   const p = placement.value
-  if (p) appliquer(changerVariante(brouillon, p.id, (e.target as HTMLSelectElement).value), 'Cette taille ne tient pas à cet endroit.')
+  if (p) appliquer(changerVariante(brouillon, p.id, (e.target as HTMLSelectElement).value))
 }
 
 // --- Glisser-déposer ---------------------------------------------------------------------------
@@ -419,7 +413,7 @@ function cliquerPalette(module: string) {
     aGlisse = false
     return
   }
-  appliquer(ajouter(brouillon, module), AUCUNE_PLACE, true)
+  appliquer(ajouter(brouillon, module), true)
 }
 
 // --- Enregistrement ----------------------------------------------------------------------------
