@@ -4,11 +4,13 @@ import GoogleDataController from '#controllers/google_data'
 import HorairesController from '#controllers/horaires'
 import LogsController from '#controllers/logs'
 import ConfigurationsController from '#controllers/configurations'
+import PhotosController from '#controllers/photos'
 
 const googleDataController = new GoogleDataController()
 const horairesController = new HorairesController()
 const logsController = new LogsController()
 const configurationsController = new ConfigurationsController()
+const photosController = new PhotosController()
 
 // État global pour le timer de progression
 let progressCycleStart = Date.now()
@@ -70,6 +72,10 @@ router.delete(
   '/configurations/:id',
   configurationsController.supprimer.bind(configurationsController)
 )
+
+// Photos (module Photos) : tirage au hasard dans abflow, et fichiers relayés
+router.get('/photos/aleatoires', photosController.aleatoires.bind(photosController))
+router.get('/photos/fichier/:nom', photosController.fichier.bind(photosController))
 
 // Routes pour les logs
 router.get('/logs', logsController.getLogs.bind(logsController))
