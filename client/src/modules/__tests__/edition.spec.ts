@@ -142,19 +142,19 @@ describe('édition d’une configuration', () => {
       expect(valider(r.config)).toEqual([])
     })
 
-    it('le module poussé rétrécit quand il n’a plus la place pour sa taille', () => {
-      // les tâches glissent d'une case à gauche : la météo (4×3) n'a plus de place en 4×3, elle passe en compact (3×2)
-      const r = deplacerEnPoussant(CONFIGURATION_PAR_DEFAUT, 'taches', 4, 6)!
-      expect(place(r.config, 'meteo')).toMatchObject({ x: 1, y: 6, variante: 'compact' })
-      expect(r.deplaces).toEqual([{ id: 'meteo', module: 'meteo', reduitEn: 'compact' }])
-      expect(valider(r.config)).toEqual([])
+    it('un module poussé ne rétrécit jamais : sans place pour sa taille, rien ne bouge', () => {
+      // les tâches glissent d'une case à gauche : la météo (4×3) n'a nulle part où aller en 4×3
+      expect(deplacerEnPoussant(CONFIGURATION_PAR_DEFAUT, 'taches', 4, 6)).toBeNull()
+      // la météo sur l'agenda : l'agenda (12×5) ne peut pas non plus rétrécir pour se ranger
+      expect(deplacerEnPoussant(CONFIGURATION_PAR_DEFAUT, 'meteo', 1, 1)).toBeNull()
     })
 
-    it('l’agenda poussé rétrécit lui aussi : la météo qui monte sur lui le réduit en « moyen »', () => {
-      const r = deplacerEnPoussant(CONFIGURATION_PAR_DEFAUT, 'meteo', 1, 1)!
-      expect(place(r.config, 'meteo')).toMatchObject({ x: 1, y: 1 })
-      expect(r.deplaces).toEqual([{ id: 'calendrier', module: 'calendrier', reduitEn: expect.any(String) }])
-      expect(valider(r.config)).toEqual([])
+    it('tous les modules gardent leur variante quand on en pousse un', () => {
+      const r = deplacerEnPoussant(CONFIGURATION_PAR_DEFAUT, 'taches', 1, 6)!
+      for (const p of r.config.placements) {
+        const avant = CONFIGURATION_PAR_DEFAUT.placements.find((q) => q.id === p.id)!
+        expect(p.variante).toBe(avant.variante)
+      }
     })
 
     it('si un module poussé ne trouve aucune place, rien ne bouge (null)', () => {
