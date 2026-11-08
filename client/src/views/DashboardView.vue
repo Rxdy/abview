@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import NotificationModal from '../components/NotificationModal.vue';
 import { useNotificationsStore } from '../stores/notificationsStore';
 import { useDashboardStore } from '../stores/dashboardStore';
@@ -36,6 +36,13 @@ import { COMPOSANTS } from '../modules/composants';
 
 const notificationsStore = useNotificationsStore();
 const dashboardStore = useDashboardStore();
+
+// La configuration active du serveur est relue chaque minute : un changement dans l'éditeur arrive à l'écran sans rechargement.
+let arreterSuivi: (() => void) | undefined;
+onMounted(() => {
+  arreterSuivi = dashboardStore.suivreConfiguration();
+});
+onUnmounted(() => arreterSuivi?.());
 
 const { activeKey: activeModule, progress } = useModuleRotation([
   { key: 'weather', duration: 25_000 },

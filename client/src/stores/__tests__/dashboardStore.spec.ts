@@ -110,4 +110,57 @@ describe('dashboardStore', () => {
       erreur.mockRestore()
     })
   })
+
+  describe('configuration active du serveur', () => {
+    const serveur = (corps: unknown, ok = true) => {
+      global.fetch = vi.fn(async () => ({ ok, status: ok ? 200 : 500, json: async () => corps })) as unknown as typeof fetch
+    }
+    const seule = { nom: 'Météo seule', placements: [{ id: 'm', module: 'meteo', x: 1, y: 1 }] }
+
+    it('adopte la configuration active renvoyée par le serveur', async () => {
+      serveur({ id: 'meteo', configuration: seule })
+      const store = useDashboardStore()
+      await store.chargerConfigurationActive()
+      expect(store.configuration).toEqual(seule)
+    })
+
+    it('garde la disposition en place quand le serveur n’a pas de configuration active', async () => {
+      serveur({ id: null, configuration: null })
+      const store = useDashboardStore()
+      await store.chargerConfigurationActive()
+      expect(store.configuration).toEqual(CONFIGURATION_PAR_DEFAUT)
+    })
+
+    it('garde la disposition en place si le serveur est en panne', async () => {
+      const erreur = vi.spyOn(console, 'error').mockImplementation(() => {})
+      serveur({}, false)
+      const store = useDashboardStore()
+      store.configuration = seule
+      await store.chargerConfigurationActive()
+      expect(store.configuration).toEqual(seule)
+      erreur.mockRestore()
+    })
+
+    it('refuse une configuration invalide du serveur et garde la disposition en place', async () => {
+      const erreur = vi.spyOn(console, 'error').mockImplementation(() => {})
+      serveur({ id: 'x', configuration: { nom: 'Cassée', placements: [{ id: 'a', module: 'inconnu', x: 1, y: 1 }] } })
+      const store = useDashboardStore()
+      await store.chargerConfigurationActive()
+      expect(store.configuration).toEqual(CONFIGURATION_PAR_DEFAUT)
+      erreur.mockRestore()
+    })
+
+    it('relit la configuration à intervalle régulier, jusqu’à ce qu’on l’arrête', async () => {
+      vi.useFakeTimers()
+      serveur({ id: 'meteo', configuration: seule })
+      const store = useDashboardStore()
+      const arreter = store.suivreConfiguration(1000)
+      await vi.advanceTimersByTimeAsync(3100)
+      expect(global.fetch).toHaveBeenCalledTimes(3)
+      arreter()
+      await vi.advanceTimersByTimeAsync(3000)
+      expect(global.fetch).toHaveBeenCalledTimes(3)
+      vi.useRealTimers()
+    })
+  })
 })
