@@ -5,12 +5,14 @@ import HorairesController from '#controllers/horaires'
 import LogsController from '#controllers/logs'
 import ConfigurationsController from '#controllers/configurations'
 import PhotosController from '#controllers/photos'
+import VeilleController from '#controllers/veille'
 
 const googleDataController = new GoogleDataController()
 const horairesController = new HorairesController()
 const logsController = new LogsController()
 const configurationsController = new ConfigurationsController()
 const photosController = new PhotosController()
+const veilleController = new VeilleController()
 
 // État global pour le timer de progression
 let progressCycleStart = Date.now()
@@ -72,6 +74,10 @@ router.delete(
   '/configurations/:id',
   configurationsController.supprimer.bind(configurationsController)
 )
+
+// Mode veille : lecture libre (l'écran), écriture avec jeton (commande, puis capteur de présence)
+router.get('/veille', veilleController.etat.bind(veilleController))
+router.put('/veille', veilleController.regler.bind(veilleController))
 
 // Photos (module Photos) : tirage au hasard dans abflow, et fichiers relayés
 router.get('/photos/aleatoires', photosController.aleatoires.bind(photosController))

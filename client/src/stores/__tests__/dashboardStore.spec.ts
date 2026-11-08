@@ -202,4 +202,55 @@ describe('dashboardStore', () => {
       erreur.mockRestore()
     })
   })
+
+  describe('mode veille', () => {
+    const serveur = (corps: unknown, ok = true) => {
+      global.fetch = vi.fn(async () => ({ ok, status: ok ? 200 : 500, json: async () => corps })) as unknown as typeof fetch
+    }
+
+    it('est en mode normal au départ', () => {
+      expect(useDashboardStore().veille).toBe(false)
+    })
+
+    it('suit l’état du serveur : veille puis retour au mode normal', async () => {
+      const store = useDashboardStore()
+      serveur({ actif: true, depuis: '2026-11-08T20:00:00Z' })
+      await store.chargerVeille()
+      expect(store.veille).toBe(true)
+      serveur({ actif: false, depuis: null })
+      await store.chargerVeille()
+      expect(store.veille).toBe(false)
+    })
+
+    it('une réponse inattendue ne met jamais l’écran en veille', async () => {
+      const store = useDashboardStore()
+      serveur({ actif: 'oui' })
+      await store.chargerVeille()
+      expect(store.veille).toBe(false)
+    })
+
+    it('en cas de panne du serveur, garde l’état en place (pas de bascule à cause du réseau)', async () => {
+      const store = useDashboardStore()
+      serveur({ actif: true })
+      await store.chargerVeille()
+      serveur({}, false)
+      await store.chargerVeille()
+      expect(store.veille).toBe(true)
+    })
+
+    it('relit l’état toutes les 3 secondes, jusqu’à ce qu’on arrête', async () => {
+      vi.useFakeTimers()
+      serveur({ actif: false })
+      const store = useDashboardStore()
+      const arreter = store.suivreVeille()
+      await vi.advanceTimersByTimeAsync(0)
+      expect(global.fetch).toHaveBeenCalledTimes(1) // une première lecture tout de suite
+      await vi.advanceTimersByTimeAsync(9000)
+      expect(global.fetch).toHaveBeenCalledTimes(4)
+      arreter()
+      await vi.advanceTimersByTimeAsync(9000)
+      expect(global.fetch).toHaveBeenCalledTimes(4)
+      vi.useRealTimers()
+    })
+  })
 })

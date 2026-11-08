@@ -1,5 +1,10 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3333' : '');
 
+/** L'adresse complète d'un chemin du serveur (pour une image : le navigateur ne passe pas par `fetch`). En production, le même hôte. */
+export function urlApi(chemin: string): string {
+  return chemin.startsWith('/') ? `${API_BASE_URL}${chemin}` : chemin;
+}
+
 export const apiService = {
   async get(endpoint: string) {
     const response = await fetch(`${API_BASE_URL}${endpoint}`);

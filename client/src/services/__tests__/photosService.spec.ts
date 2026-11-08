@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { photosService } from '../photosService'
-import { apiService } from '../apiService'
+import { apiService, urlApi } from '../apiService'
 
 const photo = (id: string, orientation: 'paysage' | 'portrait' | 'carre') => ({ id, url: `/photos/fichier/${id}`, orientation })
 
@@ -62,5 +62,17 @@ describe('photosService', () => {
     vi.spyOn(apiService, 'get').mockResolvedValue({ photos: [photo('p', 'portrait')] })
     const [seul] = await photosService.aleatoires(['paysage'])
     expect(seul!.id).toMatch(/^demo-/) // pas le portrait dans un paysage
+  })
+
+  it('donne à chaque photo l’adresse complète du serveur d’AbView (l’image ne passe pas par fetch)', async () => {
+    vi.spyOn(apiService, 'get').mockResolvedValue({ photos: [photo('a.jpg', 'paysage')] })
+    const [p] = await photosService.aleatoires(['paysage'])
+    expect(p!.url).toBe(urlApi('/photos/fichier/a.jpg'))
+    expect(p!.url.endsWith('/photos/fichier/a.jpg')).toBe(true)
+  })
+
+  it('urlApi laisse intactes les adresses déjà complètes ou intégrées (images de démonstration)', () => {
+    expect(urlApi('https://exemple.fr/a.jpg')).toBe('https://exemple.fr/a.jpg')
+    expect(urlApi('data:image/svg+xml;utf8,abc')).toBe('data:image/svg+xml;utf8,abc')
   })
 })

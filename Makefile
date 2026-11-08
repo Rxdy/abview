@@ -1,7 +1,11 @@
 # Makefile pour AbView
 # Utilise client comme frontend principal (port 5175)
 
-.PHONY: help run prod prod-browser get-token stop logs logs-api logs-files logs-stats logs-tail logs-clean reset restart-kiosk check-remote
+# Mode veille : ABVIEW_URL = adresse du serveur d'AbView (l'API, port 3333 en dev ; en production l'adresse de l'écran),
+# ABVIEW_ADMIN_TOKEN = le jeton d'administration (le même que pour l'éditeur de disposition).
+ABVIEW_URL ?= http://localhost:3333
+
+.PHONY: veille-on veille-off veille-etat help run prod prod-browser get-token stop logs logs-api logs-files logs-stats logs-tail logs-clean reset restart-kiosk check-remote
 
 help:
 	@echo "Commandes disponibles (utilise client comme frontend principal):"
@@ -18,7 +22,19 @@ help:
 	@echo "  logs-clean      - Nettoyer les anciens logs"
 	@echo "  reset           - Réinitialisation de l'environnement"
 	@echo "  restart-kiosk   - Redémarrer Chromium sur le Pi (via SSH Tailscale)"
+	@echo "  veille-on / veille-off / veille-etat - Mode veille : le mur de cadres photo à la place du tableau de bord (ABVIEW_URL, ABVIEW_ADMIN_TOKEN)"
 	@echo "  check-remote    - Vérifie un déploiement à distance : docker, healthchecks, screenshot du kiosk (HOST=rp-meliodas par défaut)"
+
+veille-on: ## Met l'écran en veille : le mur de cadres photo remplace le tableau de bord
+	@test -n "$$ABVIEW_ADMIN_TOKEN" || { echo "ABVIEW_ADMIN_TOKEN manquant (le jeton d'administration)"; exit 1; }
+	@curl -fsS -X PUT "$(ABVIEW_URL)/veille" -H "Authorization: Bearer $$ABVIEW_ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{"actif":true}'; echo
+
+veille-off: ## Ramène l'écran au tableau de bord
+	@test -n "$$ABVIEW_ADMIN_TOKEN" || { echo "ABVIEW_ADMIN_TOKEN manquant (le jeton d'administration)"; exit 1; }
+	@curl -fsS -X PUT "$(ABVIEW_URL)/veille" -H "Authorization: Bearer $$ABVIEW_ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{"actif":false}'; echo
+
+veille-etat: ## Dit si l'écran est en veille
+	@curl -fsS "$(ABVIEW_URL)/veille"; echo
 
 run:
 	@echo "Lancement en mode dev..."
