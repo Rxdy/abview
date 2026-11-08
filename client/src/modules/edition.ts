@@ -65,8 +65,26 @@ export function deplacer(config: Configuration, id: string, x: number, y: number
   return modifier(config, id, { x, y })
 }
 
+/**
+ * Change la taille d'un module. Un module s'agrandit d'abord vers le bas et la droite (sa case de départ ne bouge
+ * pas) ; s'il n'y a pas la place de ce côté, il se décale vers la case la plus proche où il tient : par exemple
+ * vers le haut et la gauche quand il est collé au bord. Rend null seulement s'il ne tient nulle part.
+ */
 export function changerVariante(config: Configuration, id: string, nouvelle: string): Configuration | null {
-  return modifier(config, id, { variante: nouvelle })
+  const p = config.placements.find((q) => q.id === id)
+  if (!p || !variante(REGISTRE, p.module, nouvelle)) return null
+  const autres = config.placements.filter((q) => q.id !== id)
+  const positions: { x: number; y: number }[] = []
+  for (let y = 1; y <= GRILLE.lignes; y++) for (let x = 1; x <= GRILLE.colonnes; x++) positions.push({ x, y })
+  // la plus proche de la case d'origine d'abord (à égalité : la plus haute, puis la plus à gauche)
+  positions.sort((a, b) => Math.abs(a.x - p.x) + Math.abs(a.y - p.y) - (Math.abs(b.x - p.x) + Math.abs(b.y - p.y)) || a.y - b.y || a.x - b.x)
+  for (const pos of positions) {
+    const essai: Placement = { ...p, variante: nouvelle, ...pos }
+    if (validerPlacement({ nom: config.nom, placements: [...autres, essai] }).length === 0) {
+      return avec(config, config.placements.map((q) => (q.id === id ? essai : q)))
+    }
+  }
+  return null
 }
 
 /**
