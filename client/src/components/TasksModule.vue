@@ -14,7 +14,7 @@
 
     <!-- No Data State -->
     <ErrorDisplay
-      v-else-if="tasksStore.tasks.length === 0"
+      v-else-if="groupedLists.length === 0"
       type="no-data"
     />
 
@@ -40,6 +40,13 @@ import { useTasksStore } from '../stores/tasksStore';
 import ErrorDisplay from './ErrorDisplay.vue';
 import TaskList from './TaskList.vue';
 
+/**
+ * listes : noms des listes à afficher (toutes si absent ou vide) — permet de poser plusieurs modules Tâches,
+ * chacun avec ses listes. variante : taille donnée par la configuration (les listes défilent déjà quand
+ * la place manque).
+ */
+const props = defineProps<{ listes?: string[]; variante?: string }>();
+
 const tasksStore = useTasksStore();
 const tasksContainer = ref<HTMLElement | null>(null);
 let scrollInterval: number | null = null;
@@ -58,6 +65,7 @@ const groupedLists = computed(() => {
   const groups: { [key: string]: { title: string; color: string; tasks: any[] } } = {};
   tasksStore.tasks.forEach(task => {
     const key = task.taskListTitle;
+    if (props.listes?.length && !props.listes.includes(key)) return;
     if (!groups[key]) {
       groups[key] = { title: key, color: task.listColor || '#ccc', tasks: [] };
     }

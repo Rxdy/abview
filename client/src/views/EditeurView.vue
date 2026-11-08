@@ -71,6 +71,16 @@
               </option>
             </select>
           </label>
+          <label v-for="r in REGISTRE[placement.module]?.reglages" :key="r.cle" class="champ">
+            {{ r.libelle }}
+            <input
+              type="text"
+              :value="(placement.reglages?.[r.cle] as string[] | undefined)?.join(', ') ?? ''"
+              :placeholder="r.aide"
+              :aria-label="r.libelle"
+              @change="regler(r.cle, $event)"
+            />
+          </label>
           <span class="fleches" role="group" aria-label="Déplacer">
             <button type="button" aria-label="Monter" @click="bouger(0, -1)">↑</button>
             <button type="button" aria-label="Aller à gauche" @click="bouger(-1, 0)">←</button>
@@ -106,7 +116,17 @@ import { CLE_APERCU } from '../modules/apercu'
 import { GRILLE } from '../modules/grille'
 import { REGISTRE, variante } from '../modules/registre'
 import { CONFIGURATION_PAR_DEFAUT, rectangle, valider, type Configuration } from '../modules/configuration'
-import { ajouter, ajouterA, changerVariante, deplacer, identifiantDepuisNom, retirer } from '../modules/edition'
+import {
+  ajouter,
+  ajouterEnPoussant,
+  changerVariante,
+  definirReglage,
+  deplacerEnPoussant,
+  identifiantDepuisNom,
+  obstacle,
+  retirer,
+  type Deplacement,
+} from '../modules/edition'
 import { configurationsService, messageErreur, type ResumeConfiguration } from '../services/configurationsService'
 
 const CLE_JETON = 'abview-jeton-admin'
@@ -226,8 +246,8 @@ function dupliquer() {
   message.value = 'Copie prête : changez le nom si vous voulez, puis enregistrez.'
 }
 
+const AUCUNE_PLACE = 'Pas de place pour déplacer les modules voisins : rien n’a bougé. Retirez-en un ou réduisez une taille.'
 const PLEIN = 'Pas assez de place pour ce module : retirez-en un ou déplacez-en un autre.'
-const IMPOSSIBLE = 'Emplacement impossible : bord de la grille ou autre module.'
 
 function appliquer(suivante: Configuration | null, refus: string, selectionner = false) {
   if (!suivante) {
@@ -240,6 +260,20 @@ function appliquer(suivante: Configuration | null, refus: string, selectionner =
   return true
 }
 
+/** Applique un déplacement qui a poussé d'autres modules, et dit où ils sont allés. */
+function appliquerPousse(resultat: { config: Configuration; deplaces: Deplacement[] } | null, selectionner = false) {
+  if (!resultat) {
+    message.value = AUCUNE_PLACE
+    return false
+  }
+  remplacer(resultat.config)
+  message.value = resultat.deplaces
+    .map((d) => `« ${REGISTRE[d.module]?.titre ?? d.module} » a été déplacé${d.reduitEn ? ` et réduit (${d.reduitEn})` : ''}.`)
+    .join(' ')
+  if (selectionner) selection.value = resultat.config.placements.find((p) => !brouillonAvant.has(p.id))?.id ?? selection.value
+  return true
+}
+
 function retirerModule() {
   if (!selection.value) return
   remplacer(retirer(brouillon, selection.value))
@@ -248,7 +282,14 @@ function retirerModule() {
 
 function bouger(dx: number, dy: number) {
   const p = placement.value
-  if (p) appliquer(deplacer(brouillon, p.id, p.x + dx, p.y + dy), 'Déplacement impossible : bord de la grille ou autre module.')
+  if (p) appliquerPousse(deplacerEnPoussant(brouillon, p.id, p.x + dx, p.y + dy))
+}
+
+function regler(cle: string, e: Event) {
+  const p = placement.value
+  if (!p) return
+  const noms = (e.target as HTMLInputElement).value.split(',').map((n) => n.trim()).filter(Boolean)
+  remplacer(definirReglage(brouillon, p.id, cle, noms))
 }
 
 function changerTaille(e: Event) {
@@ -291,7 +332,7 @@ function debutGlisse(e: PointerEvent, m: { id: string; x: number; y: number }) {
     glisse.value = null
     const cx = Math.round((ev.clientX - departX) / mesure.caseL)
     const cy = Math.round((ev.clientY - departY) / mesure.caseH)
-    if (cx || cy) appliquer(deplacer(brouillon, m.id, m.x + cx, m.y + cy), IMPOSSIBLE)
+    if (cx || cy) appliquerPousse(deplacerEnPoussant(brouillon, m.id, m.x + cx, m.y + cy))
   }
   window.addEventListener('pointermove', bouge)
   window.addEventListener('pointerup', fin)
@@ -299,6 +340,7 @@ function debutGlisse(e: PointerEvent, m: { id: string; x: number; y: number }) {
 
 // Depuis la palette : un fantôme montre où le module se poserait (vert : possible, rouge : impossible).
 let aGlisse = false
+let brouillonAvant = new Set<string>() // les identifiants présents avant un ajout, pour retrouver le module ajouté
 
 function debutGlissePalette(e: PointerEvent, module: string) {
   const v = variante(REGISTRE, module)
@@ -322,7 +364,7 @@ function debutGlissePalette(e: PointerEvent, module: string) {
     if (Math.hypot(ev.clientX - departX, ev.clientY - departY) > 6) aGlisse = true
     const p = visee(ev)
     cible.value = p
-      ? { valide: ajouterA(brouillon, module, p.x, p.y) !== null, style: styleRect(Math.max(1, p.x), Math.max(1, p.y), v.largeur, v.hauteur) }
+      ? { valide: ajouterEnPoussant(brouillon, module, p.x, p.y) !== null, style: styleRect(Math.max(1, p.x), Math.max(1, p.y), v.largeur, v.hauteur) }
       : null
   }
   const fin = (ev: PointerEvent) => {
@@ -331,7 +373,10 @@ function debutGlissePalette(e: PointerEvent, module: string) {
     cible.value = null
     if (!aGlisse) return // un simple clic : géré par cliquerPalette
     const p = visee(ev)
-    if (p) appliquer(ajouterA(brouillon, module, p.x, p.y), IMPOSSIBLE, true)
+    if (p) {
+      brouillonAvant = new Set(brouillon.placements.map((q) => q.id))
+      appliquerPousse(ajouterEnPoussant(brouillon, module, p.x, p.y), true)
+    }
   }
   window.addEventListener('pointermove', bouge)
   window.addEventListener('pointerup', fin)
@@ -343,7 +388,9 @@ function cliquerPalette(module: string) {
     aGlisse = false
     return
   }
-  appliquer(ajouter(brouillon, module), PLEIN, true)
+  const raison = obstacle(brouillon, module)
+  const def = REGISTRE[module]
+  appliquer(ajouter(brouillon, module), raison === 'max' ? `« ${def?.titre} » : ${def?.max} au plus.` : PLEIN, true)
 }
 
 // --- Enregistrement ----------------------------------------------------------------------------
@@ -526,6 +573,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round
   box-shadow: var(--shadow-card);
 }
 .reglage label { display: flex; align-items: center; gap: 8px; }
+.reglage .champ input { width: 260px; }
 .fleches { display: inline-flex; gap: 6px; }
 .calme { color: var(--c-muted); font-size: 13px; margin: 12px 0 0; }
 .palette {
