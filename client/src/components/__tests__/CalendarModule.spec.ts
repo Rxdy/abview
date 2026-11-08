@@ -474,6 +474,25 @@ describe('CalendarModule', () => {
       document.removeEventListener('birthday-detected', listener)
     })
 
+    it("ne relance pas l'effet si celui de cette personne est déjà actif aujourd'hui", () => {
+      const listener = vi.fn()
+      document.addEventListener('birthday-detected', listener)
+      ;(window as any).currentBirthdayPerson = 'Julie'
+      ;(window as any).currentBirthdayDate = todayStr
+
+      mockCalendarStore.loading = false
+      mockCalendarStore.allEvents = [
+        { id: 'bday', summary: 'Anniversaire de Julie', start: `${todayStr}T10:00:00`, end: `${todayStr}T11:00:00` },
+      ] as any
+
+      mount(CalendarModule, { stubs: ['ErrorDisplay'] })
+
+      expect(listener).not.toHaveBeenCalled()
+      document.removeEventListener('birthday-detected', listener)
+      delete (window as any).currentBirthdayPerson
+      delete (window as any).currentBirthdayDate
+    })
+
     it("arrête l'effet quand il n'y a pas d'anniversaire aujourd'hui", () => {
       const stopSpy = vi.fn()
       ;(window as any).stopBirthdayEffect = stopSpy
