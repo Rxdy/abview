@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { DISPOSITIONS, DISPOSITION_PAR_DEFAUT, PERMANENT, VEILLE, type Emplacement } from '../dispositionsPhotos'
+import { DISPOSITIONS, DISPOSITIONS_VEILLE, DISPOSITION_PAR_DEFAUT, PERMANENT, VEILLE, type Emplacement } from '../dispositionsPhotos'
 import { REGISTRE } from '../registre'
 
 // Écran de référence (1280 × 720) : une case de la grille et l'écart entre cases
@@ -46,7 +46,7 @@ describe('modes du module Photos', () => {
   })
 
   it('chaque disposition est connue : permanente ou veille, rien d’autre', () => {
-    expect(Object.keys(DISPOSITIONS).sort()).toEqual([...PERMANENT, ...VEILLE].sort())
+    expect(Object.keys(DISPOSITIONS).sort()).toEqual([...PERMANENT, ...DISPOSITIONS_VEILLE].sort())
   })
 })
 
@@ -130,5 +130,56 @@ describe('formes de fantaisie', () => {
   it('le mur de cinq cadres mélange des formes : arche, ovale, et des cadres classiques', () => {
     const styles = new Set(DISPOSITIONS.cinq!.emplacements.map((e) => e.cadre))
     for (const forme of ['or', 'noir', 'bois', 'arche', 'ovale']) expect(styles.has(forme as never), forme).toBe(true)
+  })
+})
+
+describe('mur de galerie (mode veille, proposition)', () => {
+  const galerie = DISPOSITIONS.galerie!.emplacements
+  const ecran = 16 / 9 // les % de largeur et de hauteur n'ont pas la même longueur : on compare en pixels d'un écran 1920 × 1080
+
+  it('est proposé à l\'aperçu du mode veille sans remplacer le mur de cinq cadres', () => {
+    expect([...DISPOSITIONS_VEILLE]).toEqual(['cinq', 'galerie'])
+    expect([...VEILLE]).toEqual(['cinq'])
+  })
+
+  it('a de nombreux cadres, de plusieurs formes et styles, pour couvrir l\'écran', () => {
+    expect(galerie.length).toBeGreaterThanOrEqual(15)
+    expect(new Set(galerie.map((e) => e.cadre)).size).toBe(5)
+    const couvert = galerie.reduce((n, em) => n + (em.largeur * em.hauteur) / 100, 0) / 100
+    expect(couvert).toBeGreaterThanOrEqual(0.4)
+  })
+
+  it('tient dans l\'écran, avec une marge pour la corniche et la plinthe', () => {
+    for (const [i, em] of galerie.entries()) {
+      expect(em.x, `x ${i}`).toBeGreaterThanOrEqual(1)
+      expect(em.y, `y ${i}`).toBeGreaterThanOrEqual(3)
+      expect(em.x + em.largeur, `droite ${i}`).toBeLessThanOrEqual(99)
+      expect(em.y + em.hauteur, `bas ${i}`).toBeLessThanOrEqual(98)
+    }
+  })
+
+  it('aucun cadre n\'en recouvre un autre', () => {
+    const rect = (em: Emplacement) => ({ g: em.x * ecran, d: (em.x + em.largeur) * ecran, h: em.y, b: em.y + em.hauteur })
+    for (let i = 0; i < galerie.length; i++) {
+      for (let j = i + 1; j < galerie.length; j++) {
+        const a = rect(galerie[i]!)
+        const b = rect(galerie[j]!)
+        const chevauche = a.g < b.d && b.g < a.d && a.h < b.b && b.h < a.b
+        expect(chevauche, `cadres ${i} et ${j}`).toBe(false)
+      }
+    }
+  })
+
+  it('les cadres gardent les proportions d\'une photo : 2:3 en portrait, 3:2 en paysage', () => {
+    for (const em of galerie) {
+      const ratio = (em.largeur * 16) / (em.hauteur * 9) // largeur / hauteur en pixels
+      expect(ratio).toBeCloseTo(em.orientation === 'portrait' ? 2 / 3 : 3 / 2, 1)
+    }
+  })
+
+  it('des appliques éclairent quelques grands cadres, jamais plus d\'un sur quatre', () => {
+    const avec = galerie.filter((e) => e.lampe)
+    expect(avec.length).toBeGreaterThanOrEqual(2)
+    expect(avec.length).toBeLessThanOrEqual(galerie.length / 4)
   })
 })
