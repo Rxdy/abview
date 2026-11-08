@@ -23,8 +23,8 @@ const router = createRouter({
       component: ApercuView,
     },
     {
-      path: '/veille',
-      name: 'veille',
+      path: '/apercu-veille',
+      name: 'apercu-veille',
       component: VeilleView,
     },
   ],

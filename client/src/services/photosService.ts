@@ -1,4 +1,4 @@
-import { apiService } from './apiService'
+import { apiService, urlApi } from './apiService'
 import { photoDemo, type Orientation, type PhotoAffichee } from '../utils/photosDemo'
 
 /**
@@ -17,7 +17,8 @@ export const photosService = {
         exclure.length ? `&exclure=${encodeURIComponent(exclure.join(','))}` : ''
       }`
       const { photos } = await apiService.get(requete)
-      recues = Array.isArray(photos) ? photos : []
+      // l'adresse d'une photo est un chemin du serveur d'AbView : en développement, l'écran est servi par un autre port
+      recues = Array.isArray(photos) ? photos.map((p: PhotoAffichee) => ({ ...p, url: urlApi(p.url) })) : []
     } catch {
       /* serveur ou abflow indisponible : images de démonstration */
     }

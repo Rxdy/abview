@@ -9,7 +9,7 @@ describe('router', () => {
     expect(router.currentRoute.value.matched[0].components?.default).toBe(DashboardView)
   })
 
-  it("n'a que quatre pages : l'écran, l'éditeur de disposition, son aperçu et le mode veille", () => {
-    expect(router.getRoutes().map((r) => r.path).sort()).toEqual(['/', '/apercu', '/editeur', '/veille'])
+  it("n'a que quatre pages : l'écran, l'éditeur de disposition, son aperçu et l'aperçu du mode veille", () => {
+    expect(router.getRoutes().map((r) => r.path).sort()).toEqual(['/', '/apercu', '/apercu-veille', '/editeur'])
   })
 })

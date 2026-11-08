@@ -38,6 +38,8 @@ export const useDashboardStore = defineStore('dashboard', {
     categories: {} as ReglesCategories,
     /** Disposition des modules à l'écran ; la disposition standard tant qu'aucune autre valide n'est fournie. */
     configuration: CONFIGURATION_PAR_DEFAUT as Configuration,
+    /** Mode veille : le mur de cadres photo remplace le tableau de bord (voir VeilleView et GET /veille). */
+    veille: false,
   }),
   actions: {
     /**
@@ -53,6 +55,23 @@ export const useDashboardStore = defineStore('dashboard', {
       } catch (error) {
         console.error('Configuration du serveur indisponible, disposition conservée :', error);
       }
+    },
+
+    /** Demande au serveur si l'écran doit être en veille. En cas de panne, l'état en place est gardé. */
+    async chargerVeille() {
+      try {
+        const { actif } = await apiService.get('/veille');
+        this.veille = actif === true;
+      } catch {
+        /* serveur injoignable : on garde l'état courant, sans bruit (la demande revient toutes les quelques secondes) */
+      }
+    },
+
+    /** Relit l'état de veille toutes les quelques secondes (3 par défaut) ; rend la fonction qui arrête la relecture. */
+    suivreVeille(intervalleMs = 3000) {
+      void this.chargerVeille();
+      const minuteur = setInterval(() => void this.chargerVeille(), intervalleMs);
+      return () => clearInterval(minuteur);
     },
 
     /** Relit la configuration active à intervalle régulier ; rend la fonction qui arrête la relecture. */
