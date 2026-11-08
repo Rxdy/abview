@@ -33,10 +33,16 @@ describe('modes du module Photos', () => {
     expect(DISPOSITIONS.portrait!.emplacements[0]!.orientation).toBe('portrait')
   })
 
-  it('les murs de plusieurs cadres sont réservés au mode veille : 2, 3, 4 et 5 photos', () => {
-    expect([...VEILLE]).toEqual(['deux', 'trois', 'quatre', 'cinq'])
-    expect(veille.map(([, d]) => d.emplacements.length)).toEqual([2, 3, 4, 5])
-    for (const nom of VEILLE) expect(REGISTRE.photos!.variantes.map((v) => v.id)).not.toContain(nom)
+  it('le mode veille a un seul mur : cinq cadres, hors des tailles du module permanent', () => {
+    expect([...VEILLE]).toEqual(['cinq'])
+    expect(DISPOSITIONS.cinq!.emplacements).toHaveLength(5)
+    expect(REGISTRE.photos!.variantes.map((v) => v.id)).not.toContain('cinq')
+  })
+
+  it('la plupart des photos étant en portrait : quatre emplacements en portrait et un seul en paysage', () => {
+    const orientations = DISPOSITIONS.cinq!.emplacements.map((e) => e.orientation)
+    expect(orientations.filter((o) => o === 'portrait')).toHaveLength(4)
+    expect(orientations.filter((o) => o === 'paysage')).toHaveLength(1)
   })
 
   it('chaque disposition est connue : permanente ou veille, rien d’autre', () => {
@@ -92,7 +98,7 @@ describe.each(Object.keys(DISPOSITIONS))('disposition « %s »', (nom) => {
 describe.each(veille)('mode veille « %s »', (nom, d) => {
   it('remplit bien l’écran : au moins la moitié de la surface est occupée par des cadres', () => {
     const couvert = d.emplacements.reduce((n, em) => n + (em.largeur * em.hauteur) / 100, 0) / 100
-    expect(couvert).toBeGreaterThanOrEqual(nom === 'deux' ? 0.5 : 0.55)
+    expect(couvert).toBeGreaterThanOrEqual(0.55)
   })
 
   it('les emplacements n’ont pas tous la même taille', () => {
@@ -121,12 +127,8 @@ describe.each(veille)('mode veille « %s »', (nom, d) => {
 })
 
 describe('formes de fantaisie', () => {
-  it('le mur à cinq cadres utilise plusieurs formes : classique, arche et rond', () => {
+  it('le mur de cinq cadres mélange des formes : arche, ovale, et des cadres classiques', () => {
     const styles = new Set(DISPOSITIONS.cinq!.emplacements.map((e) => e.cadre))
-    for (const forme of ['or', 'noir', 'bois', 'arche', 'rond']) expect(styles.has(forme as never), forme).toBe(true)
-  })
-
-  it('le mur à quatre cadres (le plus apprécié) garde son équilibre : un grand paysage, une arche, un rond, un portrait', () => {
-    expect(DISPOSITIONS.quatre!.emplacements.map((e) => e.cadre)).toEqual(['or', 'arche', 'rond', 'bois'])
+    for (const forme of ['or', 'noir', 'bois', 'arche', 'ovale']) expect(styles.has(forme as never), forme).toBe(true)
   })
 })

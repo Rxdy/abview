@@ -9,11 +9,10 @@ import PhotosModule from '../components/PhotosModule.vue'
 import { VEILLE } from '../modules/dispositionsPhotos'
 
 /**
- * Mode veille : toute la page devient un mur de cadres photo (2 à 5 photos). Le capteur de présence le
- * déclenchera ; en attendant, la page /veille permet de le voir. /veille?dispo=cinq choisit la disposition.
+ * Mode veille : toute la page devient un mur de cinq cadres photo (quatre portraits et un paysage). Le capteur
+ * de présence le déclenchera ; en attendant, la page /veille permet de le voir.
  */
-const demandee = new URLSearchParams(window.location.search).get('dispo') ?? ''
-const disposition = (VEILLE as readonly string[]).includes(demandee) ? demandee : 'quatre'
+const disposition = VEILLE[0]
 </script>
 
 <style scoped>

@@ -8,9 +8,9 @@ import type { Orientation } from '../utils/photosDemo'
 
 /**
  * Le style du cadre : « or » (doré, mouluré), « noir » (fin, avec filet doré), « bois » (noyer), puis des formes
- * de fantaisie : « ovale » et « rond » (dorés), « arche » (doré, cintré en haut).
+ * de fantaisie : « ovale » (doré) et « arche » (doré, cintré en haut).
  */
-export type StyleCadre = 'or' | 'noir' | 'bois' | 'ovale' | 'rond' | 'arche'
+export type StyleCadre = 'or' | 'noir' | 'bois' | 'ovale' | 'arche'
 
 export interface Emplacement {
   x: number
@@ -39,12 +39,12 @@ const e = (
 
 /**
  * Photo permanente (module posé sur le tableau de bord, en mode normal) : UNE seule photo, en paysage ou en portrait.
- * Les autres dispositions sont celles du mode veille (voir plus bas).
+ * Le mur de cadres est celui du mode veille (voir plus bas).
  */
 export const PERMANENT = ['un', 'portrait'] as const
 
-/** Dispositions du mode veille : la page entière devient un mur de cadres (2 à 5 photos). */
-export const VEILLE = ['deux', 'trois', 'quatre', 'cinq'] as const
+/** Dispositions du mode veille : la page entière devient un mur de cadres. Il n'y en a qu'une : cinq photos. */
+export const VEILLE = ['cinq'] as const
 
 export const DISPOSITIONS: Record<string, Disposition> = {
   // une photo en paysage (4 × 3 cases) — cadre doré mouluré
@@ -52,34 +52,18 @@ export const DISPOSITIONS: Record<string, Disposition> = {
   // une photo en portrait (3 × 5) — cadre en arche dorée
   portrait: { emplacements: [e(8, 5, 84, 90, 'portrait', 'arche')] },
 
-  // ----- Mode veille : positions en % de l'écran entier (16:9) -----
-  // deux grands cadres : un paysage et un portrait ovale
-  deux: { emplacements: [e(4, 8, 60, 80, 'paysage', 'or', -0.7), e(68, 12, 28, 68, 'portrait', 'ovale', 1)] },
-  // un grand paysage, un portrait ovale plus haut, un portrait en bois plus bas
-  trois: {
-    emplacements: [
-      e(3, 10, 52, 70, 'paysage', 'or', -0.6),
-      e(58, 4, 22, 78, 'portrait', 'arche', 0.8),
-      e(80, 16, 17, 62, 'portrait', 'bois', -1),
-    ],
-  },
-  // un grand paysage, une arche, un rond et un portrait en bois (celui que l'on préfère : il remplit bien l'écran)
-  quatre: {
-    emplacements: [
-      e(3, 5, 50, 72, 'paysage', 'or', -0.6),
-      e(56, 3, 22, 72, 'portrait', 'arche', 0.8),
-      e(81, 6, 16, 28, 'carre', 'rond', -1),
-      e(81, 40, 16, 54, 'portrait', 'bois', 1),
-    ],
-  },
-  // cinq cadres qui remplissent l'écran, de formes et de tailles différentes
+  /*
+   * Mode veille, positions en % de l'écran entier (16:9) : cinq cadres de formes et de tailles différentes,
+   * à des hauteurs différentes. La plupart des photos étant en portrait, quatre emplacements sont en portrait
+   * (dont une arche et un ovale) et un seul en paysage.
+   */
   cinq: {
     emplacements: [
-      e(2, 5, 42, 50, 'paysage', 'or', -0.7),
-      e(47, 3, 19, 64, 'portrait', 'arche', 0.9),
-      e(69, 6, 29, 30, 'paysage', 'noir', -0.8),
-      e(72, 42, 24, 42, 'carre', 'rond', 1.1),
-      e(4, 60, 40, 36, 'paysage', 'bois', 0.7),
+      e(2, 10, 19, 60, 'portrait', 'arche', -0.8),
+      e(27, 6, 22, 78, 'portrait', 'noir', 0.7),
+      e(50, 7, 30, 44, 'paysage', 'or', -0.6),
+      e(54, 54, 13, 40, 'portrait', 'ovale', 1.1),
+      e(82, 8, 16, 60, 'portrait', 'bois', -1),
     ],
   },
 }
