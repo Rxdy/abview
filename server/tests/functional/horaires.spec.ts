@@ -35,4 +35,18 @@ test.group('Route /horaires', (group) => {
     assert.isObject(response.body().horaires)
     assert.isString(response.body().lastRefresh)
   })
+
+  test('GET /horaires répond 500 si le fichier est illisible une fois le cache expiré', async ({
+    client,
+  }) => {
+    const dateNowOrigine = Date.now
+    try {
+      Date.now = () => dateNowOrigine() + 10 * 60 * 1000 // cache de 5 minutes expiré
+      const response = await client.get('/horaires') // pas de fichier dans le dossier temporaire
+      response.assertStatus(500)
+      response.assertBodyContains({ error: 'Erreur récupération horaires' })
+    } finally {
+      Date.now = dateNowOrigine
+    }
+  })
 })

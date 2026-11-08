@@ -1,4 +1,5 @@
 import { test } from '@japa/runner'
+import GoogleCalendarService from '#services/calendar'
 
 // GoogleDataController.getRecapData réutilise le singleton calendarService
 // partagé avec /calendar (déjà mocké ou non selon l'ordre d'exécution des
@@ -18,5 +19,19 @@ test.group('Route /recap', () => {
     assert.property(body, 'weather')
     assert.isArray(body.events)
     assert.isString(body.generatedAt)
+  })
+
+  test('GET /recap répond 500 si la lecture des événements échoue', async ({ client }) => {
+    const origine = GoogleCalendarService.prototype.listPastYearEvents
+    GoogleCalendarService.prototype.listPastYearEvents = async () => {
+      throw new Error('agenda indisponible')
+    }
+    try {
+      const response = await client.get('/recap')
+      response.assertStatus(500)
+      response.assertBodyContains({ error: 'Failed to load recap data' })
+    } finally {
+      GoogleCalendarService.prototype.listPastYearEvents = origine
+    }
   })
 })
