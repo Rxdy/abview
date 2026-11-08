@@ -87,34 +87,23 @@ export function definirReglage(config: Configuration, id: string, cle: string, v
   )
 }
 
-/** Un module qui a dû faire de la place : où il est allé, et s'il a dû rétrécir. */
+/** Un module qui a dû faire de la place pour un autre. */
 export interface Deplacement {
   id: string
   module: string
-  /** Nouvelle variante, quand le module a dû rétrécir pour tenir. */
-  reduitEn?: string
 }
 
 /**
  * Cherche une place pour un module parmi des placements fixes : d'abord à l'endroit préféré, puis à la première
- * case libre ; sa taille actuelle d'abord, puis des tailles plus petites (de la plus grande à la plus petite).
+ * case libre. Le module garde sa taille : on ne le réduit jamais pour le faire tenir.
  */
 function trouverPlace(fixes: Placement[], p: Placement, prefere?: { x: number; y: number }): Placement | null {
-  const def = REGISTRE[p.module]
-  const actuelle = variante(REGISTRE, p.module, p.variante)
-  if (!def || !actuelle) return null
-  const aire = (v: { largeur: number; hauteur: number }) => v.largeur * v.hauteur
-  const tailles = [
-    actuelle,
-    ...def.variantes.filter((v) => v.id !== actuelle.id && aire(v) < aire(actuelle)).sort((a, b) => aire(b) - aire(a)),
-  ]
+  if (!variante(REGISTRE, p.module, p.variante)) return null
   const positions: { x: number; y: number }[] = prefere ? [prefere] : []
   for (let y = 1; y <= GRILLE.lignes; y++) for (let x = 1; x <= GRILLE.colonnes; x++) positions.push({ x, y })
-  for (const v of tailles) {
-    for (const pos of positions) {
-      const essai: Placement = { ...p, variante: v.id, ...pos }
-      if (validerPlacement({ nom: '', placements: [...fixes, essai] }).length === 0) return essai
-    }
+  for (const pos of positions) {
+    const essai: Placement = { ...p, ...pos }
+    if (validerPlacement({ nom: '', placements: [...fixes, essai] }).length === 0) return essai
   }
   return null
 }
@@ -122,8 +111,8 @@ function trouverPlace(fixes: Placement[], p: Placement, prefere?: { x: number; y
 /**
  * Pose un module (existant ou nouveau) à une case donnée en faisant de la place : les modules qui le gênent
  * vont ailleurs, là où il y a de la place (de préférence à l'ancienne place du module déplacé, ce qui donne
- * un échange), et rétrécissent si nécessaire. Rend null si le module sort de la grille ou si un des modules
- * gênés ne trouve vraiment aucune place : la disposition reste alors telle quelle.
+ * un échange), sans changer de taille. Rend null si le module sort de la grille ou si un des modules gênés
+ * ne trouve aucune place : la disposition reste alors telle quelle.
  */
 export function poserEnPoussant(
   config: Configuration,
@@ -145,11 +134,7 @@ export function poserEnPoussant(
     if (!place) return null
     fixes.push(place)
     nouveaux.set(o.id, place)
-    deplaces.push({
-      id: o.id,
-      module: o.module,
-      ...(place.variante !== (o.variante ?? REGISTRE[o.module]?.variantes[0]?.id) ? { reduitEn: place.variante } : {}),
-    })
+    deplaces.push({ id: o.id, module: o.module })
   }
   const placements = autres.map((o) => nouveaux.get(o.id) ?? o)
   if (ancien) placements.splice(config.placements.indexOf(ancien), 0, candidat)

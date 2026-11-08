@@ -172,7 +172,10 @@ describe('EditeurView', () => {
     await w.findAll('.module')[2]!.trigger('click') // les tâches
     const choix = w.find('select[aria-label="Affichage"]')
     expect((choix.element as HTMLSelectElement).value).toBe('defilement') // par défaut
+    expect(w.find('input[aria-label="Secondes par liste (en fondu)"]').exists()).toBe(false) // inutile en défilement
     await choix.setValue('fondu')
+    await choix.trigger('change')
+    expect(w.find('input[aria-label="Secondes par liste (en fondu)"]').exists()).toBe(true)
     await w.find('input[aria-label="Secondes par liste (en fondu)"]').setValue('45')
     await w.find('input[aria-label="Secondes par liste (en fondu)"]').trigger('change')
     await w.find('button[aria-label="Réglage du jeton"]').trigger('click')
@@ -200,23 +203,24 @@ describe('EditeurView', () => {
     expect(w.find('.erreurs').exists()).toBe(false)
   })
 
-  it('déplacer un module sur un autre pousse celui-ci ailleurs, sans message', async () => {
+  it('déplacer un module sur un autre pousse celui-ci là où il y a de la place, sans message', async () => {
     const w = await monter()
-    await w.findAll('.module')[2]!.trigger('click') // les tâches, à côté de la météo
-    await w.find('[aria-label="Aller à gauche"]').trigger('click') // chevauche la météo
-    expect(w.find('.message').exists()).toBe(false) // pas de message : le résultat se voit sur la grille
-    expect(w.find('.erreurs').exists()).toBe(false)
-    expect(w.findAll('.module')[1]!.attributes('style')).toMatch(/span 2.*span 3|span 3.*span 2/) // la météo, réduite en 3×2
-    expect(w.findAll('.module')).toHaveLength(3) // personne n'a disparu
+    await w.findAll('.module')[0]!.trigger('click') // l'agenda
+    await bouton(w, 'Retirer').trigger('click') // libère le haut de l'écran
+    await w.findAll('.module')[0]!.trigger('click') // la météo, en bas à gauche
+    await w.find('[aria-label="Aller à droite"]').trigger('click') // elle recouvre les tâches : elles montent
+    expect(w.find('.message').exists()).toBe(false)
+    expect(w.findAll('.module')).toHaveLength(2)
+    expect(w.findAll('.module')[1]!.attributes('style')).toMatch(/grid-row: 1|grid-area: 1 \//)
   })
 
-  it('la météo qui monte sur l’agenda le fait rétrécir au lieu de bloquer', async () => {
+  it('un module qui ne peut pas être poussé sans rétrécir reste à sa place', async () => {
     const w = await monter()
+    const avant = w.findAll('.module').map((m) => m.attributes('style'))
     await w.findAll('.module')[1]!.trigger('click') // la météo
-    await w.find('[aria-label="Monter"]').trigger('click')
+    await w.find('[aria-label="Monter"]').trigger('click') // l'agenda ne peut aller nulle part
     expect(w.find('.message').exists()).toBe(false)
-    expect(w.find('.erreurs').exists()).toBe(false)
-    expect(w.findAll('.module')).toHaveLength(3)
+    expect(w.findAll('.module').map((m) => m.attributes('style'))).toEqual(avant)
   })
 
   it('un déplacement sans effet (bord de la grille) laisse l’éditeur utilisable', async () => {
@@ -278,12 +282,14 @@ describe('EditeurView', () => {
 
     it('les flèches déplacent le module sélectionné, sans faire défiler la page', async () => {
       const w = await monterAttache()
-      await w.findAll('.module')[1]!.trigger('click') // la météo
-      await appuyer('ArrowUp') // pousse l'agenda, qui rétrécit
-      expect(style(w, 1)).toContain('grid-row: 5 / span 3')
+      await w.findAll('.module')[0]!.trigger('click') // l'agenda
+      await appuyer('Delete') // libère le haut de l'écran
+      await w.findAll('.module')[0]!.trigger('click') // la météo
+      await appuyer('ArrowUp')
+      expect(style(w, 0)).toContain('grid-row: 5 / span 3')
       const e = await appuyer('ArrowDown')
       expect(e.defaultPrevented).toBe(true)
-      expect(style(w, 1)).toContain('grid-row: 6 / span 3')
+      expect(style(w, 0)).toContain('grid-row: 6 / span 3')
       w.unmount()
     })
 

@@ -21,6 +21,8 @@ export interface Reglage {
    */
   type: 'liste-texte' | 'texte' | 'nombre' | 'date' | 'choix'
   aide?: string
+  /** N'afficher ce réglage que si un autre réglage a cette valeur (ex. la durée par liste seulement en mode fondu). */
+  si?: { cle: string; valeur: string }
   /** nombre : bornes. */
   min?: number
   max?: number
@@ -110,6 +112,7 @@ export const REGISTRE: Registre = {
         min: 10,
         max: 600,
         aide: '60 par défaut',
+        si: { cle: 'affichage', valeur: 'fondu' },
       },
     ],
     animation: 'fade-in-3',
