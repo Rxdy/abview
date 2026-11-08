@@ -1,4 +1,7 @@
 import axios from 'axios'
+import sharp from 'sharp'
+import fs from 'node:fs'
+import path from 'node:path'
 
 /**
  * Photos du module « Photos » d'AbView, prises dans abflow (la bibliothèque de photos de la maison).
@@ -25,6 +28,17 @@ export interface Photo {
 }
 
 const DUREE_CACHE = 10 * 60 * 1000
+/**
+ * Les photos de la bibliothèque sont des originaux de téléphone (jusqu'à 5712 × 4284 et 12 Mo) : les envoyer tels
+ * quels à l'écran du Raspberry Pi, qui en décode sept à la fois, le sature (charge de 30, redémarrages). On les
+ * réduit donc à COTE_MAX pixels sur le grand côté, une seule fois, et on garde le résultat sur disque.
+ */
+const COTE_MAX = 1600
+const QUALITE_JPEG = 82
+/** Réductions en parallèle : une seule, pour ne pas peser sur le Pi (et dans les 384 Mo du conteneur). */
+const REDUCTIONS_SIMULTANEES = 1
+sharp.cache(false)
+sharp.concurrency(1)
 const PAR_PAGE = 200
 const MAX_PAGES = 50 // 10 000 photos au plus : garde-fou
 
@@ -42,8 +56,28 @@ export function nomValide(nom: string): boolean {
   return /^[A-Za-z0-9][A-Za-z0-9._-]{0,200}$/.test(nom)
 }
 
+/** Une photo prête à être envoyée à l'écran. */
+export interface FichierAffichable {
+  contentType: string
+  corps: Buffer
+}
+
+async function enTampon(flux: NodeJS.ReadableStream): Promise<Buffer> {
+  const morceaux: Buffer[] = []
+  for await (const m of flux) morceaux.push(Buffer.isBuffer(m) ? m : Buffer.from(m as string))
+  return Buffer.concat(morceaux)
+}
+
 export default class PhotosService {
   private cache: { le: number; photos: Photo[] } | null = null
+  private reductionsEnCours = new Map<string, Promise<FichierAffichable>>()
+  private reductionsActives = 0
+  private reductionsEnAttente: Array<() => void> = []
+
+  /** Où sont gardées les photos réduites : dans le volume des données, donc conservées entre deux mises à jour. */
+  private get dossierCache() {
+    return path.join(process.env.DONNEES_DIR || path.join(process.cwd(), 'donnees'), 'cache-photos')
+  }
 
   private get base() {
     return (process.env.ABFLOW_URL || '').replace(/\/$/, '')
@@ -122,6 +156,65 @@ export default class PhotosService {
       }
     }
     return resultat
+  }
+
+  /**
+   * La photo réduite à COTE_MAX pixels (JPEG), prête pour l'écran. Réduite une seule fois puis lue sur disque ;
+   * deux demandes simultanées de la même photo n'en font qu'une. Un fichier que sharp ne sait pas lire est rendu
+   * tel que l'envoie abflow.
+   */
+  async fichierAffichable(nom: string): Promise<FichierAffichable> {
+    const chemin = path.join(this.dossierCache, `${nom}.${COTE_MAX}.jpg`)
+    try {
+      return { contentType: 'image/jpeg', corps: await fs.promises.readFile(chemin) }
+    } catch {
+      /* pas encore réduite */
+    }
+    const enCours = this.reductionsEnCours.get(nom)
+    if (enCours) return enCours
+    const travail = this.enFile(() => this.reduire(nom, chemin)).finally(() =>
+      this.reductionsEnCours.delete(nom)
+    )
+    this.reductionsEnCours.set(nom, travail)
+    return travail
+  }
+
+  private async enFile<T>(travail: () => Promise<T>): Promise<T> {
+    while (this.reductionsActives >= REDUCTIONS_SIMULTANEES) {
+      await new Promise<void>((suite) => this.reductionsEnAttente.push(suite))
+    }
+    this.reductionsActives++
+    try {
+      return await travail()
+    } finally {
+      this.reductionsActives--
+      this.reductionsEnAttente.shift()?.()
+    }
+  }
+
+  private async reduire(nom: string, chemin: string): Promise<FichierAffichable> {
+    const amont = await this.fichier(nom)
+    const original = await enTampon(amont.data)
+    const contentType = String(amont.headers['content-type'] || 'application/octet-stream')
+    try {
+      const corps = await sharp(original, { limitInputPixels: 120_000_000 })
+        .rotate() // applique l'orientation EXIF : le navigateur le ferait aussi, la photo réduite n'en a plus besoin
+        .resize({ width: COTE_MAX, height: COTE_MAX, fit: 'inside', withoutEnlargement: true })
+        .flatten({ background: '#ffffff' }) // un PNG transparent ne devient pas noir en JPEG
+        .jpeg({ quality: QUALITE_JPEG })
+        .toBuffer()
+      try {
+        await fs.promises.mkdir(path.dirname(chemin), { recursive: true })
+        const temporaire = `${chemin}.${process.pid}.tmp`
+        await fs.promises.writeFile(temporaire, corps)
+        await fs.promises.rename(temporaire, chemin)
+      } catch {
+        /* disque plein ou en lecture seule : on sert la photo réduite sans la garder */
+      }
+      return { contentType: 'image/jpeg', corps }
+    } catch {
+      return { contentType, corps: original }
+    }
   }
 
   /** Le fichier d'une photo, en flux, tel que le sert abflow. */

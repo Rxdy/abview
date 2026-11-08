@@ -28,16 +28,17 @@ export default class PhotosController {
     return response.json({ photos, source: 'abflow' })
   }
 
-  /** GET /photos/fichier/:nom : le fichier de la photo, relayé depuis abflow (la clé d'API reste sur le serveur). */
+  /** GET /photos/fichier/:nom : la photo, réduite à 1600 px et relayée depuis abflow (la clé d'API reste sur le serveur). */
   public async fichier({ params, response }: HttpContext) {
     if (!nomValide(params.nom))
       return response.status(400).json({ error: 'Nom de fichier invalide' })
     if (!service.configure) return response.status(404).json({ error: 'abflow non configuré' })
     try {
-      const amont = await service.fichier(params.nom)
-      response.header('Content-Type', amont.headers['content-type'] || 'application/octet-stream')
+      // Réduite à 1600 px et gardée sur disque (voir PhotosService.fichierAffichable) : l'écran n'a pas besoin des originaux
+      const photo = await service.fichierAffichable(params.nom)
+      response.header('Content-Type', photo.contentType)
       response.header('Cache-Control', 'public, max-age=86400')
-      return response.stream(amont.data)
+      return response.send(photo.corps)
     } catch (e: any) {
       return response
         .status(e?.response?.status === 404 ? 404 : 502)

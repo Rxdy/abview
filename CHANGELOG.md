@@ -7,6 +7,13 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [v3.7.1] — 2026-11-08
+
+### Corrigé
+- **Photos** : les photos sont réduites à 1600 pixels sur leur grand côté par le serveur (une seule fois, puis gardées dans `donnees/cache-photos`). Les originaux de téléphone (jusqu'à 5712 × 4284 et 12 Mo) saturaient le Raspberry Pi, qui en décode sept à la fois : charge de 30 et redémarrages en boucle avec le mur de sept cadres
+
+---
+
 ## [v3.7.0] — 2026-11-08
 
 ### Modifié
