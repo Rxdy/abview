@@ -72,7 +72,10 @@ test.group('Routes /photos', (group) => {
     melangee.assertStatus(200)
   })
 
-  test('accepte un mur de galerie : jusqu\'à 30 orientations dans une demande, pas davantage', async ({ client, assert }) => {
+  test("accepte un mur de galerie : jusqu'à 30 orientations dans une demande, pas davantage", async ({
+    client,
+    assert,
+  }) => {
     const trente = Array(30).fill('portrait').join(',')
     const r = await client.get('/photos/aleatoires').qs({ orientations: `${trente},paysage` })
     r.assertStatus(200)
