@@ -138,11 +138,33 @@ describe('EditeurView', () => {
     expect(w.findAll('.module')).toHaveLength(3)
   })
 
-  it('refuse un second agenda (maximum atteint)', async () => {
+  it('grise l’icône d’un module déjà placé, plutôt que d’afficher un message', async () => {
     const w = await monter()
+    for (const titre of ['Agenda', 'Météo']) {
+      expect(palette(w, titre).attributes('disabled')).toBeDefined() // déjà sur la grille (1 au plus)
+      expect(palette(w, titre).attributes('title')).toContain('déjà placé')
+    }
     await palette(w, 'Agenda').trigger('click')
     expect(w.findAll('.module')).toHaveLength(3)
-    expect(w.text()).toContain('« Agenda » : 1 au plus')
+    expect(w.find('.message').exists()).toBe(false) // aucun message : l'icône grisée suffit
+  })
+
+  it('l’icône se dégrise quand le module est retiré de la grille', async () => {
+    const w = await monter()
+    await w.findAll('.module')[1]!.trigger('click') // la météo
+    await bouton(w, 'Retirer').trigger('click')
+    expect(palette(w, 'Météo').attributes('disabled')).toBeUndefined()
+    expect(palette(w, 'Agenda').attributes('disabled')).toBeDefined()
+  })
+
+  it('grise l’icône quand il n’y a plus de place, avec la raison en infobulle', async () => {
+    const w = await monter()
+    await w.findAll('.module')[0]!.trigger('click') // l'agenda
+    await bouton(w, 'Retirer').trigger('click')
+    await palette(w, 'Tâches').trigger('click') // 8×3 en haut à gauche
+    await palette(w, 'Tâches').trigger('click') // 8×3 sous la première
+    expect(palette(w, 'Tâches').attributes('disabled')).toBeDefined() // plus de place pour une troisième 8×3
+    expect(palette(w, 'Tâches').attributes('title')).toContain('plus de place')
   })
 
   it('règle les listes d’un module Tâches, et signale deux exemplaires identiques', async () => {
