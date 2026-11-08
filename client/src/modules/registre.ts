@@ -1,9 +1,8 @@
 /**
  * Registre des modules : ce que chaque module sait afficher, et sous quelles tailles (ses variantes).
- * Ajouter un module = un composant + une entrée ici. Le registre ne contient que des données : le
- * composant est chargé à la demande, pour que la validation d'une configuration reste légère.
+ * Ajouter un module = un composant (voir composants.ts) + une entrée ici. Le registre ne contient que
+ * des données, pour que la validation d'une configuration reste légère.
  */
-import type { Component } from 'vue'
 
 export interface Variante {
   id: string
@@ -17,7 +16,10 @@ export interface DefinitionModule {
   titre: string
   /** Tailles que le module sait afficher ; la première est celle par défaut. */
   variantes: Variante[]
-  charger: () => Promise<{ default: Component }>
+  /** Le module est posé sur une carte (fond, coins arrondis, ombre) ; sinon il dessine ses propres cartes. */
+  carte?: boolean
+  /** Classe d'animation d'entrée (voir base.css), pour échelonner l'apparition des modules. */
+  animation?: string
 }
 
 export type Registre = Record<string, DefinitionModule>
@@ -27,19 +29,19 @@ export const REGISTRE: Registre = {
     id: 'calendrier',
     titre: 'Agenda',
     variantes: [{ id: 'large', largeur: 12, hauteur: 5 }],
-    charger: () => import('../components/CalendarModule.vue'),
+    animation: 'fade-in-1',
   },
   meteo: {
     id: 'meteo',
     titre: 'Météo',
     variantes: [{ id: 'standard', largeur: 4, hauteur: 3 }],
-    charger: () => import('../components/WeatherModule.vue'),
+    carte: true,
   },
   taches: {
     id: 'taches',
     titre: 'Tâches',
     variantes: [{ id: 'large', largeur: 8, hauteur: 3 }],
-    charger: () => import('../components/TasksModule.vue'),
+    animation: 'fade-in-3',
   },
 }
 
