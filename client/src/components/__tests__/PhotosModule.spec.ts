@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import PhotosModule from '../PhotosModule.vue'
 import { photosService } from '../../services/photosService'
-import { DUREE_MAX, DUREE_MIN } from '../../modules/dispositionsPhotos'
+import { DUREE_CHANGEMENT } from '../../modules/dispositionsPhotos'
 import type { Orientation, PhotoAffichee } from '../../utils/photosDemo'
 
 let n = 0
@@ -72,35 +72,39 @@ describe('PhotosModule', () => {
     expect(w.findAll('.emplacement').map((e) => e.attributes('data-orientation'))).toEqual(['portrait', 'portrait', 'paysage', 'portrait', 'portrait'])
   })
 
-  it('change la photo d’un emplacement après 20 à 40 secondes, sans toucher aux autres', async () => {
+  it('change toutes les photos en même temps, au bout de 30 secondes', async () => {
     const w = await monter({ variante: 'cinq' })
     const avant = w.findAll('img').map((i) => i.attributes('src'))
-    await vi.advanceTimersByTimeAsync(DUREE_MIN - 1)
+    await vi.advanceTimersByTimeAsync(DUREE_CHANGEMENT - 1)
     expect(w.findAll('img').map((i) => i.attributes('src'))).toEqual(avant) // trop tôt
-    await vi.advanceTimersByTimeAsync(DUREE_MAX - DUREE_MIN + 1)
+    await vi.advanceTimersByTimeAsync(2)
+    await vi.advanceTimersByTimeAsync(1000) // laisse finir le fondu
     await flushPromises()
     const apres = w.findAll('img').map((i) => i.attributes('src'))
-    expect(apres.some((s, i) => s !== avant[i])).toBe(true) // au moins un a changé
+    expect(apres).toHaveLength(5)
+    apres.forEach((src, i) => expect(src, `emplacement ${i}`).not.toBe(avant[i])) // aucun n'est resté en arrière
   })
 
-  it('un remplacement demande UNE photo de la bonne orientation, en évitant celles déjà à l’écran', async () => {
+  it('un renouvellement fait UNE requête pour tous les emplacements, en évitant les photos à l’écran', async () => {
     await monter({ variante: 'cinq' })
+    const affichees = vi.mocked(photosService.aleatoires).mock.results.length
     demandes.length = 0
-    await vi.advanceTimersByTimeAsync(DUREE_MAX)
+    await vi.advanceTimersByTimeAsync(DUREE_CHANGEMENT + 1)
     await flushPromises()
-    expect(demandes.length).toBeGreaterThan(0)
-    for (const d of demandes) {
-      expect(d.orientations).toHaveLength(1)
-      expect(d.exclure.length).toBeGreaterThan(0)
-    }
+    expect(affichees).toBe(1)
+    expect(demandes).toHaveLength(1)
+    expect(demandes[0]!.orientations).toEqual(['portrait', 'portrait', 'paysage', 'portrait', 'portrait'])
+    expect(demandes[0]!.exclure).toHaveLength(5)
   })
 
-  it('chaque emplacement change à son rythme : tous ne changent pas au même instant', async () => {
-    vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.9).mockReturnValueOnce(0.5).mockReturnValueOnce(0.7).mockReturnValueOnce(0.8)
-    await monter({ variante: 'cinq' })
-    demandes.length = 0
-    await vi.advanceTimersByTimeAsync(DUREE_MIN + 1)
-    expect(demandes).toHaveLength(1) // seul le premier, au tirage le plus court
+  it('jamais deux fois la même photo à l’écran', async () => {
+    const w = await monter({ variante: 'cinq' })
+    for (let tour = 0; tour < 4; tour++) {
+      const srcs = w.findAll('img').map((i) => i.attributes('src'))
+      expect(new Set(srcs).size, `tour ${tour}`).toBe(srcs.length)
+      await vi.advanceTimersByTimeAsync(DUREE_CHANGEMENT + 1)
+      await flushPromises()
+    }
   })
 
   it('continue indéfiniment : les photos changent encore au bout de plusieurs minutes', async () => {
@@ -149,11 +153,11 @@ describe('PhotosModule', () => {
     const w = await monter({ variante: 'un' })
     const avant = w.find('img').attributes('src')
     vi.mocked(photosService.aleatoires).mockResolvedValueOnce([])
-    await vi.advanceTimersByTimeAsync(DUREE_MAX)
+    await vi.advanceTimersByTimeAsync(DUREE_CHANGEMENT + 1)
     await flushPromises()
     expect(w.find('img').attributes('src')).toBe(avant)
     demandes.length = 0
-    await vi.advanceTimersByTimeAsync(DUREE_MAX)
+    await vi.advanceTimersByTimeAsync(DUREE_CHANGEMENT + 1)
     expect(demandes.length).toBeGreaterThan(0)
   })
 })

@@ -70,6 +70,5 @@ export const DISPOSITIONS: Record<string, Disposition> = {
 
 export const DISPOSITION_PAR_DEFAUT = 'un'
 
-/** Chaque emplacement change de photo toutes les 20 à 40 secondes (au hasard, chacun à son rythme). */
-export const DUREE_MIN = 20_000
-export const DUREE_MAX = 40_000
+/** Tous les emplacements changent de photo en même temps, toutes les 30 secondes. */
+export const DUREE_CHANGEMENT = 30_000

@@ -32,14 +32,15 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { DISPOSITIONS, DISPOSITION_PAR_DEFAUT, DUREE_MAX, DUREE_MIN } from '../modules/dispositionsPhotos'
+import { DISPOSITIONS, DISPOSITION_PAR_DEFAUT, DUREE_CHANGEMENT } from '../modules/dispositionsPhotos'
 import { photosService } from '../services/photosService'
 import type { PhotoAffichee } from '../utils/photosDemo'
 
 /**
- * Cadre photo numérique : plusieurs emplacements entourés d'un cadre en bois, sur un décor. Chaque emplacement
- * change de photo à son rythme, en fondu, avec une photo tirée au hasard dans toute la bibliothèque abflow dans
- * SON orientation (jamais un paysage dans un emplacement en portrait).
+ * Cadre photo numérique : plusieurs emplacements entourés d'un cadre en bois, sur un décor. Tous les emplacements
+ * changent de photo en même temps, en fondu. Le jeu de photos est tiré en une seule fois dans toute la bibliothèque
+ * abflow, chacune dans l'orientation de son emplacement (jamais un paysage dans un emplacement en portrait), et
+ * sans la même photo deux fois à l'écran.
  *
  * variante : la disposition (un, portrait, deux, trois, quatre, galerie).
  * Le mur à moulures et les cadres suivent le thème jour / nuit.
@@ -49,8 +50,7 @@ const props = defineProps<{ variante?: string }>()
 const disposition = computed(() => DISPOSITIONS[props.variante ?? DISPOSITION_PAR_DEFAUT] ?? DISPOSITIONS[DISPOSITION_PAR_DEFAUT]!)
 const photos = ref<(PhotoAffichee | undefined)[]>([])
 
-const identifiantsAffiches = (sauf?: number) =>
-  photos.value.flatMap((p, i) => (p && i !== sauf ? [p.id] : []))
+const identifiantsAffiches = () => photos.value.flatMap((p) => (p ? [p.id] : []))
 
 /** Attend que l'image soit prête pour que le fondu ne montre pas un cadre vide (3 s au plus). */
 function precharger(url: string): Promise<void> {
@@ -66,35 +66,42 @@ function precharger(url: string): Promise<void> {
   })
 }
 
-const minuteurs: ReturnType<typeof setTimeout>[] = []
+let minuteur: ReturnType<typeof setTimeout> | undefined
 let actif = true
+let generation = 0 // un autre agencement (ou le démontage) invalide un renouvellement encore en cours
 
-function planifier(i: number) {
+const orientations = () => disposition.value.emplacements.map((e) => e.orientation)
+
+function planifier() {
   if (!actif) return
-  const attente = DUREE_MIN + Math.random() * (DUREE_MAX - DUREE_MIN)
-  minuteurs[i] = setTimeout(async () => {
-    const orientation = disposition.value.emplacements[i]?.orientation
-    if (orientation) {
-      const [nouvelle] = await photosService.aleatoires([orientation], identifiantsAffiches())
-      if (nouvelle && actif) {
-        await precharger(nouvelle.url)
-        if (actif) photos.value[i] = nouvelle
-      }
-    }
-    planifier(i)
-  }, attente)
+  minuteur = setTimeout(renouveler, DUREE_CHANGEMENT)
+}
+
+/** Un nouveau jeu de photos pour tous les emplacements d'un coup, sans celles déjà à l'écran quand c'est possible. */
+async function renouveler() {
+  const cette = generation
+  const attendues = orientations()
+  const nouvelles = await photosService.aleatoires(attendues, identifiantsAffiches())
+  if (nouvelles.length === attendues.length) {
+    // toutes les images sont prêtes avant de changer : le fondu ne montre jamais un cadre vide
+    await Promise.all(nouvelles.map((p) => precharger(p.url)))
+    if (actif && cette === generation) photos.value = nouvelles
+  }
+  if (cette === generation) planifier()
 }
 
 function arreter() {
-  minuteurs.forEach(clearTimeout)
-  minuteurs.length = 0
+  generation++
+  clearTimeout(minuteur)
 }
 
 async function demarrer() {
   arreter()
-  const orientations = disposition.value.emplacements.map((e) => e.orientation)
-  photos.value = await photosService.aleatoires(orientations)
-  orientations.forEach((_, i) => planifier(i))
+  const cette = generation
+  const jeu = await photosService.aleatoires(orientations())
+  if (!actif || cette !== generation) return
+  photos.value = jeu
+  planifier()
 }
 
 onMounted(demarrer)
