@@ -271,9 +271,12 @@ describe('CalendarModule', () => {
 
       const vm = mountVm([nuit(1), nuit(2)])
 
-      expect(vm.getEventsForDay(day(1)).map((e: any) => e.id)).toEqual(['night-1'])
-      expect(vm.getEventsForDay(day(2)).map((e: any) => e.id)).toEqual(['night-2'])
-      expect(vm.getEventsForDay(day(3)).map((e: any) => e.id)).toEqual([]) // repos : aucune carte
+      // seules les nuits comptent : un jour férié tombant ce jour-là (le 11 novembre…) ajoute sa propre carte
+      const nuits = (n: number) =>
+        vm.getEventsForDay(day(n)).map((e: any) => e.id).filter((id: string) => id.startsWith('night-'))
+      expect(nuits(1)).toEqual(['night-1'])
+      expect(nuits(2)).toEqual(['night-2'])
+      expect(nuits(3)).toEqual([]) // repos : aucune carte de nuit
     })
 
     it('un événement calendrier multi-jours apparaît chaque jour couvert', () => {
