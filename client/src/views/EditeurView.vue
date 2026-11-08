@@ -471,7 +471,13 @@ onMounted(charger)
   color: var(--c-text);
   padding: 16px 20px 32px;
   font-size: 15px;
+  /* Bord des champs et des boutons : assez marqué (3:1 au moins) sur le fond clair comme sur le fond sombre */
+  --champ-bord: color-mix(in srgb, var(--c-text) 55%, transparent);
+  --champ-fond: var(--c-surface);
+  /* Texte posé sur la couleur d'accent : sombre sur le bleu clair de la nuit, blanc sur le bleu foncé du jour */
+  --sur-accent: #0f1115;
 }
+:global(.light-theme) .editeur { --sur-accent: #fff; }
 .editeur * { cursor: auto; }
 .barre {
   display: flex;
@@ -489,8 +495,8 @@ h1 { font-size: 20px; margin: 0; }
 input, select {
   font: inherit;
   color: inherit;
-  background: var(--c-chip);
-  border: 1px solid transparent;
+  background: var(--champ-fond);
+  border: 1px solid var(--champ-bord);
   border-radius: 8px;
   padding: 8px 10px;
   box-sizing: border-box;
@@ -498,18 +504,19 @@ input, select {
 button {
   font: inherit;
   color: inherit;
-  background: var(--c-chip);
-  border: 1px solid transparent;
+  background: var(--champ-fond);
+  border: 1px solid var(--champ-bord);
   border-radius: 8px;
   padding: 8px 12px;
 }
 button:hover:not(:disabled) { filter: brightness(1.1); }
-button:disabled { opacity: 0.45; }
+button:disabled { opacity: 0.5; }
+input::placeholder { color: var(--c-muted); }
 button:focus-visible, input:focus-visible, select:focus-visible, .module:focus-visible {
   outline: 2px solid var(--c-accent);
   outline-offset: 2px;
 }
-.principal { background: var(--c-accent); color: #fff; }
+.principal { background: var(--c-accent); color: var(--sur-accent); border-color: var(--c-accent); }
 .danger { color: #c0392b; }
 .icone-bouton { padding: 8px; line-height: 0; }
 .icone-bouton svg { width: 20px; height: 20px; }
@@ -540,7 +547,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round
   box-shadow: var(--shadow-card);
   touch-action: none;
 }
-.case { background: var(--c-chip); border-radius: 4px; opacity: 0.55; }
+.case { background: color-mix(in srgb, var(--c-text) 10%, transparent); border-radius: 4px; }
 .module {
   z-index: 1;
   display: flex;
@@ -549,7 +556,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round
   justify-content: center;
   gap: 2px;
   background: var(--c-accent);
-  color: #fff;
+  color: var(--sur-accent);
   border-radius: 8px;
   user-select: none;
   cursor: grab;
