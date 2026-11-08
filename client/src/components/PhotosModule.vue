@@ -5,25 +5,22 @@
     <div class="mur" aria-hidden="true">
       <div v-for="n in 14" :key="n" class="panneau" />
     </div>
-    <div
-      class="plan"
-      :style="{
-        gridTemplateColumns: `repeat(${disposition.colonnes}, minmax(0, 1fr))`,
-        gridTemplateRows: `repeat(${disposition.lignes}, minmax(0, 1fr))`,
-      }"
-    >
+    <div class="plan">
       <div
         v-for="(em, i) in disposition.emplacements"
         :key="i"
         class="emplacement"
         :data-orientation="em.orientation"
         :style="{
-          gridColumn: `${em.x} / span ${em.largeur}`,
-          gridRow: `${em.y} / span ${em.hauteur}`,
+          left: `${em.x}%`,
+          top: `${em.y}%`,
+          width: `${em.largeur}%`,
+          height: `${em.hauteur}%`,
+          transform: em.inclinaison ? `rotate(${em.inclinaison}deg)` : undefined,
         }"
       >
-        <!-- Cadre en bois autour de la photo ; la photo suivante arrive en fondu -->
-        <figure class="cadre">
+        <!-- Cadre autour de la photo ; la photo suivante arrive en fondu -->
+        <figure class="cadre" :class="em.cadre">
           <Transition name="photo-fondu" mode="out-in">
             <img v-if="photos[i]" :key="photos[i]!.id" :src="photos[i]!.url" alt="" draggable="false" />
           </Transition>
@@ -130,7 +127,6 @@ onUnmounted(() => {
   overflow: hidden;
   border-radius: var(--radius-card);
   box-sizing: border-box;
-  padding: calc(22 * var(--px));
   background: linear-gradient(180deg, var(--mur-haut), var(--mur));
 }
 
@@ -180,37 +176,31 @@ onUnmounted(() => {
 }
 
 .plan {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
-  display: grid;
-  gap: calc(22 * var(--px));
-  height: 100%;
 }
 
+/* Les emplacements sont posés en % du module, à des hauteurs différentes, et penchent à peine */
 .emplacement {
+  position: absolute;
   min-width: 0;
   min-height: 0;
 }
 
 /*
- * Le cadre : laque noire fine, filet doré à l'intérieur, passe-partout clair avec une ouverture en biseau.
- * Il projette une ombre vers le bas sur le mur.
+ * Les cadres : une épaisseur de passe-partout (--ep), une ombre portée vers le bas sur le mur, et un style
+ * qui change d'un cadre à l'autre pour que le mur ne soit pas uniforme.
  */
 .cadre {
+  --ep: calc(10 * var(--px));
   margin: 0;
   height: 100%;
   box-sizing: border-box;
   position: relative;
-  padding: calc(10 * var(--px));
+  padding: var(--ep);
   background: var(--passe);
-  border: calc(7 * var(--px)) solid var(--cadre-1);
-  border-image: linear-gradient(145deg, var(--cadre-1), var(--cadre-2) 55%, var(--cadre-1)) 1;
   box-shadow:
-    /* filet doré entre le cadre et le passe-partout */
-    inset 0 0 0 calc(2 * var(--px)) var(--filet),
-    /* profondeur du passe-partout */
-    inset 0 calc(2 * var(--px)) calc(8 * var(--px)) rgba(0, 0, 0, 0.28),
-    /* ombre portée sur le mur */
     0 calc(10 * var(--px)) calc(22 * var(--px)) var(--ombre-portee),
     0 calc(2 * var(--px)) calc(4 * var(--px)) var(--ombre-portee);
 }
@@ -218,12 +208,78 @@ onUnmounted(() => {
 .cadre img {
   display: block;
   position: absolute;
-  inset: calc(10 * var(--px));
-  width: calc(100% - 20 * var(--px));
-  height: calc(100% - 20 * var(--px));
+  inset: var(--ep);
+  width: calc(100% - 2 * var(--ep));
+  height: calc(100% - 2 * var(--ep));
   object-fit: cover;
   /* ouverture du passe-partout : un petit biseau d'ombre autour de la photo */
   box-shadow: 0 0 0 calc(1 * var(--px)) rgba(0, 0, 0, 0.4), inset 0 0 calc(8 * var(--px)) rgba(0, 0, 0, 0.45);
+}
+
+/* Doré, mouluré : large cadre avec un profil en gradins et des reflets aux coins */
+.cadre.or {
+  --ep: calc(11 * var(--px));
+  border: calc(15 * var(--px)) solid #b8892b;
+  border-image: linear-gradient(135deg, #f6e3a1, #b8892b 22%, #fbeeb8 42%, #9a6f1c 62%, #e9cb6c 82%, #a67a22) 1;
+  box-shadow:
+    inset 0 0 0 calc(2 * var(--px)) #6d4c10,
+    inset 0 0 0 calc(4.5 * var(--px)) #f0d37c,
+    inset 0 0 0 calc(6.5 * var(--px)) #7d5714,
+    inset 0 0 calc(10 * var(--px)) rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(60, 38, 5, 0.7),
+    0 calc(10 * var(--px)) calc(22 * var(--px)) var(--ombre-portee),
+    0 calc(2 * var(--px)) calc(4 * var(--px)) var(--ombre-portee);
+}
+.cadre.or::before {
+  content: '';
+  position: absolute;
+  inset: calc(-15 * var(--px));
+  pointer-events: none;
+  /* reflets aux quatre coins, comme des ornements en relief */
+  background:
+    radial-gradient(circle at 0 0, rgba(255, 244, 200, 0.85), transparent calc(26 * var(--px))),
+    radial-gradient(circle at 100% 0, rgba(255, 244, 200, 0.85), transparent calc(26 * var(--px))),
+    radial-gradient(circle at 0 100%, rgba(255, 244, 200, 0.85), transparent calc(26 * var(--px))),
+    radial-gradient(circle at 100% 100%, rgba(255, 244, 200, 0.85), transparent calc(26 * var(--px)));
+}
+
+/* Laque noire fine avec un filet doré */
+.cadre.noir {
+  --ep: calc(10 * var(--px));
+  border: calc(7 * var(--px)) solid var(--cadre-1);
+  border-image: linear-gradient(145deg, var(--cadre-1), var(--cadre-2) 55%, var(--cadre-1)) 1;
+  box-shadow:
+    inset 0 0 0 calc(2 * var(--px)) var(--filet),
+    inset 0 calc(2 * var(--px)) calc(8 * var(--px)) rgba(0, 0, 0, 0.28),
+    0 calc(10 * var(--px)) calc(22 * var(--px)) var(--ombre-portee),
+    0 calc(2 * var(--px)) calc(4 * var(--px)) var(--ombre-portee);
+}
+
+/* Noyer, large, avec un liseré clair à l'intérieur */
+.cadre.bois {
+  --ep: calc(9 * var(--px));
+  border: calc(13 * var(--px)) solid #6a4426;
+  border-image: linear-gradient(160deg, #9b6a3d, #5d3a1e 40%, #86582f 65%, #4f301a) 1;
+  box-shadow:
+    inset 0 0 0 calc(2 * var(--px)) #c79a63,
+    inset 0 0 calc(8 * var(--px)) rgba(0, 0, 0, 0.35),
+    0 calc(10 * var(--px)) calc(22 * var(--px)) var(--ombre-portee),
+    0 calc(2 * var(--px)) calc(4 * var(--px)) var(--ombre-portee);
+}
+
+/* Ovale doré, pour un portrait */
+.cadre.ovale {
+  --ep: calc(16 * var(--px));
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f6e3a1, #b8892b 25%, #fbeeb8 45%, #9a6f1c 65%, #e9cb6c 85%);
+  box-shadow:
+    inset 0 0 0 calc(3 * var(--px)) #7d5714,
+    inset 0 0 calc(10 * var(--px)) rgba(0, 0, 0, 0.35),
+    0 calc(10 * var(--px)) calc(22 * var(--px)) var(--ombre-portee);
+}
+.cadre.ovale img {
+  border-radius: 50%;
 }
 
 .photo-fondu-enter-active,
