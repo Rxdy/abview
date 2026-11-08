@@ -170,6 +170,18 @@ test.group('PhotosService : liste et tirage', (group) => {
     assert.deepEqual(await new PhotosService().aleatoires(['portrait']), [])
   })
 
+  test('un emplacement carré (cadre rond) prend n’importe quelle photo, sans repeter celles déjà prises', async ({
+    assert,
+  }) => {
+    bibliotheque([image('l.jpg', 1600, 1000), image('p.jpg', 1000, 1600)])
+    const s = new PhotosService()
+    const r = await s.aleatoires(['carre', 'carre'])
+    assert.lengthOf(new Set(r.map((x) => x.id)), 2)
+    const [paysage, carre] = await s.aleatoires(['paysage', 'carre'])
+    assert.equal(paysage!.id, 'l.jpg')
+    assert.equal(carre!.id, 'p.jpg') // la seule autre photo
+  })
+
   test('le tirage suit le hasard fourni (uniforme sur toute la bibliothèque)', async ({
     assert,
   }) => {

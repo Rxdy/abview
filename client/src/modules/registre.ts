@@ -80,14 +80,11 @@ export const REGISTRE: Registre = {
     id: 'photos',
     titre: 'Photos',
     icone: 'M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 17V7A1.5 1.5 0 0 1 4 5.5zM8.5 11a1.6 1.6 0 1 0 0-.01zM21 16l-5.2-5.2a1 1 0 0 0-1.4 0L7 18',
-    // Une taille par disposition (nombre d'emplacements) ; la première est celle par défaut
+    // En mode permanent : une seule photo, en paysage ou en portrait. Les murs de plusieurs cadres sont ceux du
+    // mode veille (voir modules/dispositionsPhotos.ts), pas des tailles de ce module.
     variantes: [
       { id: 'un', largeur: 4, hauteur: 3 },
       { id: 'portrait', largeur: 3, hauteur: 5 },
-      { id: 'deux', largeur: 6, hauteur: 3 },
-      { id: 'trois', largeur: 8, hauteur: 3 },
-      { id: 'quatre', largeur: 6, hauteur: 5 },
-      { id: 'galerie', largeur: 12, hauteur: 8 },
     ],
     max: 3,
   },

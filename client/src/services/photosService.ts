@@ -21,11 +21,17 @@ export const photosService = {
     } catch {
       /* serveur ou abflow indisponible : images de démonstration */
     }
-    // Chaque emplacement reçoit une photo de SON orientation ; à défaut, une image de démonstration.
+    // Chaque emplacement reçoit une photo de SON orientation ; à défaut, une image de démonstration. Un emplacement
+    // « carré » (les cadres ronds) accepte une photo d'une autre orientation, recadrée au centre : jamais l'inverse.
     const libres = [...recues]
-    return orientations.map((o) => {
+    const resultat: (PhotoAffichee | undefined)[] = orientations.map((o) => {
       const i = libres.findIndex((p) => p.orientation === o)
-      return i >= 0 ? libres.splice(i, 1)[0]! : photoDemo(o)
+      return i >= 0 ? libres.splice(i, 1)[0] : undefined
+    })
+    return orientations.map((o, k) => {
+      if (resultat[k]) return resultat[k]!
+      if (o === 'carre' && libres.length) return libres.shift()!
+      return photoDemo(o)
     })
   },
 }
