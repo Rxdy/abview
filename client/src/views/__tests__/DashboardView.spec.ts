@@ -115,7 +115,7 @@ describe('DashboardView : disposition pilotée par la configuration', () => {
     expect(wrapper.find('[data-module=taches]').classes()).not.toContain('carte')
   })
 
-  it('transmet la variante aux modules qui en ont plusieurs, pas aux autres', async () => {
+  it('transmet la variante choisie (ou la première par défaut) aux modules', async () => {
     const wrapper = await montee({
       nom: 'Variantes',
       placements: [
@@ -124,7 +124,7 @@ describe('DashboardView : disposition pilotée par la configuration', () => {
       ],
     })
     expect(wrapper.findComponent({ name: 'WeatherModule' }).props('variante')).toBe('compact')
-    expect(wrapper.findComponent({ name: 'CalendarModule' }).attributes('variante')).toBeUndefined()
+    expect(wrapper.findComponent({ name: 'CalendarModule' }).props('variante')).toBe('large')
   })
 
   it('une taille de météo différente change les cases occupées', async () => {

@@ -150,9 +150,28 @@ describe('édition d’une configuration', () => {
       expect(valider(r.config)).toEqual([])
     })
 
-    it('si le module poussé ne trouve aucune place, rien ne bouge (null)', () => {
-      // la météo sur l'agenda (12×5, une seule taille) : l'agenda n'a nulle part où aller
-      expect(deplacerEnPoussant(CONFIGURATION_PAR_DEFAUT, 'meteo', 1, 1)).toBeNull()
+    it('l’agenda poussé rétrécit lui aussi : la météo qui monte sur lui le réduit en « moyen »', () => {
+      const r = deplacerEnPoussant(CONFIGURATION_PAR_DEFAUT, 'meteo', 1, 1)!
+      expect(place(r.config, 'meteo')).toMatchObject({ x: 1, y: 1 })
+      expect(r.deplaces).toEqual([{ id: 'calendrier', module: 'calendrier', reduitEn: expect.any(String) }])
+      expect(valider(r.config)).toEqual([])
+    })
+
+    it('si un module poussé ne trouve aucune place, rien ne bouge (null)', () => {
+      // grille presque pleine : trois modules en haut, trois tâches « moyen » dessous, deux lignes libres
+      const pleine: Configuration = {
+        nom: 'Pleine',
+        placements: [
+          { id: 'calendrier', module: 'calendrier', variante: 'mini', x: 1, y: 1 },
+          { id: 'meteo', module: 'meteo', x: 5, y: 1 },
+          { id: 'a', module: 'taches', variante: 'moyen', x: 1, y: 4 },
+          { id: 'b', module: 'taches', variante: 'moyen', x: 5, y: 4 },
+          { id: 'c', module: 'taches', variante: 'moyen', x: 9, y: 4 },
+          { id: 'd', module: 'taches', variante: 'moyen', x: 9, y: 1 },
+        ],
+      }
+      // la météo à cheval sur « a » et « b » : l'un reprend l'ancienne place de la météo, l'autre n'a nulle part où aller
+      expect(deplacerEnPoussant(pleine, 'meteo', 3, 4)).toBeNull()
     })
 
     it('refuse de sortir de la grille', () => {

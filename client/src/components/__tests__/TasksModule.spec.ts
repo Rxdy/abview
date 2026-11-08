@@ -212,4 +212,43 @@ describe('TasksModule', () => {
       expect(w.findComponent({ name: 'ErrorDisplay' }).props('type')).toBe('no-data')
     })
   })
+
+  describe('largeur des cartes selon la zone', () => {
+    const avecObservateur = async (clientWidth: number) => {
+      vi.stubGlobal('innerWidth', 1280) // 1 unité = 1 px
+      let rappel: () => void = () => {}
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          constructor(cb: () => void) {
+            rappel = cb
+          }
+          observe() {}
+          disconnect() {}
+        }
+      )
+      Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => clientWidth })
+      mockTasksStore.tasks = [task(1, 'Julie'), task(2, 'Action')]
+      const w = mount(TasksModule, { global: { stubs: { TaskList: true } } })
+      rappel()
+      await w.vm.$nextTick()
+      return w
+    }
+    const carte = (w: ReturnType<typeof mount>) => w.find('.tasks-container').attributes('style')
+
+    it('garde la carte normale dans une zone large', async () => {
+      expect(carte(await avecObservateur(829))).toContain('276')
+    })
+
+    it('adapte la carte à une zone étroite au lieu de la couper', async () => {
+      const style = carte(await avecObservateur(302))!
+      expect(style).toContain('302')
+      expect(style).not.toContain('276')
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+      delete (HTMLElement.prototype as any).clientWidth
+    })
+  })
 })

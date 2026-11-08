@@ -10,7 +10,7 @@
     >
       <!-- La météo est la seule à tourner dans son emplacement (voir useModuleRotation) -->
       <Transition v-if="e.module === 'meteo'" name="module-fade" mode="out-in">
-        <component :is="e.composant" v-if="activeModule === 'weather'" :key="e.id" v-bind="e.props" />
+        <component :is="e.composant" v-if="activeModule === 'weather'" :key="e.id" v-bind="e.props" :progress="progress" />
       </Transition>
       <component :is="e.composant" v-else :key="e.id" :class="e.animation" v-bind="e.props" />
     </div>
@@ -66,7 +66,6 @@ const emplacements = computed(() =>
         animation: REGISTRE[p.module]?.animation,
         // La variante n'est transmise qu'aux modules qui en ont plusieurs : eux seuls adaptent leur affichage.
         props: {
-          ...(p.module === 'meteo' ? { progress: progress.value } : {}),
           ...((REGISTRE[p.module]?.variantes.length ?? 0) > 1 ? { variante: p.variante ?? REGISTRE[p.module]?.variantes[0]?.id } : {}),
           ...p.reglages,
         },

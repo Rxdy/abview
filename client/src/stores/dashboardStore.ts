@@ -65,7 +65,9 @@ export const useDashboardStore = defineStore('dashboard', {
       try {
         const response = await fetch('/config.json');
         const { grid, modules, name, language, categories, configuration } = await response.json();
-        this.configuration = choisirConfiguration(configuration);
+        // Le fichier ne donne une configuration que s'il en contient une : relire config.json (la langue, par exemple,
+        // le fait à chaque montage de la météo) ne doit jamais effacer celle choisie sur le serveur.
+        if (configuration) this.configuration = choisirConfiguration(configuration);
         await this.chargerConfigurationActive();
         this.categories = categories || {};
         this.grid = grid;
@@ -82,7 +84,6 @@ export const useDashboardStore = defineStore('dashboard', {
           { id: 'tasks', component: 'TasksModule', widthPercent: '69.5%', heightPercent: '40%', order: 3, visible: true },
         ];
         this.language = 'fr';
-        this.configuration = CONFIGURATION_PAR_DEFAUT;
       }
     },
   },

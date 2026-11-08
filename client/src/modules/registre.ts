@@ -46,7 +46,12 @@ export const REGISTRE: Registre = {
     titre: 'Agenda',
     max: 1,
     icone: 'M7 2.5v3M17 2.5v3M3.5 9h17M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v13a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V6A1.5 1.5 0 0 1 5 4.5zM8 13h2M14 13h2M8 17h2M14 17h2',
-    variantes: [{ id: 'large', largeur: 12, hauteur: 5 }],
+    variantes: [
+      { id: 'large', largeur: 12, hauteur: 5 },
+      { id: 'moyen', largeur: 12, hauteur: 3 },
+      { id: 'etroit', largeur: 6, hauteur: 5 },
+      { id: 'mini', largeur: 4, hauteur: 3 },
+    ],
     animation: 'fade-in-1',
   },
   meteo: {

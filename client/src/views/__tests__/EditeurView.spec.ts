@@ -186,14 +186,19 @@ describe('EditeurView', () => {
     expect(w.findAll('.module')).toHaveLength(3) // personne n'a disparu
   })
 
-  it('ne bloque pas : quand il n’y a nulle part où pousser, rien ne bouge et on est prévenu', async () => {
+  it('la météo qui monte sur l’agenda le fait rétrécir au lieu de bloquer', async () => {
     const w = await monter()
-    const avant = w.findAll('.module').map((m) => m.attributes('style'))
     await w.findAll('.module')[1]!.trigger('click') // la météo
-    await w.find('[aria-label="Monter"]').trigger('click') // elle monterait sur l'agenda, qui n'a pas de place ailleurs
-    expect(w.text()).toContain('Pas de place pour déplacer les modules voisins')
-    expect(w.findAll('.module').map((m) => m.attributes('style'))).toEqual(avant)
-    await w.find('[aria-label="Aller à gauche"]').trigger('click') // bord de la grille : sans effet, mais l'éditeur reste utilisable
+    await w.find('[aria-label="Monter"]').trigger('click')
+    expect(w.text()).toContain('« Agenda » a été déplacé et réduit')
+    expect(w.find('.erreurs').exists()).toBe(false)
+    expect(w.findAll('.module')).toHaveLength(3)
+  })
+
+  it('un déplacement sans effet (bord de la grille) laisse l’éditeur utilisable', async () => {
+    const w = await monter()
+    await w.findAll('.module')[1]!.trigger('click') // la météo, en bas à gauche
+    await w.find('[aria-label="Aller à gauche"]').trigger('click') // bord de la grille
     await w.findAll('.module')[2]!.trigger('click')
     expect(w.find('[aria-label="Taille du module"]').exists()).toBe(true)
   })

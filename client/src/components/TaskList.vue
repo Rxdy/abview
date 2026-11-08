@@ -230,7 +230,7 @@ const isDark = computed(() => {
   flex-direction: column;
   height: 100%;
   max-height: 100%;
-  width: calc(276 * var(--px));
+  width: var(--carte-l, calc(276 * var(--px)));
   flex-shrink: 0;
   border-radius: var(--radius-card);
   overflow: hidden;

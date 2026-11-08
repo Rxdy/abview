@@ -22,7 +22,7 @@
     <div class="progress-bar" v-if="showProgress" :class="{ 'progress-left': progressSide === 'left', 'progress-right': progressSide === 'right' }">
       <div class="progress-fill" :style="{ height: progressPercent + '%' }"></div>
     </div>
-    <div ref="tasksContainer" class="tasks-container">
+    <div ref="tasksContainer" class="tasks-container" :style="{ '--carte-l': `calc(${largeurCarte} * var(--px))` }">
       <TaskList
         v-for="list in groupedLists"
         :key="list.title"
@@ -36,6 +36,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue';
+import { largeurCartes } from '../utils/cartesTaches';
 import { useTasksStore } from '../stores/tasksStore';
 import ErrorDisplay from './ErrorDisplay.vue';
 import TaskList from './TaskList.vue';
@@ -57,9 +58,24 @@ const progressPercent = ref(0);
 const progressSide = ref<'left' | 'right'>('left');
 let currentSide: 'left' | 'right' = 'left';
 
+// Largeur des cartes d'après la largeur de la zone du module (voir utils/cartesTaches.ts)
+const largeurCarte = ref(largeurCartes(0));
+let observateur: ResizeObserver | null = null;
+
 onMounted(() => {
   // Le rechargement périodique est piloté par la barre d'actualisation (progressStore)
+  const zone = tasksContainer.value;
+  if (zone && typeof ResizeObserver !== 'undefined') {
+    const mesurer = () => {
+      largeurCarte.value = largeurCartes(zone.clientWidth / (window.innerWidth / 1280));
+    };
+    observateur = new ResizeObserver(mesurer);
+    observateur.observe(zone);
+    mesurer();
+  }
 });
+
+onUnmounted(() => observateur?.disconnect());
 
 const groupedLists = computed(() => {
   const groups: { [key: string]: { title: string; color: string; tasks: any[] } } = {};
