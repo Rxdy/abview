@@ -34,13 +34,16 @@ import { REGISTRE } from '../modules/registre';
 import { rectangle } from '../modules/configuration';
 import { COMPOSANTS } from '../modules/composants';
 
+/** Aperçu d'une disposition : on n'adopte pas celle du serveur. */
+const props = defineProps<{ figee?: boolean }>();
+
 const notificationsStore = useNotificationsStore();
 const dashboardStore = useDashboardStore();
 
 // La configuration active du serveur est relue chaque minute : un changement dans l'éditeur arrive à l'écran sans rechargement.
 let arreterSuivi: (() => void) | undefined;
 onMounted(() => {
-  arreterSuivi = dashboardStore.suivreConfiguration();
+  if (!props.figee) arreterSuivi = dashboardStore.suivreConfiguration();
 });
 onUnmounted(() => arreterSuivi?.());
 

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { CONFIGURATION_PAR_DEFAUT, valider, type Configuration } from '../configuration'
 import {
   ajouter,
+  ajouterA,
   changerVariante,
   deplacer,
   identifiantDepuisNom,
@@ -39,6 +40,14 @@ describe('édition d’une configuration', () => {
     c = ajouter(c, 'meteo')!
     expect(c.placements.map((p) => p.id)).toEqual(['meteo', 'meteo-2'])
     expect(identifiantLibre(c, 'meteo')).toBe('meteo-3')
+  })
+
+  it('pose un module à la case voulue, le refuse s’il ne tient pas là', () => {
+    const sans = retirer(CONFIGURATION_PAR_DEFAUT, 'meteo')
+    expect(ajouterA(sans, 'meteo', 1, 6)?.placements.at(-1)).toMatchObject({ id: 'meteo', x: 1, y: 6 })
+    expect(ajouterA(sans, 'meteo', 3, 6)).toBeNull() // chevauche les tâches
+    expect(ajouterA(vide, 'meteo', 10, 1)).toBeNull() // sort de la grille
+    expect(ajouterA(vide, 'inconnu', 1, 1)).toBeNull()
   })
 
   it('retire un module', () => {
