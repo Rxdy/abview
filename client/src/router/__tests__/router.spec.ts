@@ -9,7 +9,7 @@ describe('router', () => {
     expect(router.currentRoute.value.matched[0].components?.default).toBe(DashboardView)
   })
 
-  it("n'a qu'une seule route : le kiosque n'a pas d'autre page", () => {
-    expect(router.getRoutes().map((r) => r.path)).toEqual(['/'])
+  it("n'a que deux pages : l'écran et l'éditeur de disposition", () => {
+    expect(router.getRoutes().map((r) => r.path).sort()).toEqual(['/', '/editeur'])
   })
 })
