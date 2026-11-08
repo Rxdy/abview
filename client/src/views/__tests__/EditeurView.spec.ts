@@ -200,12 +200,13 @@ describe('EditeurView', () => {
     expect(w.find('.erreurs').exists()).toBe(false)
   })
 
-  it('déplacer un module sur un autre pousse celui-ci ailleurs, et le dit', async () => {
+  it('déplacer un module sur un autre pousse celui-ci ailleurs, sans message', async () => {
     const w = await monter()
     await w.findAll('.module')[2]!.trigger('click') // les tâches, à côté de la météo
     await w.find('[aria-label="Aller à gauche"]').trigger('click') // chevauche la météo
-    expect(w.text()).toContain('« Météo » a été déplacé et réduit (compact)')
+    expect(w.find('.message').exists()).toBe(false) // pas de message : le résultat se voit sur la grille
     expect(w.find('.erreurs').exists()).toBe(false)
+    expect(w.findAll('.module')[1]!.attributes('style')).toMatch(/span 2.*span 3|span 3.*span 2/) // la météo, réduite en 3×2
     expect(w.findAll('.module')).toHaveLength(3) // personne n'a disparu
   })
 
@@ -213,7 +214,7 @@ describe('EditeurView', () => {
     const w = await monter()
     await w.findAll('.module')[1]!.trigger('click') // la météo
     await w.find('[aria-label="Monter"]').trigger('click')
-    expect(w.text()).toContain('« Agenda » a été déplacé et réduit')
+    expect(w.find('.message').exists()).toBe(false)
     expect(w.find('.erreurs').exists()).toBe(false)
     expect(w.findAll('.module')).toHaveLength(3)
   })

@@ -274,16 +274,14 @@ function appliquer(suivante: Configuration | null, refus: string, selectionner =
   return true
 }
 
-/** Applique un déplacement qui a poussé d'autres modules, et dit où ils sont allés. */
+/** Applique un déplacement qui a pu pousser d'autres modules ; ne dit un mot que s'il est impossible. */
 function appliquerPousse(resultat: { config: Configuration; deplaces: Deplacement[] } | null, selectionner = false) {
   if (!resultat) {
     message.value = AUCUNE_PLACE
     return false
   }
   remplacer(resultat.config)
-  message.value = resultat.deplaces
-    .map((d) => `« ${REGISTRE[d.module]?.titre ?? d.module} » a été déplacé${d.reduitEn ? ` et réduit (${d.reduitEn})` : ''}.`)
-    .join(' ')
+  message.value = '' // pas de confirmation : on voit le résultat sur la grille
   if (selectionner) selection.value = resultat.config.placements.find((p) => !brouillonAvant.has(p.id))?.id ?? selection.value
   return true
 }
