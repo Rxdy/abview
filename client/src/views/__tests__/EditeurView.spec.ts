@@ -257,4 +257,86 @@ describe('EditeurView', () => {
     expect(service.enregistrer).not.toHaveBeenCalled() // l'aperçu n'enregistre rien
     ouvrir.mockRestore()
   })
+
+  describe('raccourcis clavier', () => {
+    const appuyer = async (touche: string, cible: EventTarget = document.body, extra: KeyboardEventInit = {}) => {
+      const e = new KeyboardEvent('keydown', { key: touche, bubbles: true, cancelable: true, ...extra })
+      cible.dispatchEvent(e)
+      await flushPromises()
+      return e
+    }
+    const monterAttache = async () => {
+      const w = mount(EditeurView, { attachTo: document.body })
+      await flushPromises()
+      return w
+    }
+    const style = (w: Wrapper, i: number) => w.findAll('.module')[i]!.attributes('style')
+
+    it('les flèches déplacent le module sélectionné, sans faire défiler la page', async () => {
+      const w = await monterAttache()
+      await w.findAll('.module')[1]!.trigger('click') // la météo
+      await appuyer('ArrowUp') // pousse l'agenda, qui rétrécit
+      expect(style(w, 1)).toContain('grid-row: 5 / span 3')
+      const e = await appuyer('ArrowDown')
+      expect(e.defaultPrevented).toBe(true)
+      expect(style(w, 1)).toContain('grid-row: 6 / span 3')
+      w.unmount()
+    })
+
+    it('Suppr et Retour arrière retirent le module sélectionné', async () => {
+      const w = await monterAttache()
+      await w.findAll('.module')[1]!.trigger('click')
+      await appuyer('Delete')
+      expect(w.findAll('.module')).toHaveLength(2)
+      await w.findAll('.module')[1]!.trigger('click')
+      await appuyer('Backspace')
+      expect(w.findAll('.module')).toHaveLength(1)
+      w.unmount()
+    })
+
+    it('Échap désélectionne : plus rien ne bouge ensuite', async () => {
+      const w = await monterAttache()
+      await w.findAll('.module')[2]!.trigger('click')
+      await appuyer('Escape')
+      await appuyer('Delete')
+      expect(w.findAll('.module')).toHaveLength(3)
+      w.unmount()
+    })
+
+    it('sans module sélectionné, les touches ne font rien', async () => {
+      const w = await monterAttache()
+      const e = await appuyer('ArrowLeft')
+      await appuyer('Delete')
+      expect(w.findAll('.module')).toHaveLength(3)
+      expect(e.defaultPrevented).toBe(false)
+      w.unmount()
+    })
+
+    it('ignore les touches pendant la saisie dans un champ (Suppr efface du texte, pas le module)', async () => {
+      const w = await monterAttache()
+      await w.findAll('.module')[1]!.trigger('click')
+      const champ = w.find('input[aria-label="Nom de la configuration"]').element
+      await appuyer('Delete', champ)
+      await appuyer('ArrowLeft', champ)
+      expect(w.findAll('.module')).toHaveLength(3)
+      w.unmount()
+    })
+
+    it('ignore les combinaisons avec Ctrl, Alt ou Meta (raccourcis du navigateur)', async () => {
+      const w = await monterAttache()
+      await w.findAll('.module')[1]!.trigger('click')
+      await appuyer('ArrowLeft', document.body, { ctrlKey: true })
+      await appuyer('Backspace', document.body, { altKey: true })
+      expect(w.findAll('.module')).toHaveLength(3)
+      w.unmount()
+    })
+
+    it('arrête d’écouter le clavier quand l’éditeur est fermé', async () => {
+      const w = await monterAttache()
+      await w.findAll('.module')[1]!.trigger('click')
+      w.unmount()
+      const e = await appuyer('Delete')
+      expect(e.defaultPrevented).toBe(false)
+    })
+  })
 })
