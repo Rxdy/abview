@@ -142,11 +142,11 @@ describe('mur de galerie (mode veille, proposition)', () => {
     expect([...VEILLE]).toEqual(['cinq'])
   })
 
-  it('a de nombreux cadres, de plusieurs formes et styles, pour couvrir l\'écran', () => {
-    expect(galerie.length).toBeGreaterThanOrEqual(15)
-    expect(new Set(galerie.map((e) => e.cadre)).size).toBe(5)
+  it('a sept emplacements, de styles variés, qui couvrent l\'essentiel de l\'écran', () => {
+    expect(galerie).toHaveLength(7)
+    expect(new Set(galerie.map((e) => e.cadre)).size).toBeGreaterThanOrEqual(4)
     const couvert = galerie.reduce((n, em) => n + (em.largeur * em.hauteur) / 100, 0) / 100
-    expect(couvert).toBeGreaterThanOrEqual(0.4)
+    expect(couvert).toBeGreaterThanOrEqual(0.55)
   })
 
   it('tient dans l\'écran, avec une marge pour la corniche et la plinthe', () => {
@@ -158,28 +158,30 @@ describe('mur de galerie (mode veille, proposition)', () => {
     }
   })
 
-  it('aucun cadre n\'en recouvre un autre', () => {
+  it('aucun cadre n\'en recouvre un autre, et un écart les sépare', () => {
     const rect = (em: Emplacement) => ({ g: em.x * ecran, d: (em.x + em.largeur) * ecran, h: em.y, b: em.y + em.hauteur })
+    const ecart = 1.5 // en % de la hauteur de l'écran
     for (let i = 0; i < galerie.length; i++) {
       for (let j = i + 1; j < galerie.length; j++) {
         const a = rect(galerie[i]!)
         const b = rect(galerie[j]!)
-        const chevauche = a.g < b.d && b.g < a.d && a.h < b.b && b.h < a.b
+        const chevauche = a.g - ecart < b.d && b.g - ecart < a.d && a.h - ecart < b.b && b.h - ecart < a.b
         expect(chevauche, `cadres ${i} et ${j}`).toBe(false)
       }
     }
   })
 
-  it('les cadres gardent les proportions d\'une photo : 2:3 en portrait, 3:2 en paysage', () => {
-    for (const em of galerie) {
-      const ratio = (em.largeur * 16) / (em.hauteur * 9) // largeur / hauteur en pixels
-      expect(ratio).toBeCloseTo(em.orientation === 'portrait' ? 2 / 3 : 3 / 2, 1)
+  it('l\'orientation demandée suit la forme du cadre : portrait s\'il est plus haut que large, paysage sinon', () => {
+    for (const [i, em] of galerie.entries()) {
+      const largeurPx = em.largeur * ecran
+      const plusHaut = em.hauteur > largeurPx
+      expect(em.orientation, `cadre ${i}`).toBe(plusHaut ? 'portrait' : 'paysage')
     }
   })
 
-  it('des appliques éclairent quelques grands cadres, jamais plus d\'un sur quatre', () => {
+  it('des appliques éclairent deux cadres du bas', () => {
     const avec = galerie.filter((e) => e.lampe)
-    expect(avec.length).toBeGreaterThanOrEqual(2)
-    expect(avec.length).toBeLessThanOrEqual(galerie.length / 4)
+    expect(avec).toHaveLength(2)
+    avec.forEach((e) => expect(e.y).toBeGreaterThan(40)) // il faut de la place au-dessus pour la lampe
   })
 })

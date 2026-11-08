@@ -6,7 +6,7 @@ const service = new PhotosService()
 export default class PhotosController {
   /**
    * GET /photos/aleatoires?orientations=paysage,portrait,paysage&exclure=a.jpg,b.jpg
-   * Une photo par orientation demandée (30 au plus : un mur de galerie en compte une quinzaine), tirée au hasard dans toute la bibliothèque abflow.
+   * Une photo par orientation demandée (12 au plus), tirée au hasard dans toute la bibliothèque abflow.
    * Sans abflow réglé : { photos: [], source: "absente" } (l'écran montre alors des images de démonstration).
    */
   public async aleatoires({ request, response }: HttpContext) {
@@ -14,7 +14,7 @@ export default class PhotosController {
       .split(',')
       .map((o) => o.trim())
       .filter((o): o is Orientation => (ORIENTATIONS as string[]).includes(o))
-      .slice(0, 30)
+      .slice(0, 12)
     if (!demandees.length)
       return response.status(400).json({ error: 'orientations : paysage, portrait ou carre' })
     const exclure = String(request.input('exclure', ''))

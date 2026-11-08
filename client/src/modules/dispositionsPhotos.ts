@@ -45,22 +45,6 @@ const e = (
 })
 
 /**
- * Emplacement dont la hauteur découle de la largeur, pour un écran 16:9 pris en entier (le mode veille) : une
- * photo 2:3 en portrait, 3:2 en paysage. On ne règle ainsi que la largeur de chaque cadre.
- */
-const RATIO_HAUTEUR: Record<Orientation, number> = { portrait: (3 / 2) * (16 / 9), paysage: (2 / 3) * (16 / 9), carre: 16 / 9 }
-const p = (
-  x: number,
-  y: number,
-  largeur: number,
-  orientation: Orientation,
-  cadre: StyleCadre,
-  inclinaison?: number,
-  lampe?: boolean
-): Emplacement =>
-  e(x, y, largeur, Math.round(largeur * RATIO_HAUTEUR[orientation] * 10) / 10, orientation, cadre, inclinaison, lampe)
-
-/**
  * Photo permanente (module posé sur le tableau de bord, en mode normal) : UNE seule photo, en paysage ou en portrait.
  * Le mur de cadres est celui du mode veille (voir plus bas).
  */
@@ -93,28 +77,22 @@ export const DISPOSITIONS: Record<string, Disposition> = {
   },
 
   /*
-   * Mode veille, mur de galerie : dix-sept cadres de formes et de tailles variées, accrochés serrés comme dans un
-   * salon, pour couvrir tout l'écran. Dix portraits et sept paysages, avec des appliques en laiton au-dessus des grands cadres.
+   * Mode veille, mur de galerie : sept grands cadres qui couvrent l'écran. Chacun regroupe plusieurs cadres de la
+   * première version (dix-sept), choisis par groupes de voisins : un cadre = une photo. Positions en % de l'écran
+   * entier (16:9), avec des écarts réguliers ; la forme de chaque cadre décide de l'orientation de sa photo
+   * (cinq paysages, deux portraits très hauts). Des appliques en laiton éclairent les deux cadres du bas du milieu.
    */
   galerie: {
     emplacements: [
-      p(2, 5, 12, 'portrait', 'arche', -0.6),
-      p(3.5, 43, 9, 'portrait', 'ovale', 0.8),
-      p(2.5, 74, 12, 'paysage', 'bois', -0.5),
-      p(17, 7, 15, 'portrait', 'noir', 0.6),
-      p(17.5, 53, 17, 'paysage', 'or', -0.5, true),
-      p(19, 78, 13, 'paysage', 'noir', 0.5),
-      p(36, 5, 11, 'portrait', 'bois', -0.8),
-      p(50, 6, 13, 'portrait', 'ovale', 0.7),
-      p(36, 45, 25, 'paysage', 'or', 0.4, true),
-      p(36.5, 79, 12, 'paysage', 'bois', -0.4),
-      p(52, 75, 8, 'portrait', 'ovale', 0.6),
-      p(66, 6, 15, 'portrait', 'arche', 0.7),
-      p(66, 52, 12, 'portrait', 'noir', -0.6, true),
-      p(67, 85, 10, 'paysage', 'or', 0.5),
-      p(85, 8, 13, 'portrait', 'or', -0.7),
-      p(84.5, 48, 12, 'portrait', 'bois', 0.6),
-      p(86, 82, 9, 'paysage', 'noir', -0.5),
+      // haut : trois paysages côte à côte
+      e(2, 5, 30.5, 37, 'paysage', 'or', -0.4),
+      e(36, 5, 27, 35, 'paysage', 'noir', 0.4),
+      e(66, 5, 31, 39, 'paysage', 'bois', -0.4),
+      // bas : un paysage large à gauche, un portrait carré au centre, deux portraits hauts à droite
+      e(2.5, 49, 31.5, 45, 'paysage', 'noir', 0.4, true),
+      e(37, 45, 24, 50, 'portrait', 'or', -0.4, true),
+      e(66, 50, 13.5, 45, 'portrait', 'arche', 0.5),
+      e(83, 50, 14, 45, 'portrait', 'bois', -0.5),
     ],
   },
 }
