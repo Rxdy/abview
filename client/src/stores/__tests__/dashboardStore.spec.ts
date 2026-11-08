@@ -163,4 +163,43 @@ describe('dashboardStore', () => {
       vi.useRealTimers()
     })
   })
+
+  describe('relectures de config.json', () => {
+    const choisie = { nom: 'Choisie', placements: [{ id: 'm', module: 'meteo', x: 1, y: 1 }] }
+    const reseau = (fichier: unknown) => {
+      global.fetch = vi.fn(async (url: string | URL | Request) => {
+        const u = String(url)
+        return {
+          ok: true,
+          status: 200,
+          json: async () => (u.includes('/configuration') ? { id: 'choisie', configuration: choisie } : fichier),
+        }
+      }) as unknown as typeof fetch
+    }
+
+    it('relire config.json ne remet pas la disposition standard à la place de celle du serveur', async () => {
+      reseau({ grid: { columns: 12, rows: 'auto' }, modules: [] })
+      const store = useDashboardStore()
+      await store.loadConfig()
+      expect(store.configuration).toEqual(choisie)
+      // la météo relit la configuration à chaque montage (via la langue) : plusieurs fois de suite, rien ne change
+      for (let n = 0; n < 3; n++) {
+        store.configuration = { ...choisie, nom: 'Autre' } // le serveur n'a pas encore répondu
+        await store.loadConfig()
+        expect(store.configuration).toEqual(choisie)
+      }
+    })
+
+    it('ne perd pas la configuration en place si config.json est momentanément illisible', async () => {
+      const erreur = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const store = useDashboardStore()
+      store.configuration = choisie
+      global.fetch = vi.fn(async () => {
+        throw new Error('réseau')
+      }) as unknown as typeof fetch
+      await store.loadConfig()
+      expect(store.configuration).toEqual(choisie)
+      erreur.mockRestore()
+    })
+  })
 })

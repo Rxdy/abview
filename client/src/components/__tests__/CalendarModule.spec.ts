@@ -532,4 +532,28 @@ describe('CalendarModule', () => {
       vi.useRealTimers()
     })
   })
+
+  describe('variantes de taille', () => {
+    const jours = (variante?: 'large' | 'moyen' | 'etroit' | 'mini') => {
+      mockCalendarStore.loading = false
+      mockCalendarStore.error = null
+      mockCalendarStore.allEvents = []
+      const w = mount(CalendarModule, { props: { variante }, global: { stubs: { ErrorDisplay: true } } })
+      return { colonnes: w.findAll('.day-column').length, style: w.find('.calendar-grid').attributes('style') }
+    }
+
+    it('affiche 8 jours en large, en moyen et sans variante (comme l’écran standard)', () => {
+      for (const v of [undefined, 'large', 'moyen'] as const) expect(jours(v).colonnes).toBe(8)
+    })
+
+    it('moins de jours quand la zone est plus étroite', () => {
+      expect(jours('etroit').colonnes).toBe(4)
+      expect(jours('mini').colonnes).toBe(2)
+    })
+
+    it('la grille des jours suit leur nombre : chaque jour garde une largeur lisible', () => {
+      expect(jours('etroit').style).toContain('--jours: 4')
+      expect(jours('large').style).toContain('--jours: 8')
+    })
+  })
 })
