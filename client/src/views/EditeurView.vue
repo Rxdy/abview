@@ -16,7 +16,7 @@
       <div class="envoi">
         <button type="button" :disabled="!!erreurs.length" @click="apercu">Voir le rendu</button>
         <button type="button" :disabled="!peutEnregistrer" @click="enregistrer">Enregistrer</button>
-        <button type="button" class="principal" :disabled="!peutEnregistrer" @click="activer(idEdite)">
+        <button type="button" class="principal" :disabled="!peutEnregistrer" @click="enregistrerEtActiver">
           Enregistrer et activer
         </button>
         <button type="button" class="icone-bouton" aria-label="Réglage du jeton" title="Jeton d’administration" @click="reglageJeton = !reglageJeton">
@@ -442,15 +442,13 @@ async function enregistrer(): Promise<string | null> {
   }
 }
 
-async function activer(id: string | null) {
-  if (id !== null) {
-    const enregistree = await enregistrer()
-    if (!enregistree) return
-    id = enregistree
-  } else if (!exigerJeton()) return
+/** Enregistre la disposition (même nouvelle : son identifiant vient alors du nom), puis la rend active. */
+async function enregistrerEtActiver() {
+  const id = await enregistrer()
+  if (!id) return
   try {
     await configurationsService.activer(id, jeton.value)
-    message.value = id === null ? 'Retour à la disposition standard.' : 'Activée : l’écran la prend dans la minute.'
+    message.value = 'Activée : l’écran la prend dans la minute.'
     await charger()
   } catch (e) {
     message.value = messageErreur(e)

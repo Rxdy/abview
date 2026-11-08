@@ -120,6 +120,28 @@ describe('EditeurView', () => {
     expect(service.activer).toHaveBeenCalledWith('vacances', 'secret')
   })
 
+  it('« Enregistrer et activer » sur une NOUVELLE configuration l’enregistre sous son nom, puis l’active (et ne désactive rien)', async () => {
+    const w = await monter() // disposition de départ, pas encore enregistrée
+    await saisirJeton(w)
+    await w.find('input[aria-label="Nom de la configuration"]').setValue('Test complet')
+    await bouton(w, 'Enregistrer et activer').trigger('click')
+    await flushPromises()
+    expect(service.enregistrer).toHaveBeenCalledWith('test-complet', expect.objectContaining({ nom: 'Test complet' }), 'secret')
+    expect(service.activer).toHaveBeenCalledTimes(1)
+    expect(service.activer).toHaveBeenCalledWith('test-complet', 'secret') // jamais (null, …) : ce serait revenir au standard
+    expect(w.text()).toContain('Activée')
+  })
+
+  it('si l’enregistrement échoue, rien n’est activé', async () => {
+    service.enregistrer.mockRejectedValue(new Error('HTTP error! status: 401'))
+    const w = await monter()
+    await saisirJeton(w, 'mauvais')
+    await bouton(w, 'Enregistrer et activer').trigger('click')
+    await flushPromises()
+    expect(service.activer).not.toHaveBeenCalled()
+    expect(w.text()).toContain('Jeton refusé')
+  })
+
   it('dit simplement quand le jeton est refusé', async () => {
     service.enregistrer.mockRejectedValue(new Error('HTTP error! status: 401'))
     const w = await monter()
