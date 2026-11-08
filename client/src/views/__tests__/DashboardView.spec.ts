@@ -114,4 +114,26 @@ describe('DashboardView : disposition pilotée par la configuration', () => {
     expect(wrapper.find('[data-module=calendrier]').classes()).not.toContain('carte')
     expect(wrapper.find('[data-module=taches]').classes()).not.toContain('carte')
   })
+
+  it('transmet la variante aux modules qui en ont plusieurs, pas aux autres', async () => {
+    const wrapper = await montee({
+      nom: 'Variantes',
+      placements: [
+        { id: 'calendrier', module: 'calendrier', x: 1, y: 1 },
+        { id: 'meteo', module: 'meteo', variante: 'compact', x: 1, y: 6 },
+      ],
+    })
+    expect(wrapper.findComponent({ name: 'WeatherModule' }).props('variante')).toBe('compact')
+    expect(wrapper.findComponent({ name: 'CalendarModule' }).attributes('variante')).toBeUndefined()
+  })
+
+  it('une taille de météo différente change les cases occupées', async () => {
+    const wrapper = await montee({
+      nom: 'Large',
+      placements: [{ id: 'meteo', module: 'meteo', variante: 'large', x: 1, y: 1 }],
+    })
+    const style = wrapper.find('[data-module=meteo]').attributes('style')
+    expect(style).toContain('span 6')
+    expect(style).toContain('span 3')
+  })
 })

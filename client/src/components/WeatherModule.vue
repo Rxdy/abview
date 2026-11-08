@@ -1,5 +1,5 @@
 <template>
-  <div class="weather">
+  <div class="weather" :class="`weather--${variante ?? 'standard'}`">
     <!-- Loading State -->
     <div v-if="weatherStore.loading" class="skeleton">
       <div class="skeleton-current">
@@ -53,7 +53,7 @@
           <div class="condition">{{ translateCondition(weatherStore.weather.current?.conditions) }}</div>
           <div class="time">{{ languageStore.t('updated') }} {{ weatherStore.weather.current?.datetime || 'N/A' }}</div>
         </div>
-        <div class="details">
+        <div v-if="variante !== 'compact'" class="details">
           <div>{{ languageStore.t('feelsLike') }} <b class="num">{{ Math.round(weatherStore.weather.current?.feelsLike || 0) }}°</b></div>
           <div>{{ languageStore.t('humidity') }} <b class="num">{{ Math.round(weatherStore.weather.current?.humidity || 0) }} %</b></div>
           <div>{{ languageStore.t('wind') }} <b class="num">{{ Math.round(weatherStore.weather.current?.windSpeed || 0) }} km/h {{ getWindDirection(weatherStore.weather.current?.windDirection || 0) }}</b></div>
@@ -71,7 +71,7 @@
       </div>
 
       <!-- Prévisions 4 jours, en ligne -->
-      <div class="forecast">
+      <div v-if="variante !== 'compact'" class="forecast" :style="{ '--jours': forecastDays.length || 4 }">
         <div v-for="(day, index) in forecastDays" :key="index" class="forecast-day">
           <div class="day-name">{{ day.day }}</div>
           <component :is="getWeatherIcon(day.description)" class="forecast-icon" />
@@ -109,7 +109,12 @@ const weatherStore = useWeatherStore();
 const languageStore = useLanguageStore();
 const themeStore = useThemeStore();
 
-defineProps<{ progress?: number }>();
+/**
+ * progress : avancement de la rotation (barre du bas).
+ * variante : taille donnée par la configuration. « compact » : température et conditions seulement ;
+ * « standard » : avec les détails et 4 jours de prévisions ; « large » : 6 jours de prévisions.
+ */
+const props = defineProps<{ progress?: number; variante?: 'compact' | 'standard' | 'large' }>();
 
 const emit = defineEmits(['sun-times']);
 
@@ -144,7 +149,7 @@ watch(() => weatherStore.weather?.current, (current) => {
 const forecastDays = computed(() => {
   if (!weatherStore.weather?.forecast) return [];
 
-  return weatherStore.weather.forecast.slice(1, 5).map((day: any, index: number) => ({
+  return weatherStore.weather.forecast.slice(1, 1 + (props.variante === 'large' ? 6 : 4)).map((day: any, index: number) => ({
     day: index === 0 ? languageStore.t('tomorrow') : new Date(day.date).toLocaleDateString(languageStore.language === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'short' }),
     tempMin: day.tempMin,
     tempMax: day.tempMax,
@@ -368,7 +373,7 @@ const getWeatherIconClass = (conditions: string) => {
 
 .forecast {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--jours, 4), minmax(0, 1fr));
   gap: calc(6 * var(--px));
   border-top: 1px solid var(--c-line);
   padding-top: calc(10 * var(--px));

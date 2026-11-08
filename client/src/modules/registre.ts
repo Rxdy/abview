@@ -38,7 +38,11 @@ export const REGISTRE: Registre = {
     id: 'meteo',
     titre: 'Météo',
     icone: 'M12 3v1.5M5.6 5.6l1 1M18.4 5.6l-1 1M3 12h1.5M19.5 12H21M7 18a3.5 3.5 0 0 1 .3-7 5 5 0 0 1 9.6 1.2A3 3 0 0 1 17 18z',
-    variantes: [{ id: 'standard', largeur: 4, hauteur: 3 }],
+    variantes: [
+      { id: 'standard', largeur: 4, hauteur: 3 },
+      { id: 'compact', largeur: 3, hauteur: 2 },
+      { id: 'large', largeur: 6, hauteur: 3 },
+    ],
     carte: true,
   },
   taches: {

@@ -64,7 +64,12 @@ const emplacements = computed(() =>
         composant,
         carte: REGISTRE[p.module]?.carte,
         animation: REGISTRE[p.module]?.animation,
-        props: p.module === 'meteo' ? { progress: progress.value, ...p.reglages } : p.reglages,
+        // La variante n'est transmise qu'aux modules qui en ont plusieurs : eux seuls adaptent leur affichage.
+        props: {
+          ...(p.module === 'meteo' ? { progress: progress.value } : {}),
+          ...((REGISTRE[p.module]?.variantes.length ?? 0) > 1 ? { variante: p.variante ?? REGISTRE[p.module]?.variantes[0]?.id } : {}),
+          ...p.reglages,
+        },
         style: { gridColumn: `${r.x} / span ${r.largeur}`, gridRow: `${r.y} / span ${r.hauteur}` },
       },
     ];
