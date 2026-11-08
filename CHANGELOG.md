@@ -7,6 +7,17 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [v3.7.0] — 2026-11-08
+
+### Modifié
+- **Mode veille** : le mur de cinq cadres est remplacé par une galerie de sept grands cadres (quatre paysages, trois portraits ; styles doré, noir, noyer et arche), qui couvre tout l'écran, avec deux appliques de tableau en laiton
+- **Photos** : tous les cadres changent de photo en même temps, toutes les 30 secondes (avant : chacun à son rythme), avec un seul tirage pour tout le mur : jamais deux fois la même photo à l'écran quand la bibliothèque est assez fournie
+
+### Corrigé
+- **Photos** : les adresses de photos en `.jpg` répondaient 404 derrière nginx (prises pour des fichiers statiques), les cadres restaient vides en production
+
+---
+
 ## [v3.6.0] — 2026-11-08
 
 ### Ajouté

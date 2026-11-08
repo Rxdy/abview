@@ -6,15 +6,13 @@
 
 <script setup lang="ts">
 import PhotosModule from '../components/PhotosModule.vue'
-import { DISPOSITIONS_VEILLE, VEILLE } from '../modules/dispositionsPhotos'
+import { VEILLE } from '../modules/dispositionsPhotos'
 
 /**
- * Mode veille : toute la page devient un mur de cinq cadres photo (quatre portraits et un paysage). Le capteur
+ * Mode veille : toute la page devient un mur de sept grands cadres photo (quatre paysages, trois portraits). Le capteur
  * de présence le déclenchera ; en attendant, une commande (make veille-on) ou la page /apercu-veille le montrent.
  */
-// L'aperçu peut montrer une autre disposition du mode veille : /apercu-veille?disposition=galerie
-const demandee = new URLSearchParams(window.location.search).get('disposition') ?? ''
-const disposition = (DISPOSITIONS_VEILLE as readonly string[]).includes(demandee) ? demandee : VEILLE[0]
+const disposition = VEILLE[0]
 </script>
 
 <style scoped>

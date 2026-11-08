@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { DISPOSITIONS, DISPOSITIONS_VEILLE, DISPOSITION_PAR_DEFAUT, PERMANENT, VEILLE, type Emplacement } from '../dispositionsPhotos'
+import { DISPOSITIONS, DISPOSITION_PAR_DEFAUT, PERMANENT, VEILLE, type Emplacement } from '../dispositionsPhotos'
 import { REGISTRE } from '../registre'
 
 // Écran de référence (1280 × 720) : une case de la grille et l'écart entre cases
@@ -33,20 +33,20 @@ describe('modes du module Photos', () => {
     expect(DISPOSITIONS.portrait!.emplacements[0]!.orientation).toBe('portrait')
   })
 
-  it('le mode veille a un seul mur : cinq cadres, hors des tailles du module permanent', () => {
-    expect([...VEILLE]).toEqual(['cinq'])
-    expect(DISPOSITIONS.cinq!.emplacements).toHaveLength(5)
-    expect(REGISTRE.photos!.variantes.map((v) => v.id)).not.toContain('cinq')
+  it('le mode veille a un seul mur : sept grands cadres, hors des tailles du module permanent', () => {
+    expect([...VEILLE]).toEqual(['galerie'])
+    expect(DISPOSITIONS.galerie!.emplacements).toHaveLength(7)
+    expect(REGISTRE.photos!.variantes.map((v) => v.id)).not.toContain('galerie')
   })
 
-  it('la plupart des photos étant en portrait : quatre emplacements en portrait et un seul en paysage', () => {
-    const orientations = DISPOSITIONS.cinq!.emplacements.map((e) => e.orientation)
-    expect(orientations.filter((o) => o === 'portrait')).toHaveLength(4)
-    expect(orientations.filter((o) => o === 'paysage')).toHaveLength(1)
+  it('quatre emplacements en paysage et trois en portrait', () => {
+    const orientations = DISPOSITIONS.galerie!.emplacements.map((e) => e.orientation)
+    expect(orientations.filter((o) => o === 'paysage')).toHaveLength(4)
+    expect(orientations.filter((o) => o === 'portrait')).toHaveLength(3)
   })
 
   it('chaque disposition est connue : permanente ou veille, rien d’autre', () => {
-    expect(Object.keys(DISPOSITIONS).sort()).toEqual([...PERMANENT, ...DISPOSITIONS_VEILLE].sort())
+    expect(Object.keys(DISPOSITIONS).sort()).toEqual([...PERMANENT, ...VEILLE].sort())
   })
 })
 
@@ -101,20 +101,6 @@ describe.each(veille)('mode veille « %s »', (nom, d) => {
     expect(couvert).toBeGreaterThanOrEqual(0.55)
   })
 
-  it('les emplacements n’ont pas tous la même taille', () => {
-    const aires = d.emplacements.map((em) => aire(nom, em))
-    for (let i = 0; i < aires.length; i++) {
-      for (let j = i + 1; j < aires.length; j++) expect(Math.abs(aires[i]! - aires[j]!) / aires[i]!, `${i}/${j}`).toBeGreaterThan(0.1)
-    }
-  })
-
-  it('les cadres ne sont pas alignés : aucun bord haut ou bas partagé', () => {
-    const hauts = d.emplacements.map((e) => e.y)
-    const bas = d.emplacements.map((e) => e.y + e.hauteur)
-    expect(new Set(hauts).size).toBe(hauts.length)
-    expect(new Set(bas).size).toBe(bas.length)
-  })
-
   it('les cadres penchent à peine, et jamais tous droits', () => {
     const pentes = d.emplacements.map((e) => e.inclinaison ?? 0)
     expect(pentes.every((p) => p !== 0)).toBe(true)
@@ -127,20 +113,15 @@ describe.each(veille)('mode veille « %s »', (nom, d) => {
 })
 
 describe('formes de fantaisie', () => {
-  it('le mur de cinq cadres mélange des formes : arche, ovale, et des cadres classiques', () => {
-    const styles = new Set(DISPOSITIONS.cinq!.emplacements.map((e) => e.cadre))
-    for (const forme of ['or', 'noir', 'bois', 'arche', 'ovale']) expect(styles.has(forme as never), forme).toBe(true)
+  it('le mur mélange des styles : une arche, et des cadres classiques dorés, noirs et en noyer', () => {
+    const styles = new Set(DISPOSITIONS.galerie!.emplacements.map((e) => e.cadre))
+    for (const forme of ['or', 'noir', 'bois', 'arche']) expect(styles.has(forme as never), forme).toBe(true)
   })
 })
 
-describe('mur de galerie (mode veille, proposition)', () => {
+describe('mur de galerie (mode veille)', () => {
   const galerie = DISPOSITIONS.galerie!.emplacements
   const ecran = 16 / 9 // les % de largeur et de hauteur n'ont pas la même longueur : on compare en pixels d'un écran 1920 × 1080
-
-  it('est proposé à l\'aperçu du mode veille sans remplacer le mur de cinq cadres', () => {
-    expect([...DISPOSITIONS_VEILLE]).toEqual(['cinq', 'galerie'])
-    expect([...VEILLE]).toEqual(['cinq'])
-  })
 
   it('a sept emplacements, de styles variés, qui couvrent l\'essentiel de l\'écran', () => {
     expect(galerie).toHaveLength(7)

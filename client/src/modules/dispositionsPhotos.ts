@@ -50,10 +50,8 @@ const e = (
  */
 export const PERMANENT = ['un', 'portrait'] as const
 
-/** Dispositions du mode veille : la page entière devient un mur de cadres. Il n'y en a qu'une : cinq photos. */
-export const VEILLE = ['cinq'] as const
-/** Toutes les dispositions du mode veille, pour l'aperçu (/apercu-veille?disposition=galerie). */
-export const DISPOSITIONS_VEILLE = ['cinq', 'galerie'] as const
+/** Dispositions du mode veille : la page entière devient un mur de cadres. Il n'y en a qu'une : sept grands cadres. */
+export const VEILLE = ['galerie'] as const
 
 export const DISPOSITIONS: Record<string, Disposition> = {
   // une photo en paysage (4 × 3 cases) — cadre doré mouluré
@@ -62,25 +60,10 @@ export const DISPOSITIONS: Record<string, Disposition> = {
   portrait: { emplacements: [e(8, 5, 84, 90, 'portrait', 'arche')] },
 
   /*
-   * Mode veille, positions en % de l'écran entier (16:9) : cinq cadres de formes et de tailles différentes,
-   * à des hauteurs différentes. La plupart des photos étant en portrait, quatre emplacements sont en portrait
-   * (dont une arche et un ovale) et un seul en paysage.
-   */
-  cinq: {
-    emplacements: [
-      e(2, 10, 19, 60, 'portrait', 'arche', -0.8),
-      e(27, 6, 22, 78, 'portrait', 'noir', 0.7),
-      e(50, 7, 30, 44, 'paysage', 'or', -0.6),
-      e(54, 54, 13, 40, 'portrait', 'ovale', 1.1),
-      e(82, 8, 16, 60, 'portrait', 'bois', -1),
-    ],
-  },
-
-  /*
-   * Mode veille, mur de galerie : sept grands cadres qui couvrent l'écran. Chacun regroupe plusieurs cadres de la
+   * Mode veille, mur de galerie : sept grands cadres qui couvrent l'écran. Chacun regroupe plusieurs cadres d'une
    * première version (dix-sept), choisis par groupes de voisins : un cadre = une photo. Positions en % de l'écran
    * entier (16:9), avec des écarts réguliers ; la forme de chaque cadre décide de l'orientation de sa photo
-   * (cinq paysages, deux portraits très hauts). Des appliques en laiton éclairent les deux cadres du bas du milieu.
+   * (quatre paysages, trois portraits). Des appliques en laiton éclairent les deux cadres du bas du milieu.
    */
   galerie: {
     emplacements: [
