@@ -43,7 +43,12 @@ export function rectangle(p: Placement, registre: Registre = REGISTRE): Rectangl
 }
 
 /** Les problèmes d'une configuration, en français ; liste vide si elle est valide. */
-export function valider(
+export function valider(config: Configuration, registre: Registre = REGISTRE, grille: Grille = GRILLE): string[] {
+  return [...validerPlacement(config, registre, grille), ...validerExemplaires(config, registre)]
+}
+
+/** Placement seul : modules et variantes connus, dans la grille, sans chevauchement. */
+export function validerPlacement(
   config: Configuration,
   registre: Registre = REGISTRE,
   grille: Grille = GRILLE
@@ -73,6 +78,31 @@ export function valider(
       if (seChevauchent(r, autre.r)) erreurs.push(`« ${p.id} » chevauche « ${autre.id} »`)
     }
     posés.push({ id: p.id, r })
+  }
+  return erreurs
+}
+
+/** Plusieurs exemplaires d'un même module : limite du module, et réglages qui les distinguent. */
+export function validerExemplaires(config: Configuration, registre: Registre = REGISTRE): string[] {
+  const erreurs: string[] = []
+  const parModule = new Map<string, Placement[]>()
+  for (const p of config.placements) {
+    if (registre[p.module]) parModule.set(p.module, [...(parModule.get(p.module) ?? []), p])
+  }
+  for (const [module, exemplaires] of parModule) {
+    const def = registre[module]!
+    if (def.max !== undefined && exemplaires.length > def.max) {
+      erreurs.push(`« ${def.titre} » : ${def.max} au plus (${exemplaires.length} placés)`)
+    }
+    if (def.distincts) {
+      const vues = new Map<string, string>()
+      for (const p of exemplaires) {
+        const signature = JSON.stringify(p.reglages ?? {})
+        const premier = vues.get(signature)
+        if (premier) erreurs.push(`« ${p.id} » et « ${premier} » afficheraient la même chose : changez leurs réglages`)
+        else vues.set(signature, p.id)
+      }
+    }
   }
   return erreurs
 }

@@ -185,4 +185,31 @@ describe('TasksModule', () => {
 
     wrapper.unmount()
   })
+
+  describe('listes choisies par la configuration', () => {
+    const titres = (w: ReturnType<typeof mount>) => w.findAllComponents({ name: 'TaskList' }).map((l) => l.props('listTitle')).sort()
+
+    beforeEach(() => {
+      mockTasksStore.tasks = [task(1, 'Julie'), task(2, 'Action'), task(3, 'Courses')]
+    })
+
+    it('sans réglage, affiche toutes les listes', () => {
+      expect(titres(mount(TasksModule, { global: { stubs: { TaskList: true } } }))).toEqual(['Action', 'Courses', 'Julie'])
+    })
+
+    it('n’affiche que les listes demandées', () => {
+      const w = mount(TasksModule, { props: { listes: ['Julie', 'Courses'] }, global: { stubs: { TaskList: true } } })
+      expect(titres(w)).toEqual(['Courses', 'Julie'])
+    })
+
+    it('une liste vide de réglage équivaut à « toutes »', () => {
+      expect(titres(mount(TasksModule, { props: { listes: [] }, global: { stubs: { TaskList: true } } }))).toHaveLength(3)
+    })
+
+    it('dit « aucune donnée » quand aucune des listes demandées n’existe', () => {
+      const w = mount(TasksModule, { props: { listes: ['Inconnue'] }, global: { stubs: { TaskList: true, ErrorDisplay: true } } })
+      expect(titres(w)).toEqual([])
+      expect(w.findComponent({ name: 'ErrorDisplay' }).props('type')).toBe('no-data')
+    })
+  })
 })

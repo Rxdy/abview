@@ -138,20 +138,42 @@ describe('EditeurView', () => {
     expect(w.findAll('.module')).toHaveLength(3)
   })
 
-  it('refuse d’ajouter un module quand la grille est pleine', async () => {
+  it('refuse un second agenda (maximum atteint)', async () => {
     const w = await monter()
     await palette(w, 'Agenda').trigger('click')
     expect(w.findAll('.module')).toHaveLength(3)
-    expect(w.text()).toContain('Pas assez de place')
+    expect(w.text()).toContain('« Agenda » : 1 au plus')
   })
 
-  it('déplace avec les flèches, refuse un déplacement impossible', async () => {
+  it('règle les listes d’un module Tâches, et signale deux exemplaires identiques', async () => {
     const w = await monter()
-    await w.findAll('.module')[1]!.trigger('click') // la météo, en bas à gauche
-    await w.find('[aria-label="Aller à gauche"]').trigger('click') // déjà au bord
-    expect(w.text()).toContain('Déplacement impossible')
-    await w.find('[aria-label="Aller à droite"]').trigger('click') // chevauche les tâches
-    expect(w.text()).toContain('Déplacement impossible')
+    await w.findAll('.module')[2]!.trigger('click') // les tâches
+    await w.find('input[aria-label="Listes affichées"]').setValue('Julie, Action')
+    await w.find('input[aria-label="Listes affichées"]').trigger('change')
+    expect(w.find('input[aria-label="Listes affichées"]').exists()).toBe(true)
+    expect((w.find('input[aria-label="Listes affichées"]').element as HTMLInputElement).value).toBe('Julie, Action')
+    expect(w.find('.erreurs').exists()).toBe(false)
+  })
+
+  it('déplacer un module sur un autre pousse celui-ci ailleurs, et le dit', async () => {
+    const w = await monter()
+    await w.findAll('.module')[2]!.trigger('click') // les tâches, à côté de la météo
+    await w.find('[aria-label="Aller à gauche"]').trigger('click') // chevauche la météo
+    expect(w.text()).toContain('« Météo » a été déplacé et réduit (compact)')
+    expect(w.find('.erreurs').exists()).toBe(false)
+    expect(w.findAll('.module')).toHaveLength(3) // personne n'a disparu
+  })
+
+  it('ne bloque pas : quand il n’y a nulle part où pousser, rien ne bouge et on est prévenu', async () => {
+    const w = await monter()
+    const avant = w.findAll('.module').map((m) => m.attributes('style'))
+    await w.findAll('.module')[1]!.trigger('click') // la météo
+    await w.find('[aria-label="Monter"]').trigger('click') // elle monterait sur l'agenda, qui n'a pas de place ailleurs
+    expect(w.text()).toContain('Pas de place pour déplacer les modules voisins')
+    expect(w.findAll('.module').map((m) => m.attributes('style'))).toEqual(avant)
+    await w.find('[aria-label="Aller à gauche"]').trigger('click') // bord de la grille : sans effet, mais l'éditeur reste utilisable
+    await w.findAll('.module')[2]!.trigger('click')
+    expect(w.find('[aria-label="Taille du module"]').exists()).toBe(true)
   })
 
   it('refuse de supprimer l’active, supprime une autre', async () => {

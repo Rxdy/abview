@@ -96,4 +96,26 @@ describe('valider', () => {
     expect(copie).toEqual(CONFIGURATION_PAR_DEFAUT)
     expect(valider(copie)).toEqual([])
   })
+
+  describe('plusieurs exemplaires du même module', () => {
+    const t = (id: string, x: number, listes?: string[]) => ({
+      id, module: 'taches', variante: 'etroit', x, y: 1, ...(listes ? { reglages: { listes } } : {}),
+    })
+
+    it('refuse plus d’exemplaires que le maximum du module', () => {
+      const deux = cfg({ id: 'm1', module: 'meteo', x: 1, y: 1 }, { id: 'm2', module: 'meteo', x: 5, y: 1 })
+      expect(valider(deux)).toEqual(['« Météo » : 1 au plus (2 placés)'])
+      const quatre = cfg(t('a', 1, ['A']), t('b', 4, ['B']), t('c', 7, ['C']), t('d', 10, ['D']))
+      expect(valider(quatre)).toEqual(['« Tâches » : 3 au plus (4 placés)'])
+    })
+
+    it('accepte plusieurs exemplaires de tâches quand chacun a ses listes', () => {
+      expect(valider(cfg(t('a', 1, ['Julie']), t('b', 4, ['Action'])))).toEqual([])
+    })
+
+    it('refuse deux exemplaires qui afficheraient la même chose', () => {
+      expect(valider(cfg(t('a', 1), t('b', 4)))).toEqual(['« b » et « a » afficheraient la même chose : changez leurs réglages'])
+      expect(valider(cfg(t('a', 1, ['Julie']), t('b', 4, ['Julie'])))).toHaveLength(1)
+    })
+  })
 })
