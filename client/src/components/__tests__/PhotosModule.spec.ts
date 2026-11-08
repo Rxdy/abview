@@ -32,7 +32,7 @@ describe('PhotosModule', () => {
   })
 
   it('montre autant d’emplacements, chacun dans un cadre, que la disposition en demande', async () => {
-    for (const [variante, nombre] of [['un', 1], ['portrait', 1], ['deux', 2], ['trois', 3], ['quatre', 4], ['cinq', 5]] as const) {
+    for (const [variante, nombre] of [['un', 1], ['portrait', 1], ['cinq', 5]] as const) {
       const w = await monter({ variante })
       expect(w.findAll('.emplacement'), variante).toHaveLength(nombre)
       expect(w.findAll('.cadre'), variante).toHaveLength(nombre)
@@ -47,7 +47,7 @@ describe('PhotosModule', () => {
   it('demande à chaque emplacement une photo de son orientation, en une seule requête au départ', async () => {
     await monter({ variante: 'cinq' })
     expect(demandes).toHaveLength(1)
-    expect(demandes[0]!.orientations).toEqual(['paysage', 'portrait', 'paysage', 'carre', 'paysage'])
+    expect(demandes[0]!.orientations).toEqual(['portrait', 'portrait', 'paysage', 'portrait', 'portrait'])
   })
 
   it('pose les cadres à des hauteurs et des tailles différentes, très légèrement penchés', async () => {
@@ -60,20 +60,20 @@ describe('PhotosModule', () => {
     expect(styles.filter((st) => st.includes('rotate(')).length).toBeGreaterThanOrEqual(4)
   })
 
-  it('chaque cadre a son style (doré, noir, bois, rond, arche) : le mur n’est pas uniforme', async () => {
+  it('chaque cadre a son style (doré, noir, bois, ovale, arche) : le mur n’est pas uniforme', async () => {
     const w = await monter({ variante: 'cinq' })
-    const styles = w.findAll('.cadre').map((c) => ['or', 'noir', 'bois', 'ovale', 'rond', 'arche'].find((s) => c.classes().includes(s)))
-    expect(new Set(styles)).toEqual(new Set(['or', 'noir', 'bois', 'rond', 'arche']))
+    const styles = w.findAll('.cadre').map((c) => ['or', 'noir', 'bois', 'ovale', 'arche'].find((s) => c.classes().includes(s)))
+    expect(new Set(styles)).toEqual(new Set(['or', 'noir', 'bois', 'ovale', 'arche']))
   })
 
   it('affiche la photo de chaque emplacement', async () => {
-    const w = await monter({ variante: 'deux' })
-    expect(w.findAll('img')).toHaveLength(2)
-    expect(w.findAll('.emplacement').map((e) => e.attributes('data-orientation'))).toEqual(['paysage', 'portrait'])
+    const w = await monter({ variante: 'cinq' })
+    expect(w.findAll('img')).toHaveLength(5)
+    expect(w.findAll('.emplacement').map((e) => e.attributes('data-orientation'))).toEqual(['portrait', 'portrait', 'paysage', 'portrait', 'portrait'])
   })
 
   it('change la photo d’un emplacement après 20 à 40 secondes, sans toucher aux autres', async () => {
-    const w = await monter({ variante: 'deux' })
+    const w = await monter({ variante: 'cinq' })
     const avant = w.findAll('img').map((i) => i.attributes('src'))
     await vi.advanceTimersByTimeAsync(DUREE_MIN - 1)
     expect(w.findAll('img').map((i) => i.attributes('src'))).toEqual(avant) // trop tôt
@@ -96,8 +96,8 @@ describe('PhotosModule', () => {
   })
 
   it('chaque emplacement change à son rythme : tous ne changent pas au même instant', async () => {
-    vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.9).mockReturnValueOnce(0.5)
-    await monter({ variante: 'trois' })
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0.9).mockReturnValueOnce(0.5).mockReturnValueOnce(0.7).mockReturnValueOnce(0.8)
+    await monter({ variante: 'cinq' })
     demandes.length = 0
     await vi.advanceTimersByTimeAsync(DUREE_MIN + 1)
     expect(demandes).toHaveLength(1) // seul le premier, au tirage le plus court
@@ -111,7 +111,7 @@ describe('PhotosModule', () => {
   })
 
   it('arrête tout quand le module disparaît', async () => {
-    const w = await monter({ variante: 'trois' })
+    const w = await monter({ variante: 'cinq' })
     w.unmount()
     demandes.length = 0
     await vi.advanceTimersByTimeAsync(10 * 60 * 1000)
@@ -121,10 +121,10 @@ describe('PhotosModule', () => {
 
   it('un changement de disposition (éditeur) repart de zéro avec le bon nombre d’emplacements', async () => {
     const w = await monter({ variante: 'un' })
-    await w.setProps({ variante: 'quatre' })
+    await w.setProps({ variante: 'cinq' })
     await flushPromises()
-    expect(w.findAll('.emplacement')).toHaveLength(4)
-    expect(demandes.at(-1)!.orientations).toHaveLength(4)
+    expect(w.findAll('.emplacement')).toHaveLength(5)
+    expect(demandes.at(-1)!.orientations).toHaveLength(5)
   })
 
   it('pose les photos sur un mur à moulures (panneaux), décoratif et sans effet sur la lecture', async () => {

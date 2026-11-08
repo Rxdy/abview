@@ -278,18 +278,6 @@ onUnmounted(() => {
     inset 0 0 calc(10 * var(--px)) rgba(0, 0, 0, 0.35),
     0 calc(10 * var(--px)) calc(22 * var(--px)) var(--ombre-portee);
 }
-/* Rond : un cercle doré, pour une photo de n'importe quelle orientation (recadrée au centre) */
-.cadre.rond {
-  --ep: calc(14 * var(--px));
-  border: none;
-  border-radius: 50%;
-  background: linear-gradient(140deg, #f6e3a1, #b8892b 25%, #fbeeb8 45%, #9a6f1c 65%, #e9cb6c 85%);
-  box-shadow:
-    inset 0 0 0 calc(3 * var(--px)) #7d5714,
-    inset 0 0 calc(10 * var(--px)) rgba(0, 0, 0, 0.35),
-    0 calc(10 * var(--px)) calc(22 * var(--px)) var(--ombre-portee);
-}
-
 /* Arche : cintrée en haut, dorée, pour un portrait */
 .cadre.arche {
   --ep: calc(14 * var(--px));
@@ -302,8 +290,7 @@ onUnmounted(() => {
     0 calc(10 * var(--px)) calc(22 * var(--px)) var(--ombre-portee);
 }
 
-.cadre.ovale img,
-.cadre.rond img {
+.cadre.ovale img {
   border-radius: 50%;
 }
 .cadre.arche img {

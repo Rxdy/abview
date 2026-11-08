@@ -53,10 +53,10 @@ describe('photosService', () => {
     expect(new Set(r.map((p) => p.id)).size).toBe(2)
   })
 
-  it('un emplacement carré (cadre rond) accepte une photo d’une autre orientation, mais un paysage n’accepte jamais un portrait', async () => {
+  it('un emplacement carré accepte une photo d’une autre orientation, mais un paysage n’accepte jamais un portrait', async () => {
     vi.spyOn(apiService, 'get').mockResolvedValue({ photos: [photo('p', 'portrait'), photo('l', 'paysage')] })
     const [rond, paysage] = await photosService.aleatoires(['carre', 'paysage'])
-    expect(rond!.orientation).toBe('portrait') // recadrée au centre dans le rond
+    expect(rond!.orientation).toBe('portrait') // recadrée au centre
     expect(paysage!.id).toBe('l')
 
     vi.spyOn(apiService, 'get').mockResolvedValue({ photos: [photo('p', 'portrait')] })
