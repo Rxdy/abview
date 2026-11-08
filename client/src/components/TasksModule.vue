@@ -22,14 +22,31 @@
     <div class="progress-bar" v-if="showProgress" :class="{ 'progress-left': progressSide === 'left', 'progress-right': progressSide === 'right' }">
       <div class="progress-fill" :style="{ height: progressPercent + '%' }"></div>
     </div>
-    <div ref="tasksContainer" class="tasks-container" :style="{ '--carte-l': `calc(${largeurCarte} * var(--px))` }">
-      <TaskList
-        v-for="list in groupedLists"
-        :key="list.title"
-        :listTitle="list.title"
-        :listColor="list.color"
-        :tasks="list.tasks"
-      />
+    <div
+      ref="tasksContainer"
+      class="tasks-container"
+      :class="{ 'tasks-fondu': enFondu }"
+      :style="{ '--carte-l': enFondu ? '100%' : `calc(${largeurCarte} * var(--px))` }"
+    >
+      <!-- Une liste à la fois : elle remplace la précédente en fondu, et défile verticalement si elle est longue -->
+      <Transition v-if="enFondu" name="fondu-liste" mode="out-in">
+        <TaskList
+          v-if="listeCourante"
+          :key="listeCourante.title"
+          :listTitle="listeCourante.title"
+          :listColor="listeCourante.color"
+          :tasks="listeCourante.tasks"
+        />
+      </Transition>
+      <template v-else>
+        <TaskList
+          v-for="list in groupedLists"
+          :key="list.title"
+          :listTitle="list.title"
+          :listColor="list.color"
+          :tasks="list.tasks"
+        />
+      </template>
     </div>
   </div>
 </template>
@@ -46,7 +63,14 @@ import TaskList from './TaskList.vue';
  * chacun avec ses listes. variante : taille donnée par la configuration (les listes défilent déjà quand
  * la place manque).
  */
-const props = defineProps<{ listes?: string[]; variante?: string }>();
+const props = defineProps<{
+  listes?: string[];
+  variante?: string;
+  /** « defilement » : toutes les listes côte à côte (qui défilent) ; « fondu » : une liste à la fois. */
+  affichage?: 'defilement' | 'fondu';
+  /** Secondes pendant lesquelles chaque liste reste affichée, en mode fondu (60 par défaut). */
+  duree?: number;
+}>();
 
 const tasksStore = useTasksStore();
 const tasksContainer = ref<HTMLElement | null>(null);
@@ -57,6 +81,33 @@ const showProgress = ref(false);
 const progressPercent = ref(0);
 const progressSide = ref<'left' | 'right'>('left');
 let currentSide: 'left' | 'right' = 'left';
+
+// Mode « fondu » : une liste à la fois, changée toutes les `duree` secondes
+const enFondu = computed(() => props.affichage === 'fondu');
+const indexListe = ref(0);
+// Dans l'ordre de l'importance : la liste la plus chargée d'abord (l'ordre « centré » du mode défilement n'a pas de sens ici)
+const listesEnFondu = computed(() => [...groupedLists.value].sort((a, b) => b.tasks.length - a.tasks.length));
+const listeCourante = computed(() => {
+  const listes = listesEnFondu.value;
+  return listes.length ? listes[indexListe.value % listes.length] : undefined;
+});
+let minuteurFondu: ReturnType<typeof setInterval> | null = null;
+const arreterFondu = () => {
+  if (minuteurFondu) clearInterval(minuteurFondu);
+  minuteurFondu = null;
+};
+watch(
+  () => [enFondu.value, props.duree],
+  () => {
+    arreterFondu();
+    if (!enFondu.value) return;
+    const ms = Math.max(1, props.duree ?? 60) * 1000;
+    minuteurFondu = setInterval(() => {
+      indexListe.value = (indexListe.value + 1) % Math.max(1, listesEnFondu.value.length);
+    }, ms);
+  },
+  { immediate: true }
+);
 
 // Largeur des cartes d'après la largeur de la zone du module (voir utils/cartesTaches.ts)
 const largeurCarte = ref(largeurCartes(0));
@@ -75,7 +126,10 @@ onMounted(() => {
   }
 });
 
-onUnmounted(() => observateur?.disconnect());
+onUnmounted(() => {
+  observateur?.disconnect();
+  arreterFondu();
+});
 
 const groupedLists = computed(() => {
   const groups: { [key: string]: { title: string; color: string; tasks: any[] } } = {};
@@ -289,6 +343,19 @@ onUnmounted(() => {
   overflow-y: hidden;
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.tasks-fondu {
+  overflow: hidden;
+}
+
+.fondu-liste-enter-active,
+.fondu-liste-leave-active {
+  transition: opacity 0.8s ease;
+}
+.fondu-liste-enter-from,
+.fondu-liste-leave-to {
+  opacity: 0;
 }
 
 .tasks-container::-webkit-scrollbar {

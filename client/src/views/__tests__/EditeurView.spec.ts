@@ -167,6 +167,29 @@ describe('EditeurView', () => {
     expect(palette(w, 'Tâches').attributes('title')).toContain('plus de place')
   })
 
+  it('règle l’affichage en fondu et la durée d’un module Tâches', async () => {
+    const w = await monter()
+    await w.findAll('.module')[2]!.trigger('click') // les tâches
+    const choix = w.find('select[aria-label="Affichage"]')
+    expect((choix.element as HTMLSelectElement).value).toBe('defilement') // par défaut
+    await choix.setValue('fondu')
+    await w.find('input[aria-label="Secondes par liste (en fondu)"]').setValue('45')
+    await w.find('input[aria-label="Secondes par liste (en fondu)"]').trigger('change')
+    await w.find('button[aria-label="Réglage du jeton"]').trigger('click')
+    await w.find('input[type=password]').setValue('secret')
+    await bouton(w, 'Enregistrer').trigger('click')
+    await flushPromises()
+    expect(service.enregistrer).toHaveBeenCalledWith(
+      'standard',
+      expect.objectContaining({
+        placements: expect.arrayContaining([
+          expect.objectContaining({ id: 'taches', reglages: { affichage: 'fondu', duree: 45 } }),
+        ]),
+      }),
+      'secret'
+    )
+  })
+
   it('règle les listes d’un module Tâches, et signale deux exemplaires identiques', async () => {
     const w = await monter()
     await w.findAll('.module')[2]!.trigger('click') // les tâches

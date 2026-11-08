@@ -15,9 +15,17 @@ export interface Variante {
 export interface Reglage {
   cle: string
   libelle: string
-  /** liste-texte : des noms séparés par des virgules, gardés sous forme de liste. */
-  type: 'liste-texte'
+  /**
+   * liste-texte : des noms séparés par des virgules, gardés sous forme de liste ; texte ; nombre ; date (AAAA-MM-JJ) ;
+   * choix : une valeur parmi `options`.
+   */
+  type: 'liste-texte' | 'texte' | 'nombre' | 'date' | 'choix'
   aide?: string
+  /** nombre : bornes. */
+  min?: number
+  max?: number
+  /** choix : valeurs proposées ; la première est celle par défaut. */
+  options?: { valeur: string; libelle: string }[]
 }
 
 export interface DefinitionModule {
@@ -50,7 +58,9 @@ export const REGISTRE: Registre = {
       { id: 'large', largeur: 12, hauteur: 5 },
       { id: 'moyen', largeur: 12, hauteur: 3 },
       { id: 'etroit', largeur: 6, hauteur: 5 },
+      { id: 'trois', largeur: 5, hauteur: 5 },
       { id: 'mini', largeur: 4, hauteur: 3 },
+      { id: 'jour', largeur: 2, hauteur: 5 },
     ],
     animation: 'fade-in-1',
   },
@@ -83,6 +93,23 @@ export const REGISTRE: Registre = {
         libelle: 'Listes affichées',
         type: 'liste-texte',
         aide: 'Noms séparés par des virgules ; vide = toutes les listes',
+      },
+      {
+        cle: 'affichage',
+        libelle: 'Affichage',
+        type: 'choix',
+        options: [
+          { valeur: 'defilement', libelle: 'Toutes les listes, qui défilent' },
+          { valeur: 'fondu', libelle: 'Une liste à la fois, en fondu' },
+        ],
+      },
+      {
+        cle: 'duree',
+        libelle: 'Secondes par liste (en fondu)',
+        type: 'nombre',
+        min: 10,
+        max: 600,
+        aide: '60 par défaut',
       },
     ],
     animation: 'fade-in-3',

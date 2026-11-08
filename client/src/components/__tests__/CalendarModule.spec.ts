@@ -534,7 +534,7 @@ describe('CalendarModule', () => {
   })
 
   describe('variantes de taille', () => {
-    const jours = (variante?: 'large' | 'moyen' | 'etroit' | 'mini') => {
+    const jours = (variante?: 'large' | 'moyen' | 'etroit' | 'trois' | 'mini' | 'jour') => {
       mockCalendarStore.loading = false
       mockCalendarStore.error = null
       mockCalendarStore.allEvents = []
@@ -548,7 +548,9 @@ describe('CalendarModule', () => {
 
     it('moins de jours quand la zone est plus étroite', () => {
       expect(jours('etroit').colonnes).toBe(4)
+      expect(jours('trois').colonnes).toBe(3)
       expect(jours('mini').colonnes).toBe(2)
+      expect(jours('jour').colonnes).toBe(1) // aujourd'hui seulement
     })
 
     it('la grille des jours suit leur nombre : chaque jour garde une largeur lisible', () => {

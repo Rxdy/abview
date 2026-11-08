@@ -201,4 +201,15 @@ describe('édition d’une configuration', () => {
       expect(ajouterEnPoussant(CONFIGURATION_PAR_DEFAUT, 'meteo', 9, 6)).toBeNull() // une seule météo
     })
   })
+
+  it('définit des réglages de tous types : nombre, texte, choix ; efface les valeurs vides', () => {
+    let c = ajouter(vide, 'taches')!
+    c = definirReglage(c, 'taches', 'duree', 30)
+    c = definirReglage(c, 'taches', 'affichage', 'fondu')
+    expect(c.placements[0]!.reglages).toEqual({ duree: 30, affichage: 'fondu' })
+    c = definirReglage(c, 'taches', 'duree', Number.NaN) // champ vidé
+    expect(c.placements[0]!.reglages).toEqual({ affichage: 'fondu' })
+    c = definirReglage(c, 'taches', 'affichage', '')
+    expect(c.placements[0]).not.toHaveProperty('reglages')
+  })
 })
