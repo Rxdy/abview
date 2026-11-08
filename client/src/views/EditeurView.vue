@@ -99,7 +99,8 @@
           type="button"
           class="outil"
           :aria-label="`Ajouter : ${def.titre}`"
-          :title="`${def.titre} — cliquez pour ajouter, ou glissez sur la grille`"
+          :title="infobulle(def.id)"
+          :disabled="!!obstacle(brouillon, def.id)"
           @pointerdown="debutGlissePalette($event, def.id)"
           @click="cliquerPalette(def.id)"
         >
@@ -247,7 +248,6 @@ function dupliquer() {
 }
 
 const AUCUNE_PLACE = 'Pas de place pour déplacer les modules voisins : rien n’a bougé. Retirez-en un ou réduisez une taille.'
-const PLEIN = 'Pas assez de place pour ce module : retirez-en un ou déplacez-en un autre.'
 
 function appliquer(suivante: Configuration | null, refus: string, selectionner = false) {
   if (!suivante) {
@@ -342,6 +342,15 @@ function debutGlisse(e: PointerEvent, m: { id: string; x: number; y: number }) {
 let aGlisse = false
 let brouillonAvant = new Set<string>() // les identifiants présents avant un ajout, pour retrouver le module ajouté
 
+/** Ce que dit l'infobulle d'une icône : l'action possible, ou pourquoi l'icône est grisée. */
+function infobulle(module: string): string {
+  const def = REGISTRE[module]
+  const raison = obstacle(brouillon, module)
+  if (raison === 'max') return `${def?.titre} : déjà placé${def?.max && def.max > 1 ? ` ${def.max} fois` : ''} sur l’écran`
+  if (raison === 'place') return `${def?.titre} : plus de place sur la grille`
+  return `${def?.titre} — cliquez pour ajouter, ou glissez sur la grille`
+}
+
 function debutGlissePalette(e: PointerEvent, module: string) {
   const v = variante(REGISTRE, module)
   if (!v) return
@@ -388,9 +397,7 @@ function cliquerPalette(module: string) {
     aGlisse = false
     return
   }
-  const raison = obstacle(brouillon, module)
-  const def = REGISTRE[module]
-  appliquer(ajouter(brouillon, module), raison === 'max' ? `« ${def?.titre} » : ${def?.max} au plus.` : PLEIN, true)
+  appliquer(ajouter(brouillon, module), AUCUNE_PLACE, true)
 }
 
 // --- Enregistrement ----------------------------------------------------------------------------
@@ -603,6 +610,8 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round
   cursor: grab;
 }
 .outil svg { width: 28px; height: 28px; }
+/* Module déjà placé (ou plus de place) : l'icône est grisée, on ne peut pas en ajouter */
+.outil:disabled { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; }
 @media (max-width: 800px) {
   .plan { grid-template-columns: 1fr; }
   .palette { flex-direction: row; }
