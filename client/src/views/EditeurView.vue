@@ -98,9 +98,12 @@
             <button type="button" aria-label="Descendre" @click="bouger(0, 1)">↓</button>
             <button type="button" aria-label="Aller à droite" @click="bouger(1, 0)">→</button>
           </span>
-          <button type="button" class="danger" @click="retirerModule">Retirer</button>
+          <button type="button" class="danger" title="Raccourci : Suppr" @click="retirerModule">Retirer</button>
         </div>
-        <p v-else class="calme">Cliquez sur un module pour le régler, ou glissez-le pour le déplacer.</p>
+        <p v-else class="calme">
+          Cliquez sur un module pour le régler, ou glissez-le pour le déplacer. Une fois sélectionné : flèches pour le
+          déplacer, Suppr pour le retirer.
+        </p>
       </div>
 
       <aside class="palette" aria-label="Modules disponibles">
@@ -123,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { CLE_APERCU } from '../modules/apercu'
 import { GRILLE } from '../modules/grille'
 import { REGISTRE, variante, type Reglage } from '../modules/registre'
@@ -484,7 +487,38 @@ function apercu() {
   window.open('/apercu', '_blank')
 }
 
-onMounted(charger)
+/**
+ * Raccourcis clavier quand un module est sélectionné : les flèches le déplacent d'une case (il pousse les autres
+ * si besoin), Suppr ou Retour arrière le retire, Échap le désélectionne. Ignorés pendant la saisie dans un champ.
+ */
+const DIRECTIONS: Record<string, [number, number]> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+}
+
+function touche(e: KeyboardEvent) {
+  const cible = e.target as HTMLElement | null
+  if (cible && ['INPUT', 'SELECT', 'TEXTAREA'].includes(cible.tagName)) return
+  if (e.ctrlKey || e.metaKey || e.altKey || !selection.value) return
+  const direction = DIRECTIONS[e.key]
+  if (direction) {
+    e.preventDefault() // sans cela, la page défile
+    bouger(direction[0], direction[1])
+  } else if (e.key === 'Delete' || e.key === 'Backspace') {
+    e.preventDefault()
+    retirerModule()
+  } else if (e.key === 'Escape') {
+    selection.value = null
+  }
+}
+
+onMounted(() => {
+  void charger()
+  window.addEventListener('keydown', touche)
+})
+onUnmounted(() => window.removeEventListener('keydown', touche))
 </script>
 
 <style scoped>
