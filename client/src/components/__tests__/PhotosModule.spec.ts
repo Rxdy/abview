@@ -47,7 +47,23 @@ describe('PhotosModule', () => {
   it('demande à chaque emplacement une photo de son orientation, en une seule requête au départ', async () => {
     await monter({ variante: 'galerie' })
     expect(demandes).toHaveLength(1)
-    expect(demandes[0]!.orientations).toEqual(['paysage', 'portrait', 'portrait', 'portrait', 'portrait'])
+    expect(demandes[0]!.orientations).toEqual(['paysage', 'portrait', 'paysage', 'portrait', 'portrait'])
+  })
+
+  it('pose les cadres à des hauteurs et des tailles différentes, très légèrement penchés', async () => {
+    const w = await monter({ variante: 'galerie' })
+    const styles = w.findAll('.emplacement').map((e) => e.attributes('style')!)
+    const tops = styles.map((st) => /top:\s*([\d.]+)%/.exec(st)![1])
+    const largeurs = styles.map((st) => /width:\s*([\d.]+)%/.exec(st)![1])
+    expect(new Set(tops).size).toBe(5)
+    expect(new Set(largeurs).size).toBeGreaterThanOrEqual(4)
+    expect(styles.filter((st) => st.includes('rotate(')).length).toBeGreaterThanOrEqual(4)
+  })
+
+  it('chaque cadre a son style (doré, noir, bois, ovale) : le mur n’est pas uniforme', async () => {
+    const w = await monter({ variante: 'galerie' })
+    const styles = w.findAll('.cadre').map((c) => ['or', 'noir', 'bois', 'ovale'].find((s) => c.classes().includes(s)))
+    expect(new Set(styles)).toEqual(new Set(['or', 'noir', 'bois', 'ovale']))
   })
 
   it('affiche la photo de chaque emplacement', async () => {
