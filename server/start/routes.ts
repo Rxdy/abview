@@ -3,10 +3,16 @@ const WeatherController = () => import('#controllers/weather')
 import GoogleDataController from '#controllers/google_data'
 import HorairesController from '#controllers/horaires'
 import LogsController from '#controllers/logs'
+import ConfigurationsController from '#controllers/configurations'
+import PhotosController from '#controllers/photos'
+import VeilleController from '#controllers/veille'
 
 const googleDataController = new GoogleDataController()
 const horairesController = new HorairesController()
 const logsController = new LogsController()
+const configurationsController = new ConfigurationsController()
+const photosController = new PhotosController()
+const veilleController = new VeilleController()
 
 // État global pour le timer de progression
 let progressCycleStart = Date.now()
@@ -54,6 +60,28 @@ router.get('/tasks', googleDataController.getTasks.bind(googleDataController))
 router.patch('/tasks/:id', googleDataController.updateTask.bind(googleDataController))
 router.get('/horaires', horairesController.getHoraires.bind(horairesController))
 router.get('/recap', googleDataController.getRecapData.bind(googleDataController))
+
+// Configurations de l'écran : lecture libre (le kiosque), écriture avec jeton
+router.get('/configuration', configurationsController.active.bind(configurationsController))
+router.put('/configuration/active', configurationsController.activer.bind(configurationsController))
+router.get('/configurations', configurationsController.liste.bind(configurationsController))
+router.get('/configurations/:id', configurationsController.obtenir.bind(configurationsController))
+router.put(
+  '/configurations/:id',
+  configurationsController.enregistrer.bind(configurationsController)
+)
+router.delete(
+  '/configurations/:id',
+  configurationsController.supprimer.bind(configurationsController)
+)
+
+// Mode veille : lecture libre (l'écran), écriture avec jeton (commande, puis capteur de présence)
+router.get('/veille', veilleController.etat.bind(veilleController))
+router.put('/veille', veilleController.regler.bind(veilleController))
+
+// Photos (module Photos) : tirage au hasard dans abflow, et fichiers relayés
+router.get('/photos/aleatoires', photosController.aleatoires.bind(photosController))
+router.get('/photos/fichier/:nom', photosController.fichier.bind(photosController))
 
 // Routes pour les logs
 router.get('/logs', logsController.getLogs.bind(logsController))

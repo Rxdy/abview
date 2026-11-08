@@ -7,6 +7,24 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [v3.6.0] — 2026-11-08
+
+### Ajouté
+- **Grille et modules** : l'écran est une grille de 12×8 cases remplie par des modules (agenda, météo, tâches, photos), chacun avec ses variantes de taille et de contenu
+- **Configurations** : plusieurs dispositions nommées, enregistrées sur le serveur ; l'écran lit la configuration active chaque minute (lecture libre, écriture avec `ABVIEW_ADMIN_TOKEN`)
+- **Éditeur** (`/editeur`) : glisser-déposer, flèches et suppression au clavier, aperçu du rendu (`/apercu`), enregistrement et activation d'une configuration
+- **Photos** : module alimenté par abflow (`ABFLOW_URL`, `ABFLOW_API_KEY`), photos tirées au hasard dans toute la bibliothèque selon l'orientation de l'emplacement ; une seule photo en mode permanent
+- **Mode veille** : mur de cinq cadres (quatre portraits, un paysage, formes arche et ovale), activé par `make veille-on` / `make veille-off`, état servi par `GET/PUT /veille`
+
+### Modifié
+- Les tâches s'affichent en fondu automatique ; les cartes s'adaptent au contenu disponible
+
+### À savoir
+- Nouvelles variables : `ABFLOW_URL`, `ABFLOW_API_KEY`, `ABVIEW_ADMIN_TOKEN` ; nouveau volume `./donnees` (configurations)
+- Écran 16:9 uniquement
+
+---
+
 ## [v3.5.2] — 2026-11-07
 
 ### Corrigé

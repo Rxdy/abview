@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
+import { apiService } from '../services/apiService';
 import type { ReglesCategories } from '../utils/categories';
+import { CONFIGURATION_PAR_DEFAUT, valider, type Configuration } from '../modules/configuration';
 
 export interface GridConfig {
   columns: number;
@@ -15,6 +17,18 @@ export interface ModuleConfig {
   visible: boolean;
 }
 
+/** La configuration fournie si elle est valide, sinon la standard (un écran ne reste jamais sans disposition). */
+function choisirConfiguration(candidate: unknown): Configuration {
+  if (!candidate) return CONFIGURATION_PAR_DEFAUT;
+  const config = candidate as Configuration;
+  const erreurs = Array.isArray(config.placements) ? valider(config) : ['placements manquants'];
+  if (erreurs.length) {
+    console.error('Configuration refusée, disposition standard utilisée :', erreurs);
+    return CONFIGURATION_PAR_DEFAUT;
+  }
+  return config;
+}
+
 export const useDashboardStore = defineStore('dashboard', {
   state: () => ({
     grid: { columns: 12, rows: '70% 25%' } as GridConfig,
@@ -22,12 +36,58 @@ export const useDashboardStore = defineStore('dashboard', {
     name: 'Abview' as string,
     language: 'fr' as string,
     categories: {} as ReglesCategories,
+    /** Disposition des modules à l'écran ; la disposition standard tant qu'aucune autre valide n'est fournie. */
+    configuration: CONFIGURATION_PAR_DEFAUT as Configuration,
+    /** Mode veille : le mur de cadres photo remplace le tableau de bord (voir VeilleView et GET /veille). */
+    veille: false,
   }),
   actions: {
+    /**
+     * Va chercher la configuration active sur le serveur (celle choisie dans l'éditeur). Si le serveur n'en
+     * a pas, ou n'est pas joignable, la disposition en place reste : l'écran ne change jamais à cause d'une panne.
+     */
+    async chargerConfigurationActive() {
+      try {
+        const { configuration } = await apiService.get('/configuration');
+        if (!configuration) return;
+        const choisie = choisirConfiguration(configuration);
+        if (JSON.stringify(choisie) !== JSON.stringify(this.configuration)) this.configuration = choisie;
+      } catch (error) {
+        console.error('Configuration du serveur indisponible, disposition conservée :', error);
+      }
+    },
+
+    /** Demande au serveur si l'écran doit être en veille. En cas de panne, l'état en place est gardé. */
+    async chargerVeille() {
+      try {
+        const { actif } = await apiService.get('/veille');
+        this.veille = actif === true;
+      } catch {
+        /* serveur injoignable : on garde l'état courant, sans bruit (la demande revient toutes les quelques secondes) */
+      }
+    },
+
+    /** Relit l'état de veille toutes les quelques secondes (3 par défaut) ; rend la fonction qui arrête la relecture. */
+    suivreVeille(intervalleMs = 3000) {
+      void this.chargerVeille();
+      const minuteur = setInterval(() => void this.chargerVeille(), intervalleMs);
+      return () => clearInterval(minuteur);
+    },
+
+    /** Relit la configuration active à intervalle régulier ; rend la fonction qui arrête la relecture. */
+    suivreConfiguration(intervalleMs = 60_000) {
+      const minuteur = setInterval(() => void this.chargerConfigurationActive(), intervalleMs);
+      return () => clearInterval(minuteur);
+    },
+
     async loadConfig() {
       try {
         const response = await fetch('/config.json');
-        const { grid, modules, name, language, categories } = await response.json();
+        const { grid, modules, name, language, categories, configuration } = await response.json();
+        // Le fichier ne donne une configuration que s'il en contient une : relire config.json (la langue, par exemple,
+        // le fait à chaque montage de la météo) ne doit jamais effacer celle choisie sur le serveur.
+        if (configuration) this.configuration = choisirConfiguration(configuration);
+        await this.chargerConfigurationActive();
         this.categories = categories || {};
         this.grid = grid;
         this.modules = modules;

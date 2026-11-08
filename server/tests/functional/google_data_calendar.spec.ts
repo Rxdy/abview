@@ -32,6 +32,12 @@ test.group('Routes /calendar', (group) => {
                 start: { dateTime: '2026-01-05T10:00:00Z' },
                 end: { dateTime: '2026-01-05T11:00:00Z' },
               },
+              {
+                id: 'evt-simple', // même identifiant renvoyé deux fois par l'agenda
+                summary: 'RDV',
+                start: { dateTime: '2026-01-05T10:00:00Z' },
+                end: { dateTime: '2026-01-05T11:00:00Z' },
+              },
             ],
           },
         }),
@@ -48,7 +54,7 @@ test.group('Routes /calendar', (group) => {
     assert.include(expandedIds, 'evt-multi_2026-01-02')
     assert.include(expandedIds, 'evt-multi_2026-01-03')
     assert.include(expandedIds, 'evt-simple')
-    assert.lengthOf(body.events, 4)
+    assert.lengthOf(body.events, 4) // le doublon « evt-simple » n'apparaît qu'une fois
     assert.isString(body.lastRefresh)
   })
 })

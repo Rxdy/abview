@@ -185,4 +185,183 @@ describe('TasksModule', () => {
 
     wrapper.unmount()
   })
+
+  describe('listes choisies par la configuration', () => {
+    const titres = (w: ReturnType<typeof mount>) => w.findAllComponents({ name: 'TaskList' }).map((l) => l.props('listTitle')).sort()
+
+    beforeEach(() => {
+      mockTasksStore.tasks = [task(1, 'Julie'), task(2, 'Action'), task(3, 'Courses')]
+    })
+
+    it('sans réglage, affiche toutes les listes', () => {
+      expect(titres(mount(TasksModule, { global: { stubs: { TaskList: true } } }))).toEqual(['Action', 'Courses', 'Julie'])
+    })
+
+    it('n’affiche que les listes demandées', () => {
+      const w = mount(TasksModule, { props: { listes: ['Julie', 'Courses'] }, global: { stubs: { TaskList: true } } })
+      expect(titres(w)).toEqual(['Courses', 'Julie'])
+    })
+
+    it('une liste vide de réglage équivaut à « toutes »', () => {
+      expect(titres(mount(TasksModule, { props: { listes: [] }, global: { stubs: { TaskList: true } } }))).toHaveLength(3)
+    })
+
+    it('dit « aucune donnée » quand aucune des listes demandées n’existe', () => {
+      const w = mount(TasksModule, { props: { listes: ['Inconnue'] }, global: { stubs: { TaskList: true, ErrorDisplay: true } } })
+      expect(titres(w)).toEqual([])
+      expect(w.findComponent({ name: 'ErrorDisplay' }).props('type')).toBe('no-data')
+    })
+  })
+
+  describe('largeur des cartes selon la zone', () => {
+    const avecObservateur = async (clientWidth: number) => {
+      vi.stubGlobal('innerWidth', 1280) // 1 unité = 1 px
+      let rappel: () => void = () => {}
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          constructor(cb: () => void) {
+            rappel = cb
+          }
+          observe() {}
+          disconnect() {}
+        }
+      )
+      Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => clientWidth })
+      mockTasksStore.tasks = [task(1, 'Julie'), task(2, 'Action')]
+      const w = mount(TasksModule, { global: { stubs: { TaskList: true } } })
+      rappel()
+      await w.vm.$nextTick()
+      return w
+    }
+    const carte = (w: ReturnType<typeof mount>) => w.find('.tasks-container').attributes('style')
+
+    it('garde la carte normale dans une zone large', async () => {
+      expect(carte(await avecObservateur(829))).toContain('276')
+    })
+
+    it('adapte la carte à une zone moyenne : deux cartes se partagent la largeur', async () => {
+      const style = carte(await avecObservateur(409))!
+      expect(style).toContain('199.5')
+      expect(style).not.toContain('276')
+    })
+
+    it('dans une zone étroite, la carte remplit toute la zone (fondu)', async () => {
+      expect(carte(await avecObservateur(302))).toContain('--carte-l: 100%')
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+      delete (HTMLElement.prototype as any).clientWidth
+    })
+  })
+
+  describe('affichage en fondu : une liste à la fois', () => {
+    const affichees = (w: ReturnType<typeof mount>) => w.findAllComponents({ name: 'TaskList' }).map((l) => l.props('listTitle'))
+    const monter = (props: Record<string, unknown> = {}) =>
+      mount(TasksModule, { props: { affichage: 'fondu', ...props }, global: { stubs: { TaskList: true } } })
+
+    beforeEach(() => {
+      vi.useFakeTimers()
+      mockTasksStore.tasks = [task(1, 'Julie'), task(2, 'Julie'), task(3, 'Action'), task(4, 'Courses')]
+    })
+
+    it('n’affiche qu’une liste : celle qui a le plus de tâches d’abord', async () => {
+      const w = monter()
+      await w.vm.$nextTick()
+      expect(affichees(w)).toHaveLength(1)
+      expect(affichees(w)).toEqual(['Julie'])
+    })
+
+    it('passe à la liste suivante après la durée choisie, puis revient au début', async () => {
+      const w = monter({ duree: 30 })
+      const premiere = affichees(w)[0]
+      await vi.advanceTimersByTimeAsync(30_000)
+      const deuxieme = affichees(w)[0]
+      expect(deuxieme).not.toBe(premiere)
+      await vi.advanceTimersByTimeAsync(60_000) // trois listes : on a fait le tour
+      expect(affichees(w)[0]).toBe(premiere)
+    })
+
+    it('attend une minute par défaut', async () => {
+      const w = monter()
+      const premiere = affichees(w)[0]
+      await vi.advanceTimersByTimeAsync(59_000)
+      expect(affichees(w)[0]).toBe(premiere)
+      await vi.advanceTimersByTimeAsync(2_000)
+      expect(affichees(w)[0]).not.toBe(premiere)
+    })
+
+    it('respecte le choix des listes : seules celles-ci tournent', async () => {
+      const w = monter({ listes: ['Action', 'Courses'], duree: 10 })
+      const vues = new Set([affichees(w)[0]])
+      await vi.advanceTimersByTimeAsync(10_000)
+      vues.add(affichees(w)[0])
+      expect([...vues].sort()).toEqual(['Action', 'Courses'])
+    })
+
+    it('la carte remplit la zone (une seule liste visible)', () => {
+      expect(monter().find('.tasks-container').attributes('style')).toContain('--carte-l: 100%')
+    })
+
+    it('arrête sa minuterie quand le module disparaît', async () => {
+      const w = monter({ duree: 10 })
+      const avant = affichees(w)[0]
+      w.unmount()
+      await vi.advanceTimersByTimeAsync(60_000)
+      expect(avant).toBeDefined() // pas d'erreur, plus de minuterie en cours
+      expect(vi.getTimerCount()).toBe(0)
+    })
+
+    it('sans « fondu », toutes les listes restent côte à côte', () => {
+      const w = mount(TasksModule, { global: { stubs: { TaskList: true } } })
+      expect(affichees(w)).toHaveLength(3)
+    })
+  })
+
+  describe('fondu automatique quand la zone n’a la place que pour une liste', () => {
+    const affichees = (w: ReturnType<typeof mount>) => w.findAllComponents({ name: 'TaskList' }).map((l) => l.props('listTitle'))
+    const monterAvecZone = async (largeur: number, props: Record<string, unknown> = {}) => {
+      vi.stubGlobal('innerWidth', 1280) // 1 unité = 1 px
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          constructor(cb: () => void) {
+            cb()
+          }
+          observe() {}
+          disconnect() {}
+        }
+      )
+      Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => largeur })
+      mockTasksStore.tasks = [task(1, 'Julie'), task(2, 'Action'), task(3, 'Courses')]
+      const w = mount(TasksModule, { props, global: { stubs: { TaskList: true } } })
+      await w.vm.$nextTick()
+      return w
+    }
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+      delete (HTMLElement.prototype as any).clientWidth
+    })
+
+    it('zone étroite (une seule liste tient) : une liste à la fois, en fondu', async () => {
+      expect(affichees(await monterAvecZone(302))).toHaveLength(1)
+      expect(affichees(await monterAvecZone(250))).toHaveLength(1)
+    })
+
+    it('zone moyenne ou large (au moins deux listes tiennent) : toutes les listes côte à côte', async () => {
+      expect(affichees(await monterAvecZone(409))).toHaveLength(3)
+      expect(affichees(await monterAvecZone(829))).toHaveLength(3)
+    })
+
+    it('« defilement » force le défilement même dans une zone étroite', async () => {
+      expect(affichees(await monterAvecZone(302, { affichage: 'defilement' }))).toHaveLength(3)
+    })
+
+    it('avant la première mesure, rien n’est en fondu (pas de clignotement au démarrage)', async () => {
+      const w = mount(TasksModule, { global: { stubs: { TaskList: true } } })
+      expect(w.find('.tasks-container').classes()).not.toContain('tasks-fondu')
+    })
+  })
 })

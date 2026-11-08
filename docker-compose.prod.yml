@@ -41,6 +41,11 @@ services:
             - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN}
             - GOOGLE_ACCESS_TOKEN=${GOOGLE_ACCESS_TOKEN}
             - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+            # Photos (module Photos, veille) : bibliothèque abflow et clé d'accès en lecture ; vides = pas de photos
+            - ABFLOW_URL=${ABFLOW_URL:-}
+            - ABFLOW_API_KEY=${ABFLOW_API_KEY:-}
+            # Jeton d'écriture des configurations de l'écran ; vide = écriture coupée (la lecture reste libre)
+            - ABVIEW_ADMIN_TOKEN=${ABVIEW_ADMIN_TOKEN:-}
         restart: unless-stopped
         mem_limit: 384m
         healthcheck:
@@ -50,6 +55,8 @@ services:
             retries: 3
         volumes:
             - ./logs:/app/logs
+            # Configurations de l'écran (favorites) : gardées entre deux mises à jour de l'image
+            - ./donnees:/app/donnees
 
 networks:
     default: {}

@@ -6,13 +6,21 @@ import AnnualRecapWrapper from './components/AnnualRecapWrapper.vue';
 import BirthdayEffect from './components/BirthdayEffect.vue';
 import { useThemeStore } from './stores/themeStore';
 import { useWeatherStore } from './stores/weatherStore';
-import { onMounted } from 'vue';
+import { useDashboardStore } from './stores/dashboardStore';
+import VeilleView from './views/VeilleView.vue';
+import { onMounted, onUnmounted } from 'vue';
 
 const themeStore = useThemeStore();
 const weatherStore = useWeatherStore();
+const dashboardStore = useDashboardStore();
+
+// Le mode veille (mur de cadres photo à plein écran) est demandé au serveur toutes les quelques secondes
+let arreterVeille: (() => void) | undefined;
+onUnmounted(() => arreterVeille?.());
 
 onMounted(() => {
   weatherStore.fetchWeather();
+  arreterVeille = dashboardStore.suivreVeille();
 
   if (import.meta.env.DEV) {
     // DEBUG: Raccourci clavier pour logs
@@ -109,6 +117,7 @@ onMounted(() => {
     <Footer />
     <AnnualRecapWrapper />
     <BirthdayEffect />
+    <VeilleView v-if="dashboardStore.veille" />
   </div>
 </template>
 

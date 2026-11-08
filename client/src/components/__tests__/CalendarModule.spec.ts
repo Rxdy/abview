@@ -271,9 +271,12 @@ describe('CalendarModule', () => {
 
       const vm = mountVm([nuit(1), nuit(2)])
 
-      expect(vm.getEventsForDay(day(1)).map((e: any) => e.id)).toEqual(['night-1'])
-      expect(vm.getEventsForDay(day(2)).map((e: any) => e.id)).toEqual(['night-2'])
-      expect(vm.getEventsForDay(day(3)).map((e: any) => e.id)).toEqual([]) // repos : aucune carte
+      // seules les nuits comptent : un jour férié tombant ce jour-là (le 11 novembre…) ajoute sa propre carte
+      const nuits = (n: number) =>
+        vm.getEventsForDay(day(n)).map((e: any) => e.id).filter((id: string) => id.startsWith('night-'))
+      expect(nuits(1)).toEqual(['night-1'])
+      expect(nuits(2)).toEqual(['night-2'])
+      expect(nuits(3)).toEqual([]) // repos : aucune carte de nuit
     })
 
     it('un événement calendrier multi-jours apparaît chaque jour couvert', () => {
@@ -471,6 +474,25 @@ describe('CalendarModule', () => {
       document.removeEventListener('birthday-detected', listener)
     })
 
+    it("ne relance pas l'effet si celui de cette personne est déjà actif aujourd'hui", () => {
+      const listener = vi.fn()
+      document.addEventListener('birthday-detected', listener)
+      ;(window as any).currentBirthdayPerson = 'Julie'
+      ;(window as any).currentBirthdayDate = todayStr
+
+      mockCalendarStore.loading = false
+      mockCalendarStore.allEvents = [
+        { id: 'bday', summary: 'Anniversaire de Julie', start: `${todayStr}T10:00:00`, end: `${todayStr}T11:00:00` },
+      ] as any
+
+      mount(CalendarModule, { stubs: ['ErrorDisplay'] })
+
+      expect(listener).not.toHaveBeenCalled()
+      document.removeEventListener('birthday-detected', listener)
+      delete (window as any).currentBirthdayPerson
+      delete (window as any).currentBirthdayDate
+    })
+
     it("arrête l'effet quand il n'y a pas d'anniversaire aujourd'hui", () => {
       const stopSpy = vi.fn()
       ;(window as any).stopBirthdayEffect = stopSpy
@@ -508,6 +530,32 @@ describe('CalendarModule', () => {
 
       wrapper.unmount() // couvre le clearTimeout du onUnmounted
       vi.useRealTimers()
+    })
+  })
+
+  describe('variantes de taille', () => {
+    const jours = (variante?: 'large' | 'moyen' | 'etroit' | 'trois' | 'mini' | 'jour') => {
+      mockCalendarStore.loading = false
+      mockCalendarStore.error = null
+      mockCalendarStore.allEvents = []
+      const w = mount(CalendarModule, { props: { variante }, global: { stubs: { ErrorDisplay: true } } })
+      return { colonnes: w.findAll('.day-column').length, style: w.find('.calendar-grid').attributes('style') }
+    }
+
+    it('affiche 8 jours en large, en moyen et sans variante (comme l’écran standard)', () => {
+      for (const v of [undefined, 'large', 'moyen'] as const) expect(jours(v).colonnes).toBe(8)
+    })
+
+    it('moins de jours quand la zone est plus étroite', () => {
+      expect(jours('etroit').colonnes).toBe(4)
+      expect(jours('trois').colonnes).toBe(3)
+      expect(jours('mini').colonnes).toBe(2)
+      expect(jours('jour').colonnes).toBe(1) // aujourd'hui seulement
+    })
+
+    it('la grille des jours suit leur nombre : chaque jour garde une largeur lisible', () => {
+      expect(jours('etroit').style).toContain('--jours: 4')
+      expect(jours('large').style).toContain('--jours: 8')
     })
   })
 })

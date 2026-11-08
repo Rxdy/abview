@@ -13,7 +13,7 @@
     />
 
     <!-- Calendar Content -->
-    <div class="calendar-grid">
+    <div class="calendar-grid" :style="{ '--jours': nombreDeJours }">
       <div v-for="(day, index) in weekDays" :key="day.date.toISOString()"
            :class="['day-column', { today: index === 0 }]" :ref="el => setDayColumnRef(index, el)">
         <div class="day-header">
@@ -125,10 +125,18 @@ watch(() => calendarStore.allEvents, (newEvents) => {
   }, 300);
 }, { deep: true });
 
+/**
+ * variante : taille donnée par la configuration. Plus la zone est étroite, moins il y a de jours (chacun garde
+ * une largeur lisible) : large et moyen 8 jours, étroit 4, trois 3, mini 2, jour 1 (aujourd'hui seulement).
+ */
+const props = defineProps<{ variante?: 'large' | 'moyen' | 'etroit' | 'trois' | 'mini' | 'jour' }>();
+const JOURS = { large: 8, moyen: 8, etroit: 4, trois: 3, mini: 2, jour: 1 } as const;
+const nombreDeJours = computed(() => JOURS[props.variante ?? 'large']);
+
 const weekDays = computed(() => {
   const days = [];
   const today = currentDate.value;
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < nombreDeJours.value; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() + i);
     days.push({
@@ -467,7 +475,7 @@ setInterval(() => {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--jours, 8), minmax(0, 1fr));
   gap: var(--space-2);
 }
 

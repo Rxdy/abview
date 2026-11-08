@@ -58,3 +58,82 @@ describe('DashboardView', () => {
     expect(mockNotificationsStore.closeNotification).toHaveBeenCalled()
   })
 })
+describe('DashboardView : disposition pilotée par la configuration', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  const montee = async (configuration?: any) => {
+    const { useDashboardStore } = await import('../../stores/dashboardStore')
+    const store = useDashboardStore()
+    if (configuration) store.configuration = configuration
+    return mount(DashboardView, {
+      global: {
+        stubs: { CalendarModule: true, WeatherModule: true, TasksModule: true, NotificationModal: true },
+      },
+    })
+  }
+
+  it('place chaque module sur ses cases (disposition standard)', async () => {
+    const wrapper = await montee()
+    const style = (m: string) => wrapper.find(`[data-module=${m}]`).attributes('style')
+
+    expect(style('calendrier')).toContain('grid-column: 1 / span 12')
+    expect(style('calendrier')).toContain('grid-row: 1 / span 5')
+    expect(style('meteo')).toContain('grid-column: 1 / span 4')
+    expect(style('meteo')).toContain('grid-row: 6 / span 3')
+    expect(style('taches')).toContain('grid-column: 5 / span 8')
+  })
+
+  it('un module absent de la configuration n’est pas affiché', async () => {
+    const wrapper = await montee({
+      nom: 'Sans météo',
+      placements: [
+        { id: 'calendrier', module: 'calendrier', x: 1, y: 1 },
+        { id: 'taches', module: 'taches', x: 5, y: 6 },
+      ],
+    })
+    expect(wrapper.find('[data-module=meteo]').exists()).toBe(false)
+    expect(wrapper.find('[data-module=calendrier]').exists()).toBe(true)
+  })
+
+  it('suit la taille de la variante et sa position', async () => {
+    const wrapper = await montee({
+      nom: 'Déplacée',
+      placements: [{ id: 'm', module: 'meteo', x: 9, y: 1 }],
+    })
+    const style = wrapper.find('[data-module=meteo]').attributes('style')
+    expect(style).toContain('grid-column: 9 / span 4')
+    expect(style).toContain('grid-row: 1 / span 3')
+  })
+
+  it('la météo est sur une carte, l’agenda et les tâches dessinent leurs cartes', async () => {
+    const wrapper = await montee()
+    expect(wrapper.find('[data-module=meteo]').classes()).toContain('carte')
+    expect(wrapper.find('[data-module=calendrier]').classes()).not.toContain('carte')
+    expect(wrapper.find('[data-module=taches]').classes()).not.toContain('carte')
+  })
+
+  it('transmet la variante choisie (ou la première par défaut) aux modules', async () => {
+    const wrapper = await montee({
+      nom: 'Variantes',
+      placements: [
+        { id: 'calendrier', module: 'calendrier', x: 1, y: 1 },
+        { id: 'meteo', module: 'meteo', variante: 'compact', x: 1, y: 6 },
+      ],
+    })
+    expect(wrapper.findComponent({ name: 'WeatherModule' }).props('variante')).toBe('compact')
+    expect(wrapper.findComponent({ name: 'CalendarModule' }).props('variante')).toBe('large')
+  })
+
+  it('une taille de météo différente change les cases occupées', async () => {
+    const wrapper = await montee({
+      nom: 'Large',
+      placements: [{ id: 'meteo', module: 'meteo', variante: 'large', x: 1, y: 1 }],
+    })
+    const style = wrapper.find('[data-module=meteo]').attributes('style')
+    expect(style).toContain('span 6')
+    expect(style).toContain('span 3')
+  })
+})

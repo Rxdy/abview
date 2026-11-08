@@ -247,4 +247,45 @@ describe('WeatherModule', () => {
       expect(m.getWeatherIconClass('')).toBe('')
     })
   })
+
+  describe('variantes de taille', () => {
+    const dixJours = {
+      ...fullWeather,
+      forecast: Array.from({ length: 10 }, (_, n) => ({
+        date: `2026-07-${String(8 + n).padStart(2, '0')}`,
+        tempMin: 10,
+        tempMax: 20 + n,
+        description: 'Clear',
+        icon: 'clear-day',
+      })),
+    }
+    const monter = (variante?: 'compact' | 'standard' | 'large') => {
+      mockWeatherStore.weather = dixJours
+      return mount(WeatherModule, { props: { variante }, global: { stubs: { ErrorDisplay: true } } })
+    }
+
+    it('standard (ou sans variante) : détails et 4 jours de prévisions', () => {
+      for (const v of [undefined, 'standard'] as const) {
+        const w = monter(v)
+        expect(w.find('.details').exists()).toBe(true)
+        expect(w.findAll('.forecast-day')).toHaveLength(4)
+      }
+    })
+
+    it('compact : la température et les conditions seulement', () => {
+      const w = monter('compact')
+      expect(w.find('.temp').text()).toBe('25°')
+      expect(w.find('.condition').exists()).toBe(true)
+      expect(w.find('.details').exists()).toBe(false)
+      expect(w.find('.forecast').exists()).toBe(false)
+      expect(w.classes()).toContain('weather--compact')
+    })
+
+    it('large : 6 jours de prévisions, répartis sur toute la largeur', () => {
+      const w = monter('large')
+      expect(w.findAll('.forecast-day')).toHaveLength(6)
+      expect(w.find('.forecast').attributes('style')).toContain('--jours: 6')
+      expect(w.find('.details').exists()).toBe(true)
+    })
+  })
 })
