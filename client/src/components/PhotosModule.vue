@@ -19,6 +19,8 @@
           transform: em.inclinaison ? `rotate(${em.inclinaison}deg)` : undefined,
         }"
       >
+        <!-- Applique de tableau : une lampe en laiton au-dessus du cadre, qui éclaire le mur -->
+        <span v-if="em.lampe" class="lampe" aria-hidden="true" />
         <!-- Cadre autour de la photo ; la photo suivante arrive en fondu -->
         <figure class="cadre" :class="em.cadre">
           <Transition name="photo-fondu" mode="out-in">
@@ -193,6 +195,39 @@ onUnmounted(() => {
   position: absolute;
   min-width: 0;
   min-height: 0;
+}
+
+/* Applique de tableau : barre de laiton, tige vers le cadre et halo de lumière sur le mur */
+.lampe {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 15 * var(--px));
+  width: min(46%, calc(240 * var(--px)));
+  height: calc(9 * var(--px));
+  transform: translateX(-50%);
+  border-radius: calc(5 * var(--px));
+  background: linear-gradient(180deg, #f3dc92, #a67f2d 55%, #6c501a);
+  box-shadow: 0 calc(2 * var(--px)) calc(4 * var(--px)) rgba(0, 0, 0, 0.45);
+}
+.lampe::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: calc(3 * var(--px));
+  height: calc(15 * var(--px));
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #6c501a, #c9a54a, #6c501a);
+}
+.lampe::after {
+  content: '';
+  position: absolute;
+  left: -35%;
+  right: -35%;
+  top: 100%;
+  height: calc(170 * var(--px));
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 232, 170, 0.3), transparent 70%);
+  pointer-events: none;
 }
 
 /*

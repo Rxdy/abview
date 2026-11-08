@@ -13,18 +13,18 @@ describe('VeilleView', () => {
     vi.restoreAllMocks()
   })
 
-  it('montre un mur de cinq cadres sur toute la page', async () => {
+  it('montre un mur de sept grands cadres sur toute la page', async () => {
     const w = mount(VeilleView)
     await flushPromises()
-    expect(w.findAll('.cadre')).toHaveLength(5)
+    expect(w.findAll('.cadre')).toHaveLength(7)
     expect(w.find('.veille').exists()).toBe(true)
   })
 
-  it('demande surtout des portraits : quatre portraits et un seul paysage', async () => {
+  it('demande une photo par cadre : quatre paysages et trois portraits', async () => {
     mount(VeilleView)
     await flushPromises()
     const orientations = vi.mocked(photosService.aleatoires).mock.calls[0]![0]
-    expect(orientations.filter((o) => o === 'portrait')).toHaveLength(4)
-    expect(orientations.filter((o) => o === 'paysage')).toHaveLength(1)
+    expect(orientations.filter((o) => o === 'portrait')).toHaveLength(3)
+    expect(orientations.filter((o) => o === 'paysage')).toHaveLength(4)
   })
 })
