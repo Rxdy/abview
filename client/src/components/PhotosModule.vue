@@ -278,8 +278,36 @@ onUnmounted(() => {
     inset 0 0 calc(10 * var(--px)) rgba(0, 0, 0, 0.35),
     0 calc(10 * var(--px)) calc(22 * var(--px)) var(--ombre-portee);
 }
-.cadre.ovale img {
+/* Rond : un cercle doré, pour une photo de n'importe quelle orientation (recadrée au centre) */
+.cadre.rond {
+  --ep: calc(14 * var(--px));
+  border: none;
   border-radius: 50%;
+  background: linear-gradient(140deg, #f6e3a1, #b8892b 25%, #fbeeb8 45%, #9a6f1c 65%, #e9cb6c 85%);
+  box-shadow:
+    inset 0 0 0 calc(3 * var(--px)) #7d5714,
+    inset 0 0 calc(10 * var(--px)) rgba(0, 0, 0, 0.35),
+    0 calc(10 * var(--px)) calc(22 * var(--px)) var(--ombre-portee);
+}
+
+/* Arche : cintrée en haut, dorée, pour un portrait */
+.cadre.arche {
+  --ep: calc(14 * var(--px));
+  border: none;
+  border-radius: 50% 50% calc(5 * var(--px)) calc(5 * var(--px)) / 26% 26% calc(5 * var(--px)) calc(5 * var(--px));
+  background: linear-gradient(160deg, #f6e3a1, #b8892b 25%, #fbeeb8 45%, #9a6f1c 65%, #e9cb6c 85%);
+  box-shadow:
+    inset 0 0 0 calc(3 * var(--px)) #7d5714,
+    inset 0 0 calc(10 * var(--px)) rgba(0, 0, 0, 0.35),
+    0 calc(10 * var(--px)) calc(22 * var(--px)) var(--ombre-portee);
+}
+
+.cadre.ovale img,
+.cadre.rond img {
+  border-radius: 50%;
+}
+.cadre.arche img {
+  border-radius: 50% 50% calc(2 * var(--px)) calc(2 * var(--px)) / 24% 24% calc(2 * var(--px)) calc(2 * var(--px));
 }
 
 .photo-fondu-enter-active,

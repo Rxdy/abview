@@ -6,8 +6,11 @@
  */
 import type { Orientation } from '../utils/photosDemo'
 
-/** Le style du cadre : « or » (doré, mouluré), « noir » (fin, avec filet doré), « bois » (noyer), « ovale » (doré, ovale). */
-export type StyleCadre = 'or' | 'noir' | 'bois' | 'ovale'
+/**
+ * Le style du cadre : « or » (doré, mouluré), « noir » (fin, avec filet doré), « bois » (noyer), puis des formes
+ * de fantaisie : « ovale » et « rond » (dorés), « arche » (doré, cintré en haut).
+ */
+export type StyleCadre = 'or' | 'noir' | 'bois' | 'ovale' | 'rond' | 'arche'
 
 export interface Emplacement {
   x: number
@@ -34,38 +37,49 @@ const e = (
   inclinaison?: number
 ): Emplacement => ({ x, y, largeur, hauteur, orientation, cadre, ...(inclinaison ? { inclinaison } : {}) })
 
+/**
+ * Photo permanente (module posé sur le tableau de bord, en mode normal) : UNE seule photo, en paysage ou en portrait.
+ * Les autres dispositions sont celles du mode veille (voir plus bas).
+ */
+export const PERMANENT = ['un', 'portrait'] as const
+
+/** Dispositions du mode veille : la page entière devient un mur de cadres (2 à 5 photos). */
+export const VEILLE = ['deux', 'trois', 'quatre', 'cinq'] as const
+
 export const DISPOSITIONS: Record<string, Disposition> = {
-  // une photo en paysage (4 × 3 cases)
+  // une photo en paysage (4 × 3 cases) — cadre doré mouluré
   un: { emplacements: [e(5, 7, 90, 86, 'paysage', 'or')] },
-  // une photo en portrait (3 × 5)
-  portrait: { emplacements: [e(8, 5, 84, 90, 'portrait', 'or')] },
-  // deux paysages, un grand et un plus petit, plus bas (6 × 3)
-  deux: { emplacements: [e(3, 8, 56, 84, 'paysage', 'or', -0.8), e(63, 20, 34, 62, 'paysage', 'noir', 1)] },
-  // un portrait haut, un grand paysage, un petit paysage plus bas (8 × 3)
+  // une photo en portrait (3 × 5) — cadre en arche dorée
+  portrait: { emplacements: [e(8, 5, 84, 90, 'portrait', 'arche')] },
+
+  // ----- Mode veille : positions en % de l'écran entier (16:9) -----
+  // deux grands cadres : un paysage et un portrait ovale
+  deux: { emplacements: [e(4, 8, 60, 80, 'paysage', 'or', -0.7), e(68, 12, 28, 68, 'portrait', 'ovale', 1)] },
+  // un grand paysage, un portrait ovale plus haut, un portrait en bois plus bas
   trois: {
     emplacements: [
-      e(3, 8, 17, 84, 'portrait', 'noir', -1),
-      e(22, 10, 43, 80, 'paysage', 'or'),
-      e(69, 22, 28, 60, 'paysage', 'bois', 1.2),
+      e(3, 10, 52, 70, 'paysage', 'or', -0.6),
+      e(58, 4, 22, 78, 'portrait', 'arche', 0.8),
+      e(80, 16, 17, 62, 'portrait', 'bois', -1),
     ],
   },
-  // un grand paysage, un portrait plus haut, deux petits paysages à des hauteurs différentes (6 × 5)
+  // un grand paysage, une arche, un rond et un portrait en bois (celui que l'on préfère : il remplit bien l'écran)
   quatre: {
     emplacements: [
-      e(3, 4, 57, 46, 'paysage', 'or', -0.6),
-      e(65, 7, 31, 62, 'portrait', 'noir', 1),
-      e(3, 55, 33, 40, 'paysage', 'bois', 0.8),
-      e(38, 62, 26, 30, 'paysage', 'or', -1.2),
+      e(3, 5, 50, 72, 'paysage', 'or', -0.6),
+      e(56, 3, 22, 72, 'portrait', 'arche', 0.8),
+      e(81, 6, 16, 28, 'carre', 'rond', -1),
+      e(81, 40, 16, 54, 'portrait', 'bois', 1),
     ],
   },
-  // galerie plein écran (12 × 8) : cinq cadres de tailles et de styles différents, à des hauteurs différentes
-  galerie: {
+  // cinq cadres qui remplissent l'écran, de formes et de tailles différentes
+  cinq: {
     emplacements: [
-      e(3, 6, 40, 62, 'paysage', 'or', -0.7),
-      e(46, 4, 21, 66, 'portrait', 'noir', 0.9),
-      e(70, 5, 27, 34, 'paysage', 'bois', -1),
-      e(70, 43, 13, 40, 'portrait', 'ovale', 1.2),
-      e(85, 50, 12, 30, 'portrait', 'or', -0.8),
+      e(2, 5, 42, 50, 'paysage', 'or', -0.7),
+      e(47, 3, 19, 64, 'portrait', 'arche', 0.9),
+      e(69, 6, 29, 30, 'paysage', 'noir', -0.8),
+      e(72, 42, 24, 42, 'carre', 'rond', 1.1),
+      e(4, 60, 40, 36, 'paysage', 'bois', 0.7),
     ],
   },
 }

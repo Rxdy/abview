@@ -112,8 +112,10 @@ export default class PhotosService {
         tirer(toutes.filter((p) => p.orientation === voulue && libres(p))) ??
         // pas d'autre photo de cette orientation : le même format d'abord, jamais l'orientation opposée
         tirer(toutes.filter((p) => p.orientation === voulue && !pris.has(p.id)))
-      if (!choix && voulue === 'carre')
-        choix = tirer(toutes.filter((p) => p.orientation === null && !pris.has(p.id)))
+      // un emplacement carré (cadre rond) se contente de n'importe quelle photo, recadrée au centre
+      if (!choix && voulue === 'carre') {
+        choix = tirer(toutes.filter(libres)) ?? tirer(toutes.filter((p) => !pris.has(p.id)))
+      }
       if (choix) {
         pris.add(choix.id)
         resultat.push(choix)
