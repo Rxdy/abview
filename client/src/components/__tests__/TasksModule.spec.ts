@@ -240,10 +240,14 @@ describe('TasksModule', () => {
       expect(carte(await avecObservateur(829))).toContain('276')
     })
 
-    it('adapte la carte à une zone étroite au lieu de la couper', async () => {
-      const style = carte(await avecObservateur(302))!
-      expect(style).toContain('302')
+    it('adapte la carte à une zone moyenne : deux cartes se partagent la largeur', async () => {
+      const style = carte(await avecObservateur(409))!
+      expect(style).toContain('199.5')
       expect(style).not.toContain('276')
+    })
+
+    it('dans une zone étroite, la carte remplit toute la zone (fondu)', async () => {
+      expect(carte(await avecObservateur(302))).toContain('--carte-l: 100%')
     })
 
     afterEach(() => {
@@ -312,6 +316,52 @@ describe('TasksModule', () => {
     it('sans « fondu », toutes les listes restent côte à côte', () => {
       const w = mount(TasksModule, { global: { stubs: { TaskList: true } } })
       expect(affichees(w)).toHaveLength(3)
+    })
+  })
+
+  describe('fondu automatique quand la zone n’a la place que pour une liste', () => {
+    const affichees = (w: ReturnType<typeof mount>) => w.findAllComponents({ name: 'TaskList' }).map((l) => l.props('listTitle'))
+    const monterAvecZone = async (largeur: number, props: Record<string, unknown> = {}) => {
+      vi.stubGlobal('innerWidth', 1280) // 1 unité = 1 px
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          constructor(cb: () => void) {
+            cb()
+          }
+          observe() {}
+          disconnect() {}
+        }
+      )
+      Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => largeur })
+      mockTasksStore.tasks = [task(1, 'Julie'), task(2, 'Action'), task(3, 'Courses')]
+      const w = mount(TasksModule, { props, global: { stubs: { TaskList: true } } })
+      await w.vm.$nextTick()
+      return w
+    }
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+      delete (HTMLElement.prototype as any).clientWidth
+    })
+
+    it('zone étroite (une seule liste tient) : une liste à la fois, en fondu', async () => {
+      expect(affichees(await monterAvecZone(302))).toHaveLength(1)
+      expect(affichees(await monterAvecZone(250))).toHaveLength(1)
+    })
+
+    it('zone moyenne ou large (au moins deux listes tiennent) : toutes les listes côte à côte', async () => {
+      expect(affichees(await monterAvecZone(409))).toHaveLength(3)
+      expect(affichees(await monterAvecZone(829))).toHaveLength(3)
+    })
+
+    it('« defilement » force le défilement même dans une zone étroite', async () => {
+      expect(affichees(await monterAvecZone(302, { affichage: 'defilement' }))).toHaveLength(3)
+    })
+
+    it('avant la première mesure, rien n’est en fondu (pas de clignotement au démarrage)', async () => {
+      const w = mount(TasksModule, { global: { stubs: { TaskList: true } } })
+      expect(w.find('.tasks-container').classes()).not.toContain('tasks-fondu')
     })
   })
 })

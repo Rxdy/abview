@@ -175,12 +175,7 @@ const grilleEl = ref<HTMLElement | null>(null)
 const erreurs = computed(() => valider(brouillon))
 const placement = computed(() => brouillon.placements.find((p) => p.id === selection.value))
 const premiereVariante = computed(() => (placement.value ? REGISTRE[placement.value.module]?.variantes[0]?.id : ''))
-// Un réglage conditionnel (la durée en mode fondu) n'est montré que quand il sert : moins de champs à lire
-const reglagesVisibles = computed(() =>
-  (REGISTRE[placement.value?.module ?? '']?.reglages ?? []).filter(
-    (r) => !r.si || placement.value?.reglages?.[r.si.cle] === r.si.valeur
-  )
-)
+const reglagesVisibles = computed(() => REGISTRE[placement.value?.module ?? '']?.reglages ?? [])
 const modulesDisponibles = computed(() => Object.values(REGISTRE))
 const peutEnregistrer = computed(() => !erreurs.value.length && brouillon.nom.trim().length > 0)
 

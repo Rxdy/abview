@@ -21,8 +21,6 @@ export interface Reglage {
    */
   type: 'liste-texte' | 'texte' | 'nombre' | 'date' | 'choix'
   aide?: string
-  /** N'afficher ce réglage que si un autre réglage a cette valeur (ex. la durée par liste seulement en mode fondu). */
-  si?: { cle: string; valeur: string }
   /** nombre : bornes. */
   min?: number
   max?: number
@@ -95,24 +93,6 @@ export const REGISTRE: Registre = {
         libelle: 'Listes affichées',
         type: 'liste-texte',
         aide: 'Noms séparés par des virgules ; vide = toutes les listes',
-      },
-      {
-        cle: 'affichage',
-        libelle: 'Affichage',
-        type: 'choix',
-        options: [
-          { valeur: 'defilement', libelle: 'Toutes les listes, qui défilent' },
-          { valeur: 'fondu', libelle: 'Une liste à la fois, en fondu' },
-        ],
-      },
-      {
-        cle: 'duree',
-        libelle: 'Secondes par liste (en fondu)',
-        type: 'nombre',
-        min: 10,
-        max: 600,
-        aide: '60 par défaut',
-        si: { cle: 'affichage', valeur: 'fondu' },
       },
     ],
     animation: 'fade-in-3',
