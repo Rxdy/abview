@@ -127,10 +127,10 @@ watch(() => calendarStore.allEvents, (newEvents) => {
 
 /**
  * variante : taille donnée par la configuration. Plus la zone est étroite, moins il y a de jours (chacun garde
- * une largeur lisible) : large et moyen 8 jours, étroit 4, mini 2.
+ * une largeur lisible) : large et moyen 8 jours, étroit 4, trois 3, mini 2, jour 1 (aujourd'hui seulement).
  */
-const props = defineProps<{ variante?: 'large' | 'moyen' | 'etroit' | 'mini' }>();
-const JOURS = { large: 8, moyen: 8, etroit: 4, mini: 2 } as const;
+const props = defineProps<{ variante?: 'large' | 'moyen' | 'etroit' | 'trois' | 'mini' | 'jour' }>();
+const JOURS = { large: 8, moyen: 8, etroit: 4, trois: 3, mini: 2, jour: 1 } as const;
 const nombreDeJours = computed(() => JOURS[props.variante ?? 'large']);
 
 const weekDays = computed(() => {

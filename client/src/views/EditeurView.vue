@@ -73,12 +73,23 @@
           </label>
           <label v-for="r in REGISTRE[placement.module]?.reglages" :key="r.cle" class="champ">
             {{ r.libelle }}
+            <select
+              v-if="r.type === 'choix'"
+              :value="(placement.reglages?.[r.cle] as string | undefined) ?? r.options?.[0]?.valeur"
+              :aria-label="r.libelle"
+              @change="regler(r, $event)"
+            >
+              <option v-for="o in r.options" :key="o.valeur" :value="o.valeur">{{ o.libelle }}</option>
+            </select>
             <input
-              type="text"
-              :value="(placement.reglages?.[r.cle] as string[] | undefined)?.join(', ') ?? ''"
+              v-else
+              :type="r.type === 'nombre' ? 'number' : r.type === 'date' ? 'date' : 'text'"
+              :min="r.min"
+              :max="r.max"
+              :value="valeurChamp(r.type, placement.reglages?.[r.cle])"
               :placeholder="r.aide"
               :aria-label="r.libelle"
-              @change="regler(r.cle, $event)"
+              @change="regler(r, $event)"
             />
           </label>
           <span class="fleches" role="group" aria-label="Déplacer">
@@ -115,7 +126,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { CLE_APERCU } from '../modules/apercu'
 import { GRILLE } from '../modules/grille'
-import { REGISTRE, variante } from '../modules/registre'
+import { REGISTRE, variante, type Reglage } from '../modules/registre'
 import { CONFIGURATION_PAR_DEFAUT, rectangle, valider, type Configuration } from '../modules/configuration'
 import {
   ajouter,
@@ -285,11 +296,21 @@ function bouger(dx: number, dy: number) {
   if (p) appliquerPousse(deplacerEnPoussant(brouillon, p.id, p.x + dx, p.y + dy))
 }
 
-function regler(cle: string, e: Event) {
+/** Ce qu'un champ affiche pour la valeur gardée dans la configuration. */
+function valeurChamp(type: string, valeur: unknown): string | number {
+  if (valeur === undefined || valeur === null) return ''
+  return type === 'liste-texte' && Array.isArray(valeur) ? valeur.join(', ') : (valeur as string | number)
+}
+
+function regler(r: Reglage, e: Event) {
   const p = placement.value
   if (!p) return
-  const noms = (e.target as HTMLInputElement).value.split(',').map((n) => n.trim()).filter(Boolean)
-  remplacer(definirReglage(brouillon, p.id, cle, noms))
+  const brut = (e.target as HTMLInputElement | HTMLSelectElement).value
+  let valeur: unknown = brut
+  if (r.type === 'liste-texte') valeur = brut.split(',').map((n) => n.trim()).filter(Boolean)
+  else if (r.type === 'nombre') valeur = brut === '' ? undefined : Number(brut)
+  else if (r.type === 'choix' && brut === r.options?.[0]?.valeur) valeur = undefined // la valeur par défaut n'est pas gardée
+  remplacer(definirReglage(brouillon, p.id, r.cle, valeur))
 }
 
 function changerTaille(e: Event) {
@@ -587,7 +608,8 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round
   box-shadow: var(--shadow-card);
 }
 .reglage label { display: flex; align-items: center; gap: 8px; }
-.reglage .champ input { width: 260px; }
+.reglage .champ input:not([type=number]):not([type=date]), .reglage .champ select { width: 260px; }
+.reglage .champ input[type=number] { width: 90px; }
 .fleches { display: inline-flex; gap: 6px; }
 .calme { color: var(--c-muted); font-size: 13px; margin: 12px 0 0; }
 .palette {

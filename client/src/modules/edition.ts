@@ -70,16 +70,17 @@ export function changerVariante(config: Configuration, id: string, nouvelle: str
 }
 
 /**
- * Change un réglage d'un module. Une liste vide efface le réglage. Rend toujours une configuration : si le
+ * Change un réglage d'un module. Une valeur vide (texte vide, liste vide, nombre absent) efface le réglage. Rend toujours une configuration : si le
  * résultat est invalide (deux exemplaires identiques…), l'éditeur le montre et refuse seulement d'enregistrer.
  */
-export function definirReglage(config: Configuration, id: string, cle: string, valeur: string[]): Configuration {
+export function definirReglage(config: Configuration, id: string, cle: string, valeur: unknown): Configuration {
+  const vide = valeur === undefined || valeur === null || valeur === '' || (Array.isArray(valeur) && valeur.length === 0) || (typeof valeur === 'number' && Number.isNaN(valeur))
   return avec(
     config,
     config.placements.map((p) => {
       if (p.id !== id) return p
       const { [cle]: _ancien, ...autres } = p.reglages ?? {}
-      const reglages = valeur.length ? { ...autres, [cle]: valeur } : autres
+      const reglages = vide ? autres : { ...autres, [cle]: valeur }
       const { reglages: _r, ...sans } = p
       return Object.keys(reglages).length ? { ...sans, reglages } : sans
     })

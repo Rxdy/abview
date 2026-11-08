@@ -251,4 +251,67 @@ describe('TasksModule', () => {
       delete (HTMLElement.prototype as any).clientWidth
     })
   })
+
+  describe('affichage en fondu : une liste à la fois', () => {
+    const affichees = (w: ReturnType<typeof mount>) => w.findAllComponents({ name: 'TaskList' }).map((l) => l.props('listTitle'))
+    const monter = (props: Record<string, unknown> = {}) =>
+      mount(TasksModule, { props: { affichage: 'fondu', ...props }, global: { stubs: { TaskList: true } } })
+
+    beforeEach(() => {
+      vi.useFakeTimers()
+      mockTasksStore.tasks = [task(1, 'Julie'), task(2, 'Julie'), task(3, 'Action'), task(4, 'Courses')]
+    })
+
+    it('n’affiche qu’une liste : celle qui a le plus de tâches d’abord', async () => {
+      const w = monter()
+      await w.vm.$nextTick()
+      expect(affichees(w)).toHaveLength(1)
+      expect(affichees(w)).toEqual(['Julie'])
+    })
+
+    it('passe à la liste suivante après la durée choisie, puis revient au début', async () => {
+      const w = monter({ duree: 30 })
+      const premiere = affichees(w)[0]
+      await vi.advanceTimersByTimeAsync(30_000)
+      const deuxieme = affichees(w)[0]
+      expect(deuxieme).not.toBe(premiere)
+      await vi.advanceTimersByTimeAsync(60_000) // trois listes : on a fait le tour
+      expect(affichees(w)[0]).toBe(premiere)
+    })
+
+    it('attend une minute par défaut', async () => {
+      const w = monter()
+      const premiere = affichees(w)[0]
+      await vi.advanceTimersByTimeAsync(59_000)
+      expect(affichees(w)[0]).toBe(premiere)
+      await vi.advanceTimersByTimeAsync(2_000)
+      expect(affichees(w)[0]).not.toBe(premiere)
+    })
+
+    it('respecte le choix des listes : seules celles-ci tournent', async () => {
+      const w = monter({ listes: ['Action', 'Courses'], duree: 10 })
+      const vues = new Set([affichees(w)[0]])
+      await vi.advanceTimersByTimeAsync(10_000)
+      vues.add(affichees(w)[0])
+      expect([...vues].sort()).toEqual(['Action', 'Courses'])
+    })
+
+    it('la carte remplit la zone (une seule liste visible)', () => {
+      expect(monter().find('.tasks-container').attributes('style')).toContain('--carte-l: 100%')
+    })
+
+    it('arrête sa minuterie quand le module disparaît', async () => {
+      const w = monter({ duree: 10 })
+      const avant = affichees(w)[0]
+      w.unmount()
+      await vi.advanceTimersByTimeAsync(60_000)
+      expect(avant).toBeDefined() // pas d'erreur, plus de minuterie en cours
+      expect(vi.getTimerCount()).toBe(0)
+    })
+
+    it('sans « fondu », toutes les listes restent côte à côte', () => {
+      const w = mount(TasksModule, { global: { stubs: { TaskList: true } } })
+      expect(affichees(w)).toHaveLength(3)
+    })
+  })
 })
