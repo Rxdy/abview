@@ -11,7 +11,6 @@ const registre: Registre = {
       { id: 'petit', largeur: 2, hauteur: 2 },
       { id: 'grand', largeur: 4, hauteur: 2 },
     ],
-    charger: async () => ({ default: {} }),
   },
 }
 const cfg = (...placements: Configuration['placements']): Configuration => ({ nom: 't', placements })
