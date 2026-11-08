@@ -72,7 +72,7 @@ describe('EditeurView', () => {
   it('propose les modules par des icônes, sans libellé visible', async () => {
     const w = await monter()
     const outils = w.findAll('.palette .outil')
-    expect(outils).toHaveLength(3)
+    expect(outils).toHaveLength(4)
     for (const o of outils) {
       expect(o.find('svg path').exists()).toBe(true)
       expect(o.text()).toBe('') // le nom est dans l'aria-label et l'infobulle
