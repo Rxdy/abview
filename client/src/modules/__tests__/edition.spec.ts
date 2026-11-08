@@ -73,7 +73,41 @@ describe('édition d’une configuration', () => {
     expect(JSON.stringify(CONFIGURATION_PAR_DEFAUT)).toBe(avant)
   })
 
-  it('refuse une variante inconnue', () => {
+  it('agrandir un module collé au bord le décale vers le haut ou la gauche au lieu de refuser', () => {
+  // la météo compacte (3×2) tout à droite et tout en bas : en 4×3 elle ne tient plus vers la droite ni vers le bas
+  const bord: Configuration = { nom: 'Bord', placements: [{ id: 'meteo', module: 'meteo', variante: 'compact', x: 10, y: 7 }] }
+  const grand = changerVariante(bord, 'meteo', 'standard')!
+  expect(grand.placements[0]).toMatchObject({ variante: 'standard', x: 9, y: 6 })
+  expect(valider(grand)).toEqual([])
+})
+
+it('agrandir garde d’abord la case de départ quand il y a la place vers le bas et la droite', () => {
+  const libre: Configuration = { nom: 'Libre', placements: [{ id: 'meteo', module: 'meteo', variante: 'compact', x: 2, y: 2 }] }
+  expect(changerVariante(libre, 'meteo', 'standard')!.placements[0]).toMatchObject({ x: 2, y: 2 })
+})
+
+it('se décale juste ce qu’il faut : vers la case la plus proche, sans chevaucher les autres', () => {
+  const c: Configuration = {
+    nom: 'Serré',
+    placements: [
+      { id: 'meteo', module: 'meteo', variante: 'compact', x: 5, y: 6 },
+      { id: 'taches', module: 'taches', variante: 'etroit', x: 8, y: 1 }, // 8-10 × 1-5
+      { id: 'calendrier', module: 'calendrier', variante: 'etroit', x: 1, y: 1 }, // 1-6 × 1-5
+    ],
+  }
+  const grand = changerVariante(c, 'meteo', 'standard')!
+  expect(valider(grand)).toEqual([])
+  expect(grand.placements[0]!.y).toBeGreaterThanOrEqual(6)
+  expect(Math.abs(grand.placements[0]!.x - 5)).toBeLessThanOrEqual(1)
+})
+
+it('refuse seulement quand la nouvelle taille ne tient vraiment nulle part', () => {
+  const plein: Configuration = { nom: 'Plein', placements: [{ id: 'calendrier', module: 'calendrier', variante: 'jour', x: 1, y: 1 }, { id: 'taches', module: 'taches', variante: 'large', x: 3, y: 1 }, { id: 'taches-2', module: 'taches', variante: 'large', x: 3, y: 4 }] }
+  expect(changerVariante(plein, 'calendrier', 'large')).toBeNull() // 12×5 ne tient plus
+  expect(plein.placements[0]).toMatchObject({ variante: 'jour' }) // et rien n'a changé
+})
+
+it('refuse une variante inconnue', () => {
     expect(changerVariante(CONFIGURATION_PAR_DEFAUT, 'meteo', 'géante')).toBeNull()
     expect(changerVariante(CONFIGURATION_PAR_DEFAUT, 'meteo', 'standard')).not.toBeNull()
   })
