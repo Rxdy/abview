@@ -53,7 +53,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue';
-import { largeurCartes } from '../utils/cartesTaches';
+import { largeurCartes, CARTE_MINI, ECART } from '../utils/cartesTaches';
 import { useTasksStore } from '../stores/tasksStore';
 import ErrorDisplay from './ErrorDisplay.vue';
 import TaskList from './TaskList.vue';
@@ -66,7 +66,11 @@ import TaskList from './TaskList.vue';
 const props = defineProps<{
   listes?: string[];
   variante?: string;
-  /** « defilement » : toutes les listes côte à côte (qui défilent) ; « fondu » : une liste à la fois. */
+  /**
+   * Par défaut (absent) : automatique. Quand la zone n'a la place que pour une seule liste, les listes passent
+   * l'une après l'autre en fondu (plutôt que de défiler sur le côté) ; sinon elles sont côte à côte et défilent.
+   * « defilement » ou « fondu » forcent l'un des deux.
+   */
   affichage?: 'defilement' | 'fondu';
   /** Secondes pendant lesquelles chaque liste reste affichée, en mode fondu (60 par défaut). */
   duree?: number;
@@ -82,8 +86,12 @@ const progressPercent = ref(0);
 const progressSide = ref<'left' | 'right'>('left');
 let currentSide: 'left' | 'right' = 'left';
 
+const zone = ref(0); // largeur de la zone du module, en unités de 1/1280 de l'écran (0 : pas encore mesurée)
+
 // Mode « fondu » : une liste à la fois, changée toutes les `duree` secondes
-const enFondu = computed(() => props.affichage === 'fondu');
+const enFondu = computed(
+  () => props.affichage === 'fondu' || (props.affichage !== 'defilement' && zone.value > 0 && zone.value < 2 * CARTE_MINI + ECART)
+);
 const indexListe = ref(0);
 // Dans l'ordre de l'importance : la liste la plus chargée d'abord (l'ordre « centré » du mode défilement n'a pas de sens ici)
 const listesEnFondu = computed(() => [...groupedLists.value].sort((a, b) => b.tasks.length - a.tasks.length));
@@ -110,18 +118,18 @@ watch(
 );
 
 // Largeur des cartes d'après la largeur de la zone du module (voir utils/cartesTaches.ts)
-const largeurCarte = ref(largeurCartes(0));
+const largeurCarte = computed(() => largeurCartes(zone.value));
 let observateur: ResizeObserver | null = null;
 
 onMounted(() => {
   // Le rechargement périodique est piloté par la barre d'actualisation (progressStore)
-  const zone = tasksContainer.value;
-  if (zone && typeof ResizeObserver !== 'undefined') {
+  const conteneur = tasksContainer.value;
+  if (conteneur && typeof ResizeObserver !== 'undefined') {
     const mesurer = () => {
-      largeurCarte.value = largeurCartes(zone.clientWidth / (window.innerWidth / 1280));
+      zone.value = conteneur.clientWidth / (window.innerWidth / 1280);
     };
     observateur = new ResizeObserver(mesurer);
-    observateur.observe(zone);
+    observateur.observe(conteneur);
     mesurer();
   }
 });
