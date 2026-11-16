@@ -24,13 +24,15 @@ jobs:
         name: Détection des fichiers modifiés
         runs-on: ubuntu-latest
         outputs:
-            client: ${{ steps.filter.outputs.client }}
-            server: ${{ steps.filter.outputs.server }}
-            docker: ${{ steps.filter.outputs.docker }}
+            # Une version (tag vX.Y.Z) teste et construit tout, quels que soient les fichiers modifiés.
+            client: ${{ startsWith(github.ref, 'refs/tags/v') && 'true' || steps.filter.outputs.client }}
+            server: ${{ startsWith(github.ref, 'refs/tags/v') && 'true' || steps.filter.outputs.server }}
+            docker: ${{ startsWith(github.ref, 'refs/tags/v') && 'true' || steps.filter.outputs.docker }}
         steps:
             - uses: actions/checkout@v7
             - uses: dorny/paths-filter@v4
               id: filter
+              if: ${{ !startsWith(github.ref, 'refs/tags/') }}
               with:
                   filters: |
                       client:
@@ -47,7 +49,7 @@ jobs:
         # main/dev n'ont pas à suivre la convention (ce sont les branches d'intégration/prod
         # elles-mêmes) ; toutes les autres branches poussées, ou les PR, sont vérifiées.
         # La PR de mise en prod dev → main part de dev : elle n'est pas vérifiée non plus.
-        if: (github.event_name == 'pull_request' && github.head_ref != 'dev') || (github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev')
+        if: (github.event_name == 'pull_request' && github.head_ref != 'dev') || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev')
         runs-on: ubuntu-latest
         steps:
             - name: Vérifie le nom de la branche
@@ -181,7 +183,7 @@ jobs:
         needs: [changes, test-client, lint-server, test-server]
         if: |
             always() &&
-            ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') &&
+            ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || github.event_name == 'workflow_dispatch') &&
             needs.changes.result == 'success' &&
             !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
         runs-on: ubuntu-latest
@@ -217,6 +219,11 @@ jobs:
                   # Même source que le pied de page : le titre le plus récent de CHANGELOG.md
                   numero=$(sed -n 's/^##[[:space:]]*\[v\{0,1\}\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)\].*/\1/p' CHANGELOG.md | head -n 1)
                   test -n "$numero" || { echo "Aucune version trouvée dans CHANGELOG.md" >&2; exit 1; }
+                  # une version publiée doit être celle du CHANGELOG (le pied de page de l'app l'affiche)
+                  if [[ "${{ github.ref_type }}" == "tag" && "${{ github.ref_name }}" != "v$numero" ]]; then
+                      echo "::error::Le tag ${{ github.ref_name }} ne correspond pas à la dernière version du CHANGELOG ($numero)."
+                      exit 1
+                  fi
                   echo "numero=$numero" >> "$GITHUB_OUTPUT"
 
             - uses: docker/setup-qemu-action@v4
@@ -244,5 +251,20 @@ jobs:
                       ghcr.io/${{ steps.owner.outputs.name }}/abview/${{ matrix.target }}:latest
                       ghcr.io/${{ steps.owner.outputs.name }}/abview/${{ matrix.target }}:${{ github.sha }}
                       ghcr.io/${{ steps.owner.outputs.name }}/abview/${{ matrix.target }}:${{ steps.version.outputs.numero }}
+                      ghcr.io/${{ steps.owner.outputs.name }}/abview/${{ matrix.target }}:v${{ steps.version.outputs.numero }}
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
+
+    # ─────────────────── Phase 4 : Release GitHub (sur un tag de version) ───────────
+    release:
+        name: Release GitHub
+        needs: build-push
+        if: startsWith(github.ref, 'refs/tags/v')
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Release avec les notes générées depuis la version précédente
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" --title "${{ github.ref_name }}" --generate-notes --verify-tag
