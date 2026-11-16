@@ -233,7 +233,7 @@ jobs:
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Build & push (linux/arm64 pour le Raspberry Pi)
-              uses: docker/build-push-action@v6
+              uses: docker/build-push-action@v7
               if: steps.should.outputs.build == 'true'
               with:
                   context: .
