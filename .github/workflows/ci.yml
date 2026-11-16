@@ -225,7 +225,7 @@ jobs:
               if: steps.should.outputs.build == 'true'
 
             - name: Connexion à GHCR
-              uses: docker/login-action@v3
+              uses: docker/login-action@v4
               if: steps.should.outputs.build == 'true'
               with:
                   registry: ghcr.io
