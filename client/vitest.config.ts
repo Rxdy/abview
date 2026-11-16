@@ -25,6 +25,10 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(version),
   },
+  // Les tests lisent CHANGELOG.md à la racine du dépôt (hors de client/) : vite 7.3 refuse ces fichiers sans autorisation explicite.
+  server: {
+    fs: { allow: ['..'] },
+  },
   test: {
     globals: true,
     environment: 'jsdom'
