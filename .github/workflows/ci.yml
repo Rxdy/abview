@@ -219,7 +219,7 @@ jobs:
                   test -n "$numero" || { echo "Aucune version trouvée dans CHANGELOG.md" >&2; exit 1; }
                   echo "numero=$numero" >> "$GITHUB_OUTPUT"
 
-            - uses: docker/setup-qemu-action@v3
+            - uses: docker/setup-qemu-action@v4
               if: steps.should.outputs.build == 'true'
             - uses: docker/setup-buildx-action@v3
               if: steps.should.outputs.build == 'true'
