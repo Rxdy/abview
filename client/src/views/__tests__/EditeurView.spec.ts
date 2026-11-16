@@ -282,7 +282,8 @@ describe('EditeurView', () => {
       await flushPromises()
       return w
     }
-    const style = (w: Wrapper, i: number) => w.findAll('.module')[i]!.attributes('style')
+    // placement lu propriété par propriété : jsdom 31 regroupe grid-row et grid-column en « grid-area » dans l'attribut style
+    const style = (w: Wrapper, i: number) => { const s = (w.findAll('.module')[i]!.element as HTMLElement).style; return `grid-column: ${s.gridColumn}; grid-row: ${s.gridRow}` }
 
     it('les flèches déplacent le module sélectionné, sans faire défiler la page', async () => {
       const w = await monterAttache()

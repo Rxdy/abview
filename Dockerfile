@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for AbView
 # Build stage for frontend
-FROM node:24-alpine AS frontend-builder
+FROM node:26-alpine AS frontend-builder
 
 WORKDIR /app/client
 
@@ -31,7 +31,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
 
 # Backend build stage
-FROM node:24-alpine AS backend-builder
+FROM node:26-alpine AS backend-builder
 
 WORKDIR /app
 
@@ -48,7 +48,7 @@ COPY server/ .
 RUN node ace build --ignore-ts-errors && ls -la /app/build/bin/ && echo "✓ Backend build successful"
 
 # Backend production stage
-FROM node:24-alpine AS backend
+FROM node:26-alpine AS backend
 RUN apk add --no-cache curl
 
 WORKDIR /app
