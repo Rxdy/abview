@@ -7,6 +7,18 @@ Versionnage selon [Semantic Versioning](https://semver.org/lang/fr/).
 
 ---
 
+## [v3.8.0] — 2026-11-16
+
+### Sécurité
+- **0 faille connue** : les 165 alertes Dependabot sont corrigées (dont 5 critiques). Le serveur passe à **AdonisJS 7** (core 7.6, auth 10, lucid 22, cors 3, vine 4), seule version où les failles de `@adonisjs/http-server` et `@adonisjs/bodyparser` sont corrigées
+
+### Modifié
+- **Node 26** pour l'image et la CI (AdonisJS 7 demande Node 24 ou plus)
+- **Dépendances à jour** : googleapis 190, vite 7.3, vitest 5, jsdom 31, vue 3.5
+- **Publication par version** : les images ne sont construites que sur un tag `vX.Y.Z` (`scripts/release.sh X.Y.Z`), avec une Release GitHub ; un push sur `main` ne déploie plus rien
+
+---
+
 ## [v3.7.1] — 2026-11-08
 
 ### Corrigé
