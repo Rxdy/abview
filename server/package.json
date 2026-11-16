@@ -57,7 +57,7 @@
     "@adonisjs/lucid": "^22.4.2",
     "@vinejs/vine": "^4.4.0",
     "axios": "^1.11.0",
-    "googleapis": "^155.0.1",
+    "googleapis": "^190.0.0",
     "luxon": "^3.7.1",
     "mysql2": "^3.14.3",
     "reflect-metadata": "^0.2.2",
