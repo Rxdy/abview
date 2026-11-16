@@ -14,6 +14,8 @@ vi.mock('../../stores/notificationsStore', () => ({
   useNotificationsStore: () => mockNotificationsStore
 }))
 
+const placement = (el: Element) => { const s = (el as HTMLElement).style; return `grid-column: ${s.gridColumn}; grid-row: ${s.gridRow}` }
+
 describe('DashboardView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -77,7 +79,8 @@ describe('DashboardView : disposition pilotée par la configuration', () => {
 
   it('place chaque module sur ses cases (disposition standard)', async () => {
     const wrapper = await montee()
-    const style = (m: string) => wrapper.find(`[data-module=${m}]`).attributes('style')
+    // placement lu propriété par propriété : jsdom 31 regroupe grid-row et grid-column en « grid-area » dans l'attribut style
+    const style = (m: string) => placement(wrapper.find(`[data-module=${m}]`).element)
 
     expect(style('calendrier')).toContain('grid-column: 1 / span 12')
     expect(style('calendrier')).toContain('grid-row: 1 / span 5')
@@ -103,7 +106,7 @@ describe('DashboardView : disposition pilotée par la configuration', () => {
       nom: 'Déplacée',
       placements: [{ id: 'm', module: 'meteo', x: 9, y: 1 }],
     })
-    const style = wrapper.find('[data-module=meteo]').attributes('style')
+    const style = placement(wrapper.find('[data-module=meteo]').element)
     expect(style).toContain('grid-column: 9 / span 4')
     expect(style).toContain('grid-row: 1 / span 3')
   })
