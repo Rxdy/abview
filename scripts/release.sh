@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Publier une version : scripts/release.sh 1.4.0
-# Pose le tag v1.4.0 sur main et le pousse. La CI teste, construit les images (:v1.4.0 et :latest), crée la Release
-# GitHub avec ses notes ; Watchtower installe ensuite la nouvelle image sur le Pi. Un simple push sur main ne déploie rien.
+# Pose le tag v1.4.0 sur main (ce qui est en production) et le pousse. Rien n'est reconstruit : la CI (promotion.yml)
+# pose la version sur les images de la prod, construites à la fusion dans dev, et crée la Release GitHub avec le manifeste.
 # Pour figer une version sur le Pi : mettre l'image en :v1.4.0 au lieu de :latest dans son compose.
 set -euo pipefail
 V="${1:-}"

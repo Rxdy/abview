@@ -1,0 +1,30 @@
+{
+  "projet": "abview",
+  "plateformes": "linux/arm64",
+  "services": {
+    "frontend": {
+      "image": "abview/frontend",
+      "contexte": ".",
+      "dockerfile": "Dockerfile",
+      "cible": "frontend",
+      "sources": [
+        "client",
+        "CHANGELOG.md",
+        "nginx.conf",
+        "Dockerfile",
+        ".dockerignore"
+      ]
+    },
+    "backend": {
+      "image": "abview/backend",
+      "contexte": ".",
+      "dockerfile": "Dockerfile",
+      "cible": "backend",
+      "sources": [
+        "server",
+        "Dockerfile",
+        ".dockerignore"
+      ]
+    }
+  }
+}

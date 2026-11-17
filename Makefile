@@ -5,7 +5,7 @@
 # ABVIEW_ADMIN_TOKEN = le jeton d'administration (le même que pour l'éditeur de disposition).
 ABVIEW_URL ?= http://localhost:3333
 
-.PHONY: veille-on veille-off veille-etat help run prod prod-browser get-token stop logs logs-api logs-files logs-stats logs-tail logs-clean reset restart-kiosk check-remote
+.PHONY: veille-on veille-off veille-etat help run prod prod-browser get-token stop logs logs-api logs-files logs-stats logs-tail logs-clean reset restart-kiosk check-remote release
 
 help:
 	@echo "Commandes disponibles (utilise client comme frontend principal):"
@@ -192,3 +192,5 @@ services:
 	@echo "make logs         - Suivre tous les logs"
 	@echo "make logs-tail    - Logs en temps réel"
 	@echo "make stop         - Arrêter tous les services"
+release: ## Publie une version : make release V=1.0.0 (la version doit être en tête du CHANGELOG ; tag vX.Y.Z sur main, la CI pose la version sur les images et crée la release)
+	@scripts/release.sh "$(V)"

@@ -1,14 +1,12 @@
 name: CI/CD
 
 on:
+    # Tests : sur chaque push de branche de travail et chaque PR, et appelés par images.yml avant le build
+    # qui suit une fusion dans dev (dev, staging et main ne construisent plus rien ici : voir images.yml et promotion.yml)
     push:
+        branches-ignore: [dev, staging, main]
     pull_request:
-    workflow_dispatch:
-        inputs:
-            force_build:
-                description: "Forcer le build/push des deux images même sans changement détecté"
-                type: boolean
-                default: true
+    workflow_call:
 
 concurrency:
     group: ci-${{ github.ref }}
@@ -16,7 +14,6 @@ concurrency:
 
 permissions:
     contents: read
-    packages: write
 
 jobs:
     # ────────────────────── Phase 0 : détection + garde-fous ──────────────────────
@@ -48,8 +45,8 @@ jobs:
         name: Convention de nommage de branche
         # main/dev n'ont pas à suivre la convention (ce sont les branches d'intégration/prod
         # elles-mêmes) ; toutes les autres branches poussées, ou les PR, sont vérifiées.
-        # La PR de mise en prod dev → main part de dev : elle n'est pas vérifiée non plus.
-        if: (github.event_name == 'pull_request' && github.head_ref != 'dev') || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev')
+        # Les PR de promotion (dev → staging, staging → main) ne sont pas vérifiées non plus.
+        if: (github.event_name == 'pull_request' && github.head_ref != 'dev' && github.head_ref != 'staging') || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev')
         runs-on: ubuntu-latest
         steps:
             - name: Vérifie le nom de la branche
@@ -176,95 +173,3 @@ jobs:
                       exit 1
                   fi
                   echo "OK : tous les jobs requis ont réussi ou ont été légitimement ignorés."
-
-    # ─────────────────── Phase 3 : BUILD & PUSH (arm64 → GHCR) ───────────
-    build-push:
-        name: Build & push ${{ matrix.target }}
-        needs: [changes, test-client, lint-server, test-server]
-        if: |
-            always() &&
-            ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || github.event_name == 'workflow_dispatch') &&
-            needs.changes.result == 'success' &&
-            !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-        runs-on: ubuntu-latest
-        strategy:
-            fail-fast: false
-            matrix:
-                target: [frontend, backend]
-        steps:
-            - uses: actions/checkout@v7
-
-            - name: Doit-on builder cette cible ?
-              id: should
-              run: |
-                  if [[ "${{ github.event_name == 'workflow_dispatch' && inputs.force_build }}" == "true" ]]; then
-                      echo "build=true" >> "$GITHUB_OUTPUT"
-                  elif [[ "${{ matrix.target }}" == "frontend" && ( "${{ needs.changes.outputs.client }}" == "true" || "${{ needs.changes.outputs.docker }}" == "true" ) ]]; then
-                      echo "build=true" >> "$GITHUB_OUTPUT"
-                  elif [[ "${{ matrix.target }}" == "backend" && ( "${{ needs.changes.outputs.server }}" == "true" || "${{ needs.changes.outputs.docker }}" == "true" ) ]]; then
-                      echo "build=true" >> "$GITHUB_OUTPUT"
-                  else
-                      echo "build=false" >> "$GITHUB_OUTPUT"
-                  fi
-
-            - name: Nom du propriétaire en minuscules
-              id: owner
-              if: steps.should.outputs.build == 'true'
-              run: echo "name=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
-
-            - name: Version de l'app
-              id: version
-              if: steps.should.outputs.build == 'true'
-              run: |
-                  # Même source que le pied de page : le titre le plus récent de CHANGELOG.md
-                  numero=$(sed -n 's/^##[[:space:]]*\[v\{0,1\}\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)\].*/\1/p' CHANGELOG.md | head -n 1)
-                  test -n "$numero" || { echo "Aucune version trouvée dans CHANGELOG.md" >&2; exit 1; }
-                  # une version publiée doit être celle du CHANGELOG (le pied de page de l'app l'affiche)
-                  if [[ "${{ github.ref_type }}" == "tag" && "${{ github.ref_name }}" != "v$numero" ]]; then
-                      echo "::error::Le tag ${{ github.ref_name }} ne correspond pas à la dernière version du CHANGELOG ($numero)."
-                      exit 1
-                  fi
-                  echo "numero=$numero" >> "$GITHUB_OUTPUT"
-
-            - uses: docker/setup-qemu-action@v4
-              if: steps.should.outputs.build == 'true'
-            - uses: docker/setup-buildx-action@v3
-              if: steps.should.outputs.build == 'true'
-
-            - name: Connexion à GHCR
-              uses: docker/login-action@v4
-              if: steps.should.outputs.build == 'true'
-              with:
-                  registry: ghcr.io
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
-
-            - name: Build & push (linux/arm64 pour le Raspberry Pi)
-              uses: docker/build-push-action@v7
-              if: steps.should.outputs.build == 'true'
-              with:
-                  context: .
-                  target: ${{ matrix.target }}
-                  platforms: linux/arm64
-                  push: true
-                  tags: |
-                      ghcr.io/${{ steps.owner.outputs.name }}/abview/${{ matrix.target }}:latest
-                      ghcr.io/${{ steps.owner.outputs.name }}/abview/${{ matrix.target }}:${{ github.sha }}
-                      ghcr.io/${{ steps.owner.outputs.name }}/abview/${{ matrix.target }}:${{ steps.version.outputs.numero }}
-                      ghcr.io/${{ steps.owner.outputs.name }}/abview/${{ matrix.target }}:v${{ steps.version.outputs.numero }}
-                  cache-from: type=gha
-                  cache-to: type=gha,mode=max
-
-    # ─────────────────── Phase 4 : Release GitHub (sur un tag de version) ───────────
-    release:
-        name: Release GitHub
-        needs: build-push
-        if: startsWith(github.ref, 'refs/tags/v')
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-        steps:
-            - name: Release avec les notes générées depuis la version précédente
-              env:
-                  GH_TOKEN: ${{ github.token }}
-              run: gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" --title "${{ github.ref_name }}" --generate-notes --verify-tag
